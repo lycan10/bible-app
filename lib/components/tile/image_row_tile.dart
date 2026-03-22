@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-class SettingsRowItem extends StatelessWidget {
+class ImageRowTile extends StatelessWidget {
   final dynamic icon;
   final Gradient? iconGradient;
   final Color? iconBackgroundColor;
@@ -9,8 +9,9 @@ class SettingsRowItem extends StatelessWidget {
   final String title;
   final String? subtitle;
   final GestureTapCallback? onTap;
+  final Color? secondIconColor;
 
-  const SettingsRowItem({
+  const ImageRowTile({
     super.key,
     required this.icon,
     required this.iconBackgroundColor,
@@ -19,6 +20,7 @@ class SettingsRowItem extends StatelessWidget {
     this.onTap,
     required this.iconColor,
     this.iconGradient,
+    this.secondIconColor,
   });
 
   @override
@@ -37,22 +39,19 @@ class SettingsRowItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: iconGradient == null ? iconBackgroundColor : null,
-                      gradient: iconGradient,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: HugeIcon(
-                      icon: icon,
-                      size: 19,
-                      color: iconColor,
-                      strokeWidth: 2,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      10,
+                    ), // half of image width/height
+                    child: Image.asset(
+                      'assets/images/user_test.jpg',
+                      width: 42,
+                      height: 42,
+                      fit: BoxFit.cover,
                     ),
                   ),
 
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
 
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,12 +67,17 @@ class SettingsRowItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 0),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          subtitle!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 12,
-                            color: Colors.grey,
+                        const SizedBox(height: 2),
+                        SizedBox(
+                          width: 260,
+                          child: Text(
+                            subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ],
@@ -85,7 +89,7 @@ class SettingsRowItem extends StatelessWidget {
               HugeIcon(
                 icon: HugeIcons.strokeRoundedArrowRight01,
                 size: 18,
-                color: const Color(0xff8e8e93),
+                color: secondIconColor ?? Color(0xff8e8e93),
                 strokeWidth: 2,
               ),
             ],

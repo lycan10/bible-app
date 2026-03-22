@@ -2,17 +2,26 @@ import 'package:animations/animations.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:quest/components/circle_stuff.dart';
+import 'package:quest/components/event/event_dotted_card.dart';
 import 'package:quest/components/media/audio/audio_reel_card.dart';
 import 'package:quest/components/media/video/video_card.dart';
+import 'package:quest/components/menu/discover_more.dart';
 import 'package:quest/components/posts/post_card.dart';
 import 'package:quest/components/posts/post_card_long.dart';
 import 'package:quest/components/posts/post_card_short.dart';
 import 'package:quest/components/sponsored/sponsored_post.dart';
+import 'package:quest/components/sponsored/sponsored_post_card.dart';
 import 'package:quest/components/sponsored/sponsored_video.dart';
+import 'package:quest/components/titles/section_header.dart';
+import 'package:quest/screens/community/community_list_screen.dart';
+import 'package:quest/screens/connect/connect_screen.dart';
 import 'package:quest/screens/messages/message_list.dart';
+import 'package:quest/screens/messages/message_list_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
+import 'package:quest/screens/post/post_list.dart';
 import 'package:quest/screens/post/post_screen.dart';
 import 'package:quest/screens/profileScreen/profile_screen.dart';
+import 'package:quest/screens/media/video_list_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -77,6 +86,59 @@ class ExploreScreen extends StatelessWidget {
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
         pageBuilder: (context, animation, secondaryAnimation) => PostScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.scaled,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  void _navigateToCommunityListScreen(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => CommunityListScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.scaled,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  void _navigateToSponsoredPostScreen(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => SponsoredPostScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.scaled,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  void _navigateToPostList(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder: (context, animation, secondaryAnimation) => PostList(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -182,17 +244,29 @@ class ExploreScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       /// Menu / List Icon Button
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedLeftToRightListBullet,
-                          size: 22,
-                          color: Colors.black,
-                          strokeWidth: 1,
+                      GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) {
+                              return DiscoverMore();
+                            },
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedLeftToRightListBullet,
+                            size: 22,
+                            color: Colors.black,
+                            strokeWidth: 1,
+                          ),
                         ),
                       ),
 
@@ -255,10 +329,47 @@ class ExploreScreen extends StatelessWidget {
                           "Connect",
                         ];
 
-                        return TagChip(label: tags[index], onTap: () {});
+                        return TagChip(
+                          label: tags[index],
+                          onTap: () {
+                            if (tags[index] == "Communities") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CommunityListScreen(),
+                                ),
+                              );
+                            }
+                            if (tags[index] == "Videos") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => VideoListScreen(),
+                                ),
+                              );
+                            }
+                            if (tags[index] == "Messages") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MessageListScreen(),
+                                ),
+                              );
+                            }
+                            if (tags[index] == "Connect") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ConnectScreen(),
+                                ),
+                              );
+                            }
+                          },
+                        );
                       },
                     ),
                   ),
+
                   SectionHeader(title: "Most Read", seeAllText: "See more"),
                   SizedBox(
                     height: 200,
@@ -274,7 +385,7 @@ class ExploreScreen extends StatelessWidget {
                           title: 'The Battle',
                           author: 'Joyce Meyer',
                           likes: '300k',
-                          backgroundImage: 'assets/images/boy.png',
+                          backgroundImage: 'assets/images/book.jpeg',
                           onTap: () {},
                         );
                       },
@@ -321,7 +432,7 @@ class ExploreScreen extends StatelessWidget {
                           title: 'Battle of the Mind',
                           author: 'Joyce',
                           likes: '300k',
-                          backgroundImage: 'assets/images/boy.png',
+                          backgroundImage: 'assets/images/alucard.png',
                           onTap: () {},
                           width: 147,
                           height: 150,
@@ -342,22 +453,26 @@ class ExploreScreen extends StatelessWidget {
                       physics: const BouncingScrollPhysics(),
                       itemCount: 8,
                       itemBuilder: (context, index) {
-                        return const Padding(
+                        return Padding(
                           padding: EdgeInsets.only(right: 12),
                           child: CircleStuff(
                             width: 100,
                             height: 100,
                             title: 'Lekki Christians',
                             description: '2898',
+                            onTap: () {},
                           ),
                         );
                       },
                     ),
                   ),
-                  SponsoredPost(),
+                  SponsoredPostCard(
+                    onTap: () => _navigateToSponsoredPostScreen(context),
+                  ),
                   SectionHeader(
                     title: "Community Posts",
                     seeAllText: "See more",
+                    onSeeAllTap: () => _navigateToPostList(context),
                   ),
                   PostCardLong(
                     userName: "Lenny Olabisi",
@@ -385,7 +500,7 @@ class ExploreScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   SizedBox(
-                    height: 430,
+                    height: 350,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       shrinkWrap: true,
@@ -394,7 +509,7 @@ class ExploreScreen extends StatelessWidget {
                       itemBuilder: (context, index) {
                         return const Padding(
                           padding: EdgeInsets.only(right: 12),
-                          child: PostCard(),
+                          child: PostCard(width: 320),
                         );
                       },
                     ),
@@ -747,14 +862,14 @@ class ExploreScreen extends StatelessWidget {
                   ),
                   SectionHeader(title: "Friend", seeAllText: 'see more'),
                   SizedBox(
-                    height: 130,
+                    height: 140,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       shrinkWrap: true,
                       physics: const BouncingScrollPhysics(),
                       itemCount: 8,
                       itemBuilder: (context, index) {
-                        return const Padding(
+                        return Padding(
                           padding: EdgeInsets.only(right: 7),
                           child: CircleStuff(
                             titleFont: 14,
@@ -762,6 +877,7 @@ class ExploreScreen extends StatelessWidget {
                             titleWidth: 50,
                             title: 'Noah',
                             description: 'City',
+                            onTap: () {},
                           ),
                         );
                       },
@@ -771,236 +887,7 @@ class ExploreScreen extends StatelessWidget {
                     title: "Upcoming community events",
                     showSeeAll: false,
                   ),
-                  DottedBorder(
-                    borderType: BorderType.RRect,
-                    radius: const Radius.circular(30),
-                    dashPattern: const [6, 6], // dash length, gap
-                    strokeWidth: 0.5,
-                    color: AppTheme.textColor2,
-                    // color: AppTheme.redColor,
-                    child: Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Tech Conference 2026',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'Exploring the latest in technology and innovation',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.normal,
-                              fontSize: 14,
-                              color: AppTheme.textColor2,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 58,
-                                    height: 23,
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          left: 0,
-                                          child: _buildAvatar(
-                                            'assets/images/boy.png',
-                                          ),
-                                        ),
-                                        Positioned(
-                                          left: 15,
-                                          child: _buildAvatar(
-                                            'assets/images/boy.png',
-                                          ),
-                                        ),
-                                        Positioned(
-                                          left: 30,
-                                          child: _buildAvatar(
-                                            'assets/images/boy.png',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    "23 others",
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontSize: 11,
-                                      color: AppTheme.textColor2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              Row(
-                                children: [
-                                  const HugeIcon(
-                                    icon: HugeIcons.strokeRoundedFavourite,
-                                    size: 16,
-                                    color: Color(0xff8e8e93),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    "160",
-
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontSize: 11,
-                                      color: AppTheme.textColor2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 15),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 15,
-                                  vertical: 7,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.purpleColor.withValues(
-                                    alpha: 0.1,
-                                  ),
-
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'You\'re attending',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.purpleColor,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 7),
-                                    HugeIcon(
-                                      icon: HugeIcons.strokeRoundedArrowDown01,
-                                      size: 18,
-                                      color: AppTheme.purpleColor,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 15),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.buttonColor2.withValues(
-                                alpha: 0.3,
-                              ),
-                              border: Border.all(
-                                width: 0.5,
-                                color: AppTheme.buttonColor2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                HugeIcon(
-                                  icon: HugeIcons.strokeRoundedCalendar04,
-                                  size: 16,
-                                  color: Color(0xff8e8e93),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  '24',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(width: 0),
-
-                                SizedBox(
-                                  height:
-                                      10, // 👈 controls vertical line height
-                                  child: VerticalDivider(
-                                    thickness: 1.5, // 👈 line width
-                                    color: AppTheme.textColor2.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  'June 20',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(width: 15),
-                                HugeIcon(
-                                  icon: HugeIcons.strokeRoundedClock01,
-                                  size: 16,
-                                  color: Color(0xff8e8e93),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  '12pm - 3pm',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                        ],
-                      ),
-                    ),
-                  ),
-
+                  EventDottedCard(onTap: () {}),
                   const SizedBox(height: 30),
                 ],
               ),
@@ -1298,23 +1185,6 @@ class CommunityReelCard extends StatelessWidget {
   }
 }
 
-Widget _buildAvatar(String image) {
-  return Container(
-    padding: const EdgeInsets.all(2),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xff00d4ff), Color(0xff4a3aff)],
-      ),
-      shape: BoxShape.circle,
-    ),
-    child: ClipOval(
-      child: Image.asset(image, width: 18, height: 18, fit: BoxFit.cover),
-    ),
-  );
-}
-
 class OtherCategoryProgressTile extends StatelessWidget {
   final String title;
   final String level;
@@ -1554,78 +1424,6 @@ class _CategoryCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class SectionHeader extends StatelessWidget {
-  final String title;
-  final String seeAllText;
-  final bool showSeeAll;
-  final VoidCallback? onSeeAllTap;
-  final Color? titleColor;
-  final Color? actionColor;
-
-  const SectionHeader({
-    super.key,
-    required this.title,
-    this.seeAllText = "See all",
-    this.showSeeAll = true,
-    this.onSeeAllTap,
-    this.titleColor,
-    this.actionColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        SizedBox(height: 30),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            /// Title
-            Text(
-              title,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: titleColor ?? Colors.black,
-              ),
-            ),
-
-            /// Right Action
-            InkWell(
-              onTap: onSeeAllTap,
-              borderRadius: BorderRadius.circular(8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (showSeeAll)
-                    Text(
-                      seeAllText,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.normal,
-                        color: actionColor ?? AppTheme.textColor2,
-                        fontSize: 14,
-                      ),
-                    ),
-                  const SizedBox(width: 4),
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowRight01,
-                    size: 18,
-                    color: actionColor ?? const Color(0xff8e8e93),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        SizedBox(height: 10),
-      ],
     );
   }
 }

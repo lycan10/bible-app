@@ -4,8 +4,8 @@ import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
 import 'package:quest/theme/theme.dart';
 
-class MessageChatScreen extends StatelessWidget {
-  const MessageChatScreen({super.key});
+class GroupMessageScreen extends StatelessWidget {
+  const GroupMessageScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

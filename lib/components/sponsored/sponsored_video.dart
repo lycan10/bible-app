@@ -1,9 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/media/video/video_card.dart';
-import 'package:quest/screens/video/video_reel_screen.dart';
-import 'package:quest/theme/theme.dart';
+import 'package:quest/screens/media/video_reel_screen.dart';
 
 class SponsoredVideo extends StatelessWidget {
   const SponsoredVideo({super.key});

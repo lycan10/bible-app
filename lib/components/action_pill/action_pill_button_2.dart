@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
 
 class ActionPillButton2 extends StatelessWidget {
@@ -9,6 +10,7 @@ class ActionPillButton2 extends StatelessWidget {
   final Color? iconColor;
   final Color? borderColor;
   final double? borderWidth;
+  final dynamic icon;
 
   const ActionPillButton2({
     super.key,
@@ -19,6 +21,7 @@ class ActionPillButton2 extends StatelessWidget {
     this.iconColor,
     this.borderColor,
     this.borderWidth,
+    this.icon,
   });
 
   @override
@@ -40,11 +43,20 @@ class ActionPillButton2 extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (icon != null) ...[
+              HugeIcon(
+                icon: icon!,
+                size: 18,
+                color: iconColor ?? AppTheme.greenColor,
+                strokeWidth: 1,
+              ),
+              const SizedBox(width: 6),
+            ],
             Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: textColor ?? AppTheme.textColor2,
+                color: textColor ?? AppTheme.purpleColor,
               ),
             ),
           ],

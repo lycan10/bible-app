@@ -11,7 +11,7 @@ class ActionPillButton extends StatelessWidget {
 
   const ActionPillButton({
     super.key,
-    required this.icon,
+    this.icon,
     required this.label,
     this.onTap,
     this.backgroundColor,
@@ -26,21 +26,24 @@ class ActionPillButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
         decoration: BoxDecoration(
-          color: backgroundColor ?? const Color(0xfff2f2f7),
+          color: backgroundColor ?? Colors.grey.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
+        constraints: BoxConstraints(minWidth: 0, maxWidth: double.infinity),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center, // ✅ center content
           children: [
-            HugeIcon(
-              icon: icon,
-              size: 18,
-              color: iconColor ?? Colors.black,
-              strokeWidth: 1,
-            ),
-            const SizedBox(width: 5),
+            if (icon != null) ...[
+              HugeIcon(
+                icon: icon!,
+                size: 18,
+                color: iconColor ?? Colors.black,
+                strokeWidth: 1,
+              ),
+              const SizedBox(width: 6),
+            ],
             Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(

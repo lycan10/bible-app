@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/switch_row/settings_row_item.dart';
-import 'package:quest/components/switch_row/settings_switch_row.dart';
+import 'package:quest/components/tile/settings_row_item.dart';
+import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/title_two.dart';
 import 'package:quest/screens/notification/notification_option_sheet.dart';
 import 'package:quest/theme/theme.dart';

@@ -3,13 +3,13 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 
-class VideoReelScreen extends StatelessWidget {
+class AudioReelScreen extends StatelessWidget {
   final String? title;
   final String? author;
   final String? likes;
   final String? backgroundImage;
 
-  const VideoReelScreen({
+  const AudioReelScreen({
     super.key,
     this.title,
     this.author,
@@ -26,9 +26,9 @@ class VideoReelScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          /// Background Image / Video placeholder
+          /// Background Image / Audio placeholder
           Image.asset(
-            backgroundImage ?? 'assets/images/boy.png',
+            backgroundImage ?? 'assets/images/alucard.png',
             fit: BoxFit.cover,
           ),
 
@@ -40,22 +40,25 @@ class VideoReelScreen extends StatelessWidget {
           /// Top Controls
           Positioned(
             top: 10,
-            left: 16,
-            right: 16,
+            left: 15,
+            right: 15,
             child: SafeArea(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.15),
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowLeft01,
-                      size: 20,
-                      color: Colors.white,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowLeft01,
+                        size: 20,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   Container(
@@ -75,14 +78,103 @@ class VideoReelScreen extends StatelessWidget {
             ),
           ),
 
+          Center(
+            child: const HugeIcon(
+              icon: HugeIcons.strokeRoundedAudioWave01,
+
+              size: 60,
+              color: Colors.white,
+            ),
+          ),
+
           /// Bottom Content
           Positioned(
             left: 15,
             right: 15,
-            bottom: 40,
+            bottom: 30,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GradientProgressBar(
+                        progress: 0.5,
+                        gradient: const LinearGradient(
+                          colors: [Colors.pink, Colors.purple],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 30),
+                    Text(
+                      '0:45',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        25,
+                      ), // half of image width/height
+                      child: Image.asset(
+                        'assets/images/user_test.jpg',
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Column(
+                      children: [
+                        Text(
+                          title ?? 'Battle of the Mind',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'From: ',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white70,
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              TextSpan(
+                                text: author ?? 'Joyce Meyer',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+
+                const SizedBox(height: 15),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -98,7 +190,7 @@ class VideoReelScreen extends StatelessWidget {
                       child: Row(
                         children: [
                           Text(
-                            'Watch to the end to earn \n points',
+                            'Listen to the end to earn \n points',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleLarge?.copyWith(
@@ -132,58 +224,7 @@ class VideoReelScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title ?? 'Battle of the Mind',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '0:45',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'From: ',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white70,
-                          fontStyle: FontStyle.italic,
-                          fontSize: 14,
-                        ),
-                      ),
-                      TextSpan(
-                        text: author ?? 'Joyce Meyer',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 15),
+                SizedBox(height: 25),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -225,13 +266,6 @@ class VideoReelScreen extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
-                SizedBox(height: 20),
-                GradientProgressBar(
-                  progress: 0.5,
-                  gradient: const LinearGradient(
-                    colors: [Colors.pink, Colors.purple],
-                  ),
                 ),
               ],
             ),

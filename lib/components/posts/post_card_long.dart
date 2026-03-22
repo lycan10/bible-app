@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/stats/stats.dart';
+import 'package:quest/theme/theme.dart';
 
 class PostCardLong extends StatelessWidget {
   final String userName;
@@ -55,6 +56,7 @@ class PostCardLong extends StatelessWidget {
                           userName,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
+                            color: AppTheme.textColor2,
                           ),
                         ),
                       ],
@@ -103,6 +105,7 @@ class PostCardLong extends StatelessWidget {
                                 groupName,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontSize: 11,
+                                  color: AppTheme.textColor2,
                                 ),
                               ),
                             ],
@@ -131,6 +134,7 @@ class PostCardLong extends StatelessWidget {
                                 time,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontSize: 11,
+                                  color: AppTheme.textColor2,
                                 ),
                               ),
                             ],

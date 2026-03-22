@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/stats/stats.dart';
+import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/theme/theme.dart';
 
@@ -37,7 +38,18 @@ class PostScreen extends StatelessWidget {
                 leadingIconTap: () {
                   Navigator.pop(context);
                 },
-                trailingIconTap: () {},
+                trailingIconTap: () {
+                  showGeneralDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    barrierLabel: "Filter",
+                    barrierColor: Colors.black.withValues(alpha: 0.4),
+                    transitionDuration: const Duration(milliseconds: 250),
+                    pageBuilder: (context, animation, secondaryAnimation) {
+                      return Center(child: _PostMenuDialogBox());
+                    },
+                  );
+                },
               ),
               SizedBox(height: 25),
               Expanded(
@@ -510,6 +522,56 @@ class _CommentItemState extends State<CommentItem> {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PostMenuDialogBox extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 15),
+
+            SettingsRowItem(
+              icon: HugeIcons.strokeRoundedShare08,
+              iconBackgroundColor: Colors.transparent,
+              title: 'Share this post',
+              iconColor: AppTheme.textColor2,
+              secondIconColor: Colors.transparent,
+            ),
+            SettingsRowItem(
+              icon: HugeIcons.strokeRoundedFavourite,
+              iconBackgroundColor: Colors.transparent,
+              title: 'I\'ll like to see more like this',
+              iconColor: AppTheme.textColor2,
+              secondIconColor: Colors.transparent,
+            ),
+            SettingsRowItem(
+              icon: HugeIcons.strokeRoundedAlertDiamond,
+              iconBackgroundColor: Colors.transparent,
+              title: 'Report this post',
+              iconColor: AppTheme.textColor2,
+              secondIconColor: Colors.transparent,
+            ),
+            SettingsRowItem(
+              icon: HugeIcons.strokeRoundedDelete01,
+              iconBackgroundColor: Colors.transparent,
+              title: 'Delete post',
+              iconColor: AppTheme.textColor2,
+              secondIconColor: Colors.transparent,
+            ),
+          ],
+        ),
       ),
     );
   }

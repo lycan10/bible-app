@@ -3,7 +3,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/screens/explore/explore_screen.dart';
 import 'package:quest/screens/home/home_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
-import 'package:quest/screens/profileScreen/profile_settings.dart';
 import 'package:quest/theme/theme.dart';
 
 class NavigationScreen extends StatefulWidget {
@@ -20,7 +19,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     HomeScreen(),
     ExploreScreen(),
     NotificationScreen(),
-    ProfileSettings(),
+    NotificationScreen(),
   ];
 
   @override
@@ -35,16 +34,17 @@ class _NavigationScreenState extends State<NavigationScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Expanded(
+              // LEFT navigation container
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -60,20 +60,20 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(width: 12),
+
+              // RIGHT floating button
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppTheme.purpleColor,
                   borderRadius: BorderRadius.circular(50),
                 ),
-                child: Row(
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedBookOpen01,
-                      size: 25,
-                      color: Color(0xff8e8e93),
-                    ),
-                  ],
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedBookOpen01,
+                  size: 25,
+                  color: const Color(0xff8e8e93),
                 ),
               ),
             ],

@@ -187,20 +187,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 13),
-                                Row(
-                                  children: [
-                                    ActionPillButton(
-                                      icon: HugeIcons.strokeRoundedSettings02,
-                                      label: "Edit",
-                                      onTap: () {},
-                                    ),
-                                    SizedBox(width: 10),
-                                    ActionPillButton(
-                                      icon: HugeIcons.strokeRoundedShare08,
-                                      label: "Share",
-                                      onTap: () {},
-                                    ),
-                                  ],
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Row(
+                                    children: [
+                                      ActionPillButton(
+                                        icon: HugeIcons.strokeRoundedSettings02,
+                                        label: "Edit",
+                                        onTap: () {},
+                                      ),
+                                      SizedBox(width: 10),
+                                      ActionPillButton(
+                                        icon: HugeIcons.strokeRoundedShare08,
+                                        label: "Share",
+                                        onTap: () {},
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 SizedBox(height: 30),
                                 Row(
@@ -218,70 +221,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       SizedBox(height: 30),
 
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ActionPillButton2(
-                            label: "Posts",
-                            backgroundColor:
-                                selectedTab == "Posts"
-                                    ? Colors.black
-                                    : Colors.transparent,
-                            textColor:
-                                selectedTab == "Posts"
-                                    ? Colors.white
-                                    : AppTheme.textColor2,
-                            onTap: () {
-                              setState(() => selectedTab = "Posts");
-                            },
-                          ),
+                      SingleChildScrollView(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ActionPillButton2(
+                              label: "Posts",
+                              backgroundColor:
+                                  selectedTab == "Posts"
+                                      ? Colors.black
+                                      : Colors.transparent,
+                              textColor:
+                                  selectedTab == "Posts"
+                                      ? Colors.white
+                                      : AppTheme.textColor2,
+                              onTap: () {
+                                setState(() => selectedTab = "Posts");
+                              },
+                            ),
 
-                          ActionPillButton2(
-                            label: "Friends",
-                            backgroundColor:
-                                selectedTab == "Friends"
-                                    ? Colors.black
-                                    : Colors.transparent,
-                            textColor:
-                                selectedTab == "Friends"
-                                    ? Colors.white
-                                    : AppTheme.textColor2,
-                            onTap: () {
-                              setState(() => selectedTab = "Friends");
-                            },
-                          ),
+                            ActionPillButton2(
+                              label: "Friends",
+                              backgroundColor:
+                                  selectedTab == "Friends"
+                                      ? Colors.black
+                                      : Colors.transparent,
+                              textColor:
+                                  selectedTab == "Friends"
+                                      ? Colors.white
+                                      : AppTheme.textColor2,
+                              onTap: () {
+                                setState(() => selectedTab = "Friends");
+                              },
+                            ),
 
-                          ActionPillButton2(
-                            label: "Badges",
-                            backgroundColor:
-                                selectedTab == "Badges"
-                                    ? Colors.black
-                                    : Colors.transparent,
-                            textColor:
-                                selectedTab == "Badges"
-                                    ? Colors.white
-                                    : AppTheme.textColor2,
-                            onTap: () {
-                              setState(() => selectedTab = "Badges");
-                            },
-                          ),
+                            ActionPillButton2(
+                              label: "Badges",
+                              backgroundColor:
+                                  selectedTab == "Badges"
+                                      ? Colors.black
+                                      : Colors.transparent,
+                              textColor:
+                                  selectedTab == "Badges"
+                                      ? Colors.white
+                                      : AppTheme.textColor2,
+                              onTap: () {
+                                setState(() => selectedTab = "Badges");
+                              },
+                            ),
 
-                          ActionPillButton2(
-                            label: "Metric",
-                            backgroundColor:
-                                selectedTab == "Metric"
-                                    ? Colors.black
-                                    : Colors.transparent,
-                            textColor:
-                                selectedTab == "Metric"
-                                    ? Colors.white
-                                    : AppTheme.textColor2,
-                            onTap: () {
-                              setState(() => selectedTab = "Metric");
-                            },
-                          ),
-                        ],
+                            ActionPillButton2(
+                              label: "Metric",
+                              backgroundColor:
+                                  selectedTab == "Metric"
+                                      ? Colors.black
+                                      : Colors.transparent,
+                              textColor:
+                                  selectedTab == "Metric"
+                                      ? Colors.white
+                                      : AppTheme.textColor2,
+                              onTap: () {
+                                setState(() => selectedTab = "Metric");
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                       SizedBox(height: 25),
 

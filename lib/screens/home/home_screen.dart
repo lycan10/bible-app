@@ -5,6 +5,8 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:quest/components/media/audio/audio_reel_card.dart';
 import 'package:quest/components/media/video/video_card.dart';
+import 'package:quest/components/titles/section_header.dart';
+import 'package:quest/components/today_verse_glass.dart';
 import 'package:quest/screens/messages/message_list.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/screens/profileScreen/profile_screen.dart';
@@ -216,138 +218,7 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 10),
-                Container(
-                  height: 215,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
-                    child: Stack(
-                      children: [
-                        /// 🔹 Background Image
-                        Positioned.fill(
-                          child: Image.asset(
-                            "assets/images/nature.jpg",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-
-                        /// 🔹 Glass Layer (bottom 70%)
-                        Positioned(
-                          top: 215 * 0.25, // 👈 starts at 30%
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(30),
-                              bottomRight: Radius.circular(30),
-                            ),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(
-                                    alpha: 0.15,
-                                  ), // glass tint
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.25),
-                                    width: 1,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// 🔹 Content
-                        Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 0,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          'Share and earn a badge',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodySmall?.copyWith(
-                                            fontWeight: FontWeight.normal,
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                        Image.asset(
-                                          "assets/images/bronze.png",
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                'Today\'s verse',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                "Let your faith be bigger than your fears, for with God, every step forward is a step toward purpose.",
-                                maxLines: 2,
-                                overflow:
-                                    TextOverflow
-                                        .ellipsis, // 👈 prevents ugly cut
-                                softWrap: true,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodySmall?.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  height: 1.4,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                '- JAMES 1:17 KJV',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                TodayVerseGlass(),
                 SectionHeader(title: "Journal", seeAllText: "See all"),
                 Container(
                   padding: const EdgeInsets.all(15),
@@ -1736,78 +1607,6 @@ class _CategoryCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class SectionHeader extends StatelessWidget {
-  final String title;
-  final String seeAllText;
-  final bool showSeeAll;
-  final VoidCallback? onSeeAllTap;
-  final Color? titleColor;
-  final Color? actionColor;
-
-  const SectionHeader({
-    super.key,
-    required this.title,
-    this.seeAllText = "See all",
-    this.showSeeAll = true,
-    this.onSeeAllTap,
-    this.titleColor,
-    this.actionColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        SizedBox(height: 30),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            /// Title
-            Text(
-              title,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: titleColor ?? Colors.black,
-              ),
-            ),
-
-            /// Right Action
-            InkWell(
-              onTap: onSeeAllTap,
-              borderRadius: BorderRadius.circular(8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (showSeeAll)
-                    Text(
-                      seeAllText,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.normal,
-                        color: actionColor ?? AppTheme.textColor2,
-                        fontSize: 14,
-                      ),
-                    ),
-                  const SizedBox(width: 4),
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowRight01,
-                    size: 18,
-                    color: actionColor ?? const Color(0xff8e8e93),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        SizedBox(height: 10),
-      ],
     );
   }
 }
