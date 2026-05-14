@@ -3,10 +3,12 @@ import 'dart:ui';
 import 'package:animations/animations.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:quest/components/devotion/ongoing_devotion_card.dart';
 import 'package:quest/components/media/audio/audio_reel_card.dart';
 import 'package:quest/components/media/video/video_card.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/today_verse_glass.dart';
+import 'package:quest/screens/devotion/devotion_article_card.dart';
 import 'package:quest/screens/messages/message_list.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/screens/profileScreen/profile_screen.dart';
@@ -409,355 +411,32 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 SectionHeader(title: "Ongoing devotion", showSeeAll: false),
-                Container(
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      width: 0.5,
-                      color: AppTheme.buttonColor2,
-                    ),
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          /// 🔹 Text Content
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Build Your Faith in 2026',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 5),
-
-                                RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'From: ',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          fontSize: 12,
-                                          color: AppTheme.textColor2,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: 'Shalom',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          fontSize: 12,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(height: 5),
-                                Row(
-                                  children: [
-                                    const HugeIcon(
-                                      icon: HugeIcons.strokeRoundedThumbsUp,
-                                      size: 16,
-                                      color: Color(0xff8e8e93),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "385",
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(fontSize: 11),
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 5),
-                                Text(
-                                  '- 365 Days Plan',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              25,
-                            ), // half of image width/height
-                            child: Image.asset(
-                              'assets/images/user_test.jpg',
-                              width: 95,
-                              height: 95,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Day',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                  ),
-                                ),
-
-                                /// Dot separator (perfectly centered)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                  ),
-                                  child: Container(
-                                    width: 4,
-                                    height: 4,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-
-                                Text(
-                                  '4',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.purpleColor,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Continue',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                OngoingDevotionCard(
+                  title: "Build Your Faith in 2026",
+                  author: "Shalom",
+                  imagePath: "assets/images/user_test.jpg",
+                  likes: "385",
+                  planText: "- 365 Days Plan",
+                  day: 4,
+                  onContinue: () {
+                    print("Continue tapped");
+                  },
                 ),
                 SectionHeader(
                   title: "Devotion for you",
                   seeAllText: "See more",
                 ),
-                Container(
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      width: 0.5,
-                      color: AppTheme.buttonColor2,
-                    ),
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              15,
-                            ), // half of image width/height
-                            child: Image.asset(
-                              'assets/images/user_test.jpg',
-                              width: 62,
-                              height: 62,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          SizedBox(width: 10),
-
-                          /// 🔹 Text Content
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Understanding Grace and Forgiveness',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  'A weekly email with our favorite articles about design, front-end development, technology, and start',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.normal,
-                                    fontSize: 14,
-                                    color: AppTheme.textColor2,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-
-                                RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'From: ',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          fontSize: 12,
-                                          color: AppTheme.textColor2,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: 'Believer\'s Journal',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          fontSize: 12,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(height: 5),
-                                Row(
-                                  children: [
-                                    const HugeIcon(
-                                      icon: HugeIcons.strokeRoundedThumbsUp,
-                                      size: 16,
-                                      color: Color(0xff8e8e93),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "385",
-
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            fontSize: 11,
-                                            color: AppTheme.textColor2,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      ' - 365 Days Plan',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.copyWith(
-                                        fontSize: 12,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 15,
-                                        vertical: 7,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border.all(
-                                          width: 1,
-                                          color: Colors.black,
-                                        ),
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'Read',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodyMedium?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                        ],
-                      ),
-                    ],
-                  ),
+                DevotionArticleCard(
+                  title: "Understanding Grace and Forgiveness",
+                  description:
+                      "A weekly email with our favorite articles about design, front-end development, technology, and start",
+                  author: "Believer's Journal",
+                  imagePath: "assets/images/user_test.jpg",
+                  likes: "385",
+                  tag: "365 Days Plan",
+                  onTap: () {
+                    print("Read tapped");
+                  },
                 ),
                 SectionHeader(
                   title: "Upcoming community events",

@@ -13,8 +13,10 @@ import 'package:quest/components/sponsored/sponsored_post.dart';
 import 'package:quest/components/sponsored/sponsored_post_card.dart';
 import 'package:quest/components/sponsored/sponsored_video.dart';
 import 'package:quest/components/titles/section_header.dart';
+import 'package:quest/screens/books/books_list_screen.dart';
 import 'package:quest/screens/community/community_list_screen.dart';
 import 'package:quest/screens/connect/connect_screen.dart';
+import 'package:quest/screens/devotion/devotion_list_screen.dart';
 import 'package:quest/screens/messages/message_list.dart';
 import 'package:quest/screens/messages/message_list_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
@@ -332,6 +334,22 @@ class ExploreScreen extends StatelessWidget {
                         return TagChip(
                           label: tags[index],
                           onTap: () {
+                            if (tags[index] == "Devotion") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DevotionListScreen(),
+                                ),
+                              );
+                            }
+                            if (tags[index] == "Books") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BooksListScreen(),
+                                ),
+                              );
+                            }
                             if (tags[index] == "Communities") {
                               Navigator.push(
                                 context,

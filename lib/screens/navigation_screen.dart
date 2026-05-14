@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:quest/screens/bible/bible_home_screen.dart';
 import 'package:quest/screens/explore/explore_screen.dart';
 import 'package:quest/screens/home/home_screen.dart';
+import 'package:quest/screens/more/more_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/theme/theme.dart';
 
@@ -19,7 +21,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
     HomeScreen(),
     ExploreScreen(),
     NotificationScreen(),
-    NotificationScreen(),
+    MoreScreen(),
+    BibleHomeScreen(),
   ];
 
   @override
@@ -30,7 +33,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -64,16 +67,23 @@ class _NavigationScreenState extends State<NavigationScreen> {
               const SizedBox(width: 12),
 
               // RIGHT floating button
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.purpleColor,
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedBookOpen01,
-                  size: 25,
-                  color: const Color(0xff8e8e93),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _currentIndex = 4; // 👈 BibleHomeScreen index
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: AppTheme.purpleColor,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Image.asset(
+                    "assets/images/cross.png",
+                    width: 28,
+                    height: 28,
+                  ),
                 ),
               ),
             ],
