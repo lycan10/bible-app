@@ -114,12 +114,19 @@ class OngoingDevotionCard extends StatelessWidget {
               /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(25),
-                child: Image.asset(
-                  imagePath,
-                  width: 95,
-                  height: 95,
-                  fit: BoxFit.cover,
-                ),
+                child: imagePath.startsWith('http')
+                    ? Image.network(
+                        imagePath,
+                        width: 95,
+                        height: 95,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.asset(
+                        imagePath,
+                        width: 95,
+                        height: 95,
+                        fit: BoxFit.cover,
+                      ),
               ),
             ],
           ),

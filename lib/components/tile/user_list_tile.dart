@@ -56,7 +56,6 @@ class UserListTile extends StatelessWidget {
                               name,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black,
                                 fontSize: 14,
                               ),
                             ),

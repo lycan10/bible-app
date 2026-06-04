@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:quest/screens/word_match/word_match_game_screen.dart';
-import 'package:quest/screens/word_match/word_match_mode.dart';
 import '../../theme/theme.dart';
 
-class WordMatchTopicsScreen extends StatelessWidget {
-  const WordMatchTopicsScreen({super.key});
+class WordMatchDifficultyScreen extends StatelessWidget {
+  const WordMatchDifficultyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -35,7 +35,7 @@ class WordMatchTopicsScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               Text(
-                'Choose a topic to begin',
+                'Choose a difficulty level to begin',
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
@@ -43,7 +43,6 @@ class WordMatchTopicsScreen extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              // Topics Grid
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
@@ -51,23 +50,26 @@ class WordMatchTopicsScreen extends StatelessWidget {
                   crossAxisSpacing: 16,
                   childAspectRatio: 0.95,
                   children: const [
-                    _TopicCard(
-                      title: 'Word Meaning',
-                      subtitle: 'Match words to meanings',
-                      icon: Icons.menu_book_rounded,
-                      mode: WordMatchMode.wordMeaning,
+                    _DifficultyCard(
+                      title: 'Easy',
+                      subtitle: 'Relaxed pace',
+                      icon: Icons.sentiment_satisfied_alt_rounded,
+                      difficulty: 'easy',
+                      color: Colors.green,
                     ),
-                    _TopicCard(
-                      title: 'Bible Characters',
-                      subtitle: 'Match characters to roles',
-                      icon: Icons.person_rounded,
-                      mode: WordMatchMode.character,
+                    _DifficultyCard(
+                      title: 'Medium',
+                      subtitle: 'A bit challenging',
+                      icon: Icons.sentiment_neutral_rounded,
+                      difficulty: 'medium',
+                      color: Colors.orange,
                     ),
-                    _TopicCard(
-                      title: 'Places & Events',
-                      subtitle: 'Match places to events',
-                      icon: Icons.location_on_rounded,
-                      mode: WordMatchMode.place,
+                    _DifficultyCard(
+                      title: 'Hard',
+                      subtitle: 'Brain teaser',
+                      icon: Icons.sentiment_very_dissatisfied_rounded,
+                      difficulty: 'hard',
+                      color: Colors.red,
                     ),
                   ],
                 ),
@@ -80,17 +82,19 @@ class WordMatchTopicsScreen extends StatelessWidget {
   }
 }
 
-class _TopicCard extends StatelessWidget {
+class _DifficultyCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final WordMatchMode mode;
+  final String difficulty;
+  final MaterialColor color;
 
-  const _TopicCard({
+  const _DifficultyCard({
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.mode,
+    required this.difficulty,
+    required this.color,
   });
 
   @override
@@ -99,7 +103,7 @@ class _TopicCard extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => WordMatchGameScreen(mode: WordMatchMode.character),
+            builder: (_) => WordMatchGameScreen(difficulty: difficulty),
           ),
         );
       },
@@ -108,7 +112,13 @@ class _TopicCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(blurRadius: 10, offset: const Offset(0, 6))],
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 10,
+              offset: Offset(0, 6),
+              color: Color(0x14000000),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -116,10 +126,10 @@ class _TopicCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppTheme.goldAccent.withAlpha(40),
+                color: color.withAlpha(40),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 36, color: AppTheme.goldAccent),
+              child: Icon(icon, size: 36, color: color.shade600),
             ),
             const SizedBox(height: 16),
             Text(

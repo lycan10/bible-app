@@ -1,18 +1,19 @@
 import 'package:animations/animations.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:quest/components/circle_stuff.dart';
 import 'package:quest/components/event/event_dotted_card.dart';
 import 'package:quest/components/media/audio/audio_reel_card.dart';
 import 'package:quest/components/media/video/video_card.dart';
 import 'package:quest/components/menu/discover_more.dart';
-import 'package:quest/components/posts/post_card.dart';
 import 'package:quest/components/posts/post_card_long.dart';
 import 'package:quest/components/posts/post_card_short.dart';
 import 'package:quest/components/sponsored/sponsored_post.dart';
 import 'package:quest/components/sponsored/sponsored_post_card.dart';
 import 'package:quest/components/sponsored/sponsored_video.dart';
 import 'package:quest/components/titles/section_header.dart';
+import 'package:provider/provider.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/screens/books/books_list_screen.dart';
 import 'package:quest/screens/community/community_list_screen.dart';
 import 'package:quest/screens/connect/connect_screen.dart';
@@ -24,11 +25,30 @@ import 'package:quest/screens/post/post_list.dart';
 import 'package:quest/screens/post/post_screen.dart';
 import 'package:quest/screens/profileScreen/profile_screen.dart';
 import 'package:quest/screens/media/video_list_screen.dart';
+import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:quest/components/feature_guard.dart';
 
-class ExploreScreen extends StatelessWidget {
+class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
+
+  @override
+  State<ExploreScreen> createState() => _ExploreScreenState();
+}
+
+class _ExploreScreenState extends State<ExploreScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+      if (authProvider.token != null) {
+        feedProvider.loadExploreData(authProvider.token!);
+      }
+    });
+  }
 
   void _navigateToNotification(BuildContext context) {
     Navigator.of(context).push(
@@ -100,24 +120,6 @@ class ExploreScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToCommunityListScreen(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder:
-            (context, animation, secondaryAnimation) => CommunityListScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.scaled,
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-
   void _navigateToSponsoredPostScreen(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder(
@@ -155,8 +157,15 @@ class ExploreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final feedProvider = Provider.of<FeedProvider>(context);
+    final explore = feedProvider.explore;
 
+    final devotionPlans = explore?['devotionPlans'] as List<dynamic>? ?? [];
+    final communities = explore?['communities'] as List<dynamic>? ?? [];
+    final videos = explore?['videos'] as List<dynamic>? ?? [];
+    final audios = explore?['audios'] as List<dynamic>? ?? [];
+    final posts = explore?['posts'] as List<dynamic>? ?? [];
+    final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
@@ -316,541 +325,508 @@ class ExploreScreen extends StatelessWidget {
                   SizedBox(height: 30),
                   SizedBox(
                     height: 32,
-                    child: ListView.builder(
+                    child: ListView(
                       scrollDirection: Axis.horizontal,
-                      itemCount: 7,
                       padding: EdgeInsets.zero,
-                      itemBuilder: (context, index) {
-                        final tags = [
-                          "Devotion",
-                          "Books",
-                          "Communities",
-                          "Videos",
-                          "Messages",
-                          "Games",
-                          "Connect",
-                        ];
-
-                        return TagChip(
-                          label: tags[index],
-                          onTap: () {
-                            if (tags[index] == "Devotion") {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DevotionListScreen(),
+                      children: [
+                        FeatureGuard(
+                          featureKey: 'devotion',
+                          child: TagChip(
+                            label: "Devotion",
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DevotionListScreen(),
+                                  ),
                                 ),
-                              );
-                            }
-                            if (tags[index] == "Books") {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BooksListScreen(),
-                                ),
-                              );
-                            }
-                            if (tags[index] == "Communities") {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CommunityListScreen(),
-                                ),
-                              );
-                            }
-                            if (tags[index] == "Videos") {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => VideoListScreen(),
-                                ),
-                              );
-                            }
-                            if (tags[index] == "Messages") {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => MessageListScreen(),
-                                ),
-                              );
-                            }
-                            if (tags[index] == "Connect") {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ConnectScreen(),
-                                ),
-                              );
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  ),
-
-                  SectionHeader(title: "Most Read", seeAllText: "See more"),
-                  SizedBox(
-                    height: 200,
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 5,
-                      separatorBuilder: (_, __) => const SizedBox(width: 15),
-                      itemBuilder: (context, index) {
-                        return BooksReelCard(
-                          title: 'The Battle',
-                          author: 'Joyce Meyer',
-                          likes: '300k',
-                          backgroundImage: 'assets/images/book.jpeg',
-                          onTap: () {},
-                        );
-                      },
-                    ),
-                  ),
-                  SectionHeader(title: "Video", seeAllText: "See more"),
-                  SizedBox(
-                    height: 200,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-
-                      itemCount: 5,
-                      separatorBuilder: (_, __) => const SizedBox(width: 15),
-                      itemBuilder: (context, index) {
-                        return VideoCard(
-                          title: 'Battle of the Mind',
-                          author: 'Joyce Meyer',
-                          likes: '300k',
-                          height: 150,
-                          width: 150,
-                          backgroundImage: 'assets/images/boy.png',
-                          onTap: () {},
-                        );
-                      },
-                    ),
-                  ),
-                  SectionHeader(
-                    title: "Audio Messages",
-                    seeAllText: "See more",
-                  ),
-                  SizedBox(
-                    height: 165,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-
-                      itemCount: 5,
-                      separatorBuilder: (_, __) => const SizedBox(width: 15),
-                      itemBuilder: (context, index) {
-                        return AudioReelCard(
-                          title: 'Battle of the Mind',
-                          author: 'Joyce',
-                          likes: '300k',
-                          backgroundImage: 'assets/images/alucard.png',
-                          onTap: () {},
-                          width: 147,
-                          height: 150,
-                          duration: "2:30",
-                        );
-                      },
-                    ),
-                  ),
-                  SectionHeader(
-                    title: "Discover communities",
-                    seeAllText: 'see more',
-                  ),
-                  SizedBox(
-                    height: 175,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: EdgeInsets.only(right: 12),
-                          child: CircleStuff(
-                            width: 100,
-                            height: 100,
-                            title: 'Lekki Christians',
-                            description: '2898',
-                            onTap: () {},
                           ),
-                        );
-                      },
+                        ),
+                        FeatureGuard(
+                          featureKey: 'books',
+                          child: TagChip(
+                            label: "Books",
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => BooksListScreen(),
+                                  ),
+                                ),
+                          ),
+                        ),
+                        FeatureGuard(
+                          featureKey: 'community',
+                          child: TagChip(
+                            label: "Communities",
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CommunityListScreen(),
+                                  ),
+                                ),
+                          ),
+                        ),
+                        FeatureGuard(
+                          featureKey: 'videos',
+                          child: TagChip(
+                            label: "Videos",
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VideoListScreen(),
+                                  ),
+                                ),
+                          ),
+                        ),
+                        FeatureGuard(
+                          featureKey: 'audioMessages',
+                          child: TagChip(
+                            label: "Messages",
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MessageListScreen(),
+                                  ),
+                                ),
+                          ),
+                        ),
+                        FeatureGuard(
+                          featureKey: 'games',
+                          child: TagChip(label: "Games", onTap: () {}),
+                        ),
+                        FeatureGuard(
+                          featureKey: 'connect',
+                          child: TagChip(
+                            label: "Connect",
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ConnectScreen(),
+                                  ),
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SponsoredPostCard(
-                    onTap: () => _navigateToSponsoredPostScreen(context),
+
+                  FeatureGuard(
+                    featureKey: 'devotion',
+                    child: Column(
+                      children: [
+                        SectionHeader(
+                          title: "Most Read Plans",
+                          seeAllText: "See more",
+                        ),
+                        SizedBox(
+                          height: 200,
+                          child:
+                              devotionPlans.isEmpty
+                                  ? const Center(
+                                    child: Text(
+                                      "No plans available",
+                                      style: TextStyle(color: Colors.black54),
+                                    ),
+                                  )
+                                  : ListView.separated(
+                                    shrinkWrap: true,
+                                    physics: const BouncingScrollPhysics(),
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: devotionPlans.length,
+                                    separatorBuilder:
+                                        (_, __) => const SizedBox(width: 15),
+                                    itemBuilder: (context, index) {
+                                      final plan = devotionPlans[index];
+                                      return BooksReelCard(
+                                        title: plan['title'] ?? '',
+                                        author: plan['authorName'] ?? 'Shalom',
+                                        likes:
+                                            '${plan['durationDays'] ?? 0} Days',
+                                        backgroundImage:
+                                            plan['image'] ??
+                                            'assets/images/book.jpeg',
+                                        onTap: () {},
+                                      );
+                                    },
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
-                  SectionHeader(
-                    title: "Community Posts",
-                    seeAllText: "See more",
-                    onSeeAllTap: () => _navigateToPostList(context),
+                  FeatureGuard(
+                    featureKey: 'videos',
+                    child: Column(
+                      children: [
+                        SectionHeader(title: "Video", seeAllText: "See more"),
+                        SizedBox(
+                          height: 200,
+                          child:
+                              videos.isEmpty
+                                  ? const Center(
+                                    child: Text(
+                                      "No videos available",
+                                      style: TextStyle(color: Colors.black54),
+                                    ),
+                                  )
+                                  : ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: videos.length,
+                                    separatorBuilder:
+                                        (_, __) => const SizedBox(width: 15),
+                                    itemBuilder: (context, index) {
+                                      final m = videos[index];
+                                      return VideoCard(
+                                        title: m['title'] ?? '',
+                                        author: m['author'] ?? '',
+                                        likes: '${m['likes'] ?? 0}',
+                                        height: 150,
+                                        width: 150,
+                                        backgroundImage:
+                                            m['imageUrl'] ??
+                                            'assets/images/boy.png',
+                                        onTap: () {},
+                                      );
+                                    },
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
-                  PostCardLong(
-                    userName: "Lenny Olabisi",
-                    userImage: "assets/images/boy.png",
-                    postText:
-                        "Christian fellowship is a beautiful expression...",
-                    groupName: "Lekki Christian Youths",
-                    postImage: "assets/images/test.jpg",
-                    likes: "370k",
-                    comments: "29",
-                    time: "Today 3:25pm",
-                    onTap: () => _navigateToPostScreen(context),
+                  FeatureGuard(
+                    featureKey: 'audioMessages',
+                    child: Column(
+                      children: [
+                        SectionHeader(
+                          title: "Audio Messages",
+                          seeAllText: "See more",
+                        ),
+                        SizedBox(
+                          height: 165,
+                          child:
+                              audios.isEmpty
+                                  ? const Center(
+                                    child: Text(
+                                      "No audio messages available",
+                                      style: TextStyle(color: Colors.black54),
+                                    ),
+                                  )
+                                  : ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: audios.length,
+                                    separatorBuilder:
+                                        (_, __) => const SizedBox(width: 15),
+                                    itemBuilder: (context, index) {
+                                      final m = audios[index];
+                                      return AudioReelCard(
+                                        title: m['title'] ?? '',
+                                        author: m['author'] ?? '',
+                                        likes: '${m['likes'] ?? 0}',
+                                        backgroundImage:
+                                            m['imageUrl'] ??
+                                            'assets/images/alucard.png',
+                                        onTap: () {},
+                                        width: 147,
+                                        height: 150,
+                                        duration: m['duration'] ?? "2:30",
+                                      );
+                                    },
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
-                  PostCardLong(
-                    userName: "Lenny Olabisi",
-                    userImage: "assets/images/boy.png",
-                    postText:
-                        "Christian fellowship is a beautiful expression...",
-                    groupName: "Lekki Christian Youths",
-                    postImage: "assets/images/test.jpg",
-                    likes: "370k",
-                    comments: "29",
-                    time: "Today 3:25pm",
-                    onTap: () {},
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    height: 350,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: 3,
-                      itemBuilder: (context, index) {
-                        return const Padding(
-                          padding: EdgeInsets.only(right: 12),
-                          child: PostCard(width: 320),
-                        );
-                      },
+                  FeatureGuard(
+                    featureKey: 'community',
+                    child: Column(
+                      children: [
+                        SectionHeader(
+                          title: "Discover communities",
+                          seeAllText: 'see more',
+                        ),
+                        SizedBox(
+                          height: 175,
+                          child:
+                              communities.isEmpty
+                                  ? const Center(
+                                    child: Text(
+                                      "No communities found",
+                                      style: TextStyle(color: Colors.black54),
+                                    ),
+                                  )
+                                  : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: communities.length,
+                                    itemBuilder: (context, index) {
+                                      final c = communities[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 12,
+                                        ),
+                                        child: CircleStuff(
+                                          width: 100,
+                                          height: 100,
+                                          title: c['name'] ?? '',
+                                          description:
+                                              '${c['_count']?['members'] ?? 0} members',
+                                          avatarUrl: c['avatarUrl'],
+                                          onTap: () {},
+                                        ),
+                                      );
+                                    },
+                                  ),
+                        ),
+                        SponsoredPostCard(
+                          onTap: () => _navigateToSponsoredPostScreen(context),
+                        ),
+                        SectionHeader(
+                          title: "Community Posts",
+                          seeAllText: "See more",
+                          onSeeAllTap: () => _navigateToPostList(context),
+                        ),
+                        if (posts.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text(
+                                "No community posts yet",
+                                style: TextStyle(color: Colors.black54),
+                              ),
+                            ),
+                          )
+                        else
+                          ...posts.map((post) {
+                            final userName =
+                                post['user']?['firstName'] ??
+                                post['user']?['username'] ??
+                                "Anonymous";
+                            final userImage =
+                                post['user']?['avatarUrl'] != null
+                                    ? ApiService.getFullImageUrl(
+                                      post['user']!['avatarUrl'],
+                                    )
+                                    : 'assets/images/boy.png';
+                            return PostCardLong(
+                              userName: userName,
+                              userImage: userImage,
+                              postText: post['content'] ?? "",
+                              groupName:
+                                  post['community']?['name'] ?? "Community",
+                              postImage: post['mediaUrl'] ?? "",
+                              likes: '${post['reactions']?.length ?? 0}',
+                              comments: '${post['comments']?.length ?? 0}',
+                              time: "Today",
+                              onTap: () => _navigateToPostScreen(context),
+                            );
+                          }),
+                      ],
                     ),
                   ),
                   SectionHeader(
                     title: "Devotion for you",
                     seeAllText: "See more",
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 0.5,
-                        color: AppTheme.buttonColor2,
+                  if (devotionPlans.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          "No recommended devotions yet",
+                          style: TextStyle(color: Colors.black54),
+                        ),
                       ),
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                15,
-                              ), // half of image width/height
-                              child: Image.asset(
-                                'assets/images/user_test.jpg',
-                                width: 62,
-                                height: 62,
-                                fit: BoxFit.cover,
-                              ),
+                    )
+                  else
+                    ...devotionPlans.take(2).map((plan) {
+                      final image =
+                          plan['image'] ?? 'assets/images/user_test.jpg';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              width: 0.5,
+                              color: AppTheme.buttonColor2,
                             ),
-                            SizedBox(width: 10),
-
-                            /// 🔹 Text Content
-                            Expanded(
-                              child: Column(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Understanding Grace and Forgiveness',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    'A weekly email with our favorite articles about design, front-end development, technology, and start',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: 14,
-                                      color: AppTheme.textColor2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-
-                                  RichText(
-                                    text: TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: 'From: ',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.copyWith(
-                                            fontSize: 12,
-                                            color: AppTheme.textColor2,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          text: 'Believer\'s Journal',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.copyWith(
-                                            fontSize: 12,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 5),
-                                  Row(
-                                    children: [
-                                      const HugeIcon(
-                                        icon: HugeIcons.strokeRoundedThumbsUp,
-                                        size: 16,
-                                        color: Color(0xff8e8e93),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        "385",
-
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontSize: 11,
-                                              color: AppTheme.textColor2,
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child:
+                                        image.startsWith('http')
+                                            ? Image.network(
+                                              image,
+                                              width: 62,
+                                              height: 62,
+                                              fit: BoxFit.cover,
+                                            )
+                                            : Image.asset(
+                                              image,
+                                              width: 62,
+                                              height: 62,
+                                              fit: BoxFit.cover,
                                             ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        ' - 365 Days Plan',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          fontSize: 12,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 15,
-                                          vertical: 7,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          border: Border.all(
-                                            width: 1,
+                                  ),
+                                  const SizedBox(width: 10),
+
+                                  /// 🔹 Text Content
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          plan['title'] ?? '',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
                                             color: Colors.black,
                                           ),
-                                          borderRadius: BorderRadius.circular(
-                                            30,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          plan['tag'] ?? 'Weekly inspiration',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium?.copyWith(
+                                            fontWeight: FontWeight.normal,
+                                            fontSize: 14,
+                                            color: AppTheme.textColor2,
                                           ),
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
+                                        const SizedBox(height: 5),
+
+                                        RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: 'From: ',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontSize: 12,
+                                                      color:
+                                                          AppTheme.textColor2,
+                                                      fontStyle:
+                                                          FontStyle.italic,
+                                                    ),
+                                              ),
+                                              TextSpan(
+                                                text:
+                                                    plan['authorName'] ??
+                                                    "Believer's Journal",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontSize: 12,
+                                                      color: Colors.black,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 5),
+                                        Row(
                                           children: [
+                                            const HugeIcon(
+                                              icon:
+                                                  HugeIcons
+                                                      .strokeRoundedThumbsUp,
+                                              size: 16,
+                                              color: Color(0xff8e8e93),
+                                            ),
+                                            const SizedBox(width: 8),
                                             Text(
-                                              'Read',
+                                              "385",
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    fontSize: 11,
+                                                    color: AppTheme.textColor2,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              ' - ${plan['durationDays'] ?? 0} Days Plan',
                                               style: Theme.of(
                                                 context,
                                               ).textTheme.bodyMedium?.copyWith(
-                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                                 color: Colors.black,
-                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 15,
+                                                    vertical: 7,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                border: Border.all(
+                                                  width: 1,
+                                                  color: Colors.black,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(30),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    'Read',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.black,
+                                                          fontSize: 13,
+                                                        ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 20),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 0.5,
-                        color: AppTheme.buttonColor2,
-                      ),
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                15,
-                              ), // half of image width/height
-                              child: Image.asset(
-                                'assets/images/user_test.jpg',
-                                width: 62,
-                                height: 62,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            SizedBox(width: 10),
-
-                            /// 🔹 Text Content
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Understanding Grace and Forgiveness',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    'A weekly email with our favorite articles about design, front-end development, technology, and start',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: 14,
-                                      color: AppTheme.textColor2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-
-                                  RichText(
-                                    text: TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: 'From: ',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.copyWith(
-                                            fontSize: 12,
-                                            color: AppTheme.textColor2,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          text: 'Believer\'s Journal',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.copyWith(
-                                            fontSize: 12,
-                                            color: Colors.black,
-                                          ),
-                                        ),
                                       ],
                                     ),
                                   ),
-
-                                  const SizedBox(height: 5),
-                                  Row(
-                                    children: [
-                                      const HugeIcon(
-                                        icon: HugeIcons.strokeRoundedThumbsUp,
-                                        size: 16,
-                                        color: Color(0xff8e8e93),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        "385",
-
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontSize: 11,
-                                              color: AppTheme.textColor2,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        ' - 365 Days Plan',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          fontSize: 12,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 15,
-                                          vertical: 7,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          border: Border.all(
-                                            width: 1,
-                                            color: Colors.black,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Read',
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  const SizedBox(width: 20),
                                 ],
                               ),
-                            ),
-                            SizedBox(width: 20),
-                          ],
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
+                      );
+                    }),
 
                   SizedBox(height: 15),
                   SponsoredVideo(),
@@ -878,27 +854,34 @@ class ExploreScreen extends StatelessWidget {
                     time: "Today 3:25pm",
                     onTap: () {},
                   ),
-                  SectionHeader(title: "Friend", seeAllText: 'see more'),
-                  SizedBox(
-                    height: 140,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: EdgeInsets.only(right: 7),
-                          child: CircleStuff(
-                            titleFont: 14,
-                            descriptionFont: 12,
-                            titleWidth: 50,
-                            title: 'Noah',
-                            description: 'City',
-                            onTap: () {},
+                  FeatureGuard(
+                    featureKey: 'connect',
+                    child: Column(
+                      children: [
+                        SectionHeader(title: "Friend", seeAllText: 'see more'),
+                        SizedBox(
+                          height: 140,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: 8,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: EdgeInsets.only(right: 7),
+                                child: CircleStuff(
+                                  titleFont: 14,
+                                  descriptionFont: 12,
+                                  titleWidth: 50,
+                                  title: 'Noah',
+                                  description: 'City',
+                                  onTap: () {},
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   ),
                   SectionHeader(
@@ -980,7 +963,6 @@ class BooksReelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -991,8 +973,9 @@ class BooksReelCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              /// 🔹 Background Image
-              Image.asset(backgroundImage, fit: BoxFit.cover),
+              backgroundImage.startsWith('http')
+                  ? Image.network(backgroundImage, fit: BoxFit.cover)
+                  : Image.asset(backgroundImage, fit: BoxFit.cover),
 
               /// 🔹 Dark overlay for readability
               Container(color: Colors.black.withValues(alpha: 0.5)),
@@ -1110,7 +1093,6 @@ class CommunityReelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1222,7 +1204,6 @@ class OtherCategoryProgressTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Column(
       children: [
         Container(
@@ -1313,7 +1294,6 @@ class CategoryProgressTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Column(
       children: [
         Container(
@@ -1381,67 +1361,6 @@ class CategoryProgressTile extends StatelessWidget {
         ),
         const SizedBox(height: 12),
       ],
-    );
-  }
-}
-
-class _CategoryCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _CategoryCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: theme.colorScheme.surface,
-          // color: AppTheme.goldAccent2,
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withAlpha((0.08 * 255).round()),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 42, color: theme.colorScheme.primary),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

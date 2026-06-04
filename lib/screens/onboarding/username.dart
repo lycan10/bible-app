@@ -1,6 +1,7 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:animations/animations.dart';
+import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/onboarding/permission.dart';
 import '../../components/onboarding_button.dart';
 
@@ -13,15 +14,13 @@ class Username extends StatefulWidget {
 
 class _UsernameState extends State<Username> {
   final TextEditingController usernameController = TextEditingController();
-
   List<String> suggestions = [];
 
   void _navigateToPermissionScreen(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder:
-            (context, animation, secondaryAnimation) => const Permission(),
+        pageBuilder: (context, animation, secondaryAnimation) => const Permission(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -34,31 +33,50 @@ class _UsernameState extends State<Username> {
     );
   }
 
-  // ✅ Generate 6 Alphanumeric Suggestions
-  void generateSuggestions(String base) {
-    if (base.isEmpty) {
+  Future<void> fetchSuggestions(String base) async {
+    if (base.trim().isEmpty) {
       setState(() => suggestions = []);
       return;
     }
 
-    final random = Random();
-    final newSuggestions = <String>[];
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final list = await authProvider.getUsernameSuggestions(base.trim());
+    setState(() => suggestions = list);
+  }
 
-    while (newSuggestions.length < 6) {
-      String numbers = (random.nextInt(900) + 100).toString(); // 3 digits
-      String letters = String.fromCharCodes(
-        List.generate(2, (_) => random.nextInt(26) + 97),
+  Future<void> _handleContinue() async {
+    final username = usernameController.text.trim();
+    if (username.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please choose a username.')),
       );
-
-      newSuggestions.add("${base.toLowerCase()}$letters$numbers");
+      return;
     }
 
-    setState(() => suggestions = newSuggestions);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.completeRegistration(username);
+
+    if (mounted) {
+      if (success) {
+        _navigateToPermissionScreen(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.errorMessage ?? 'Failed to register username.')),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -68,7 +86,10 @@ class _UsernameState extends State<Username> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.close, size: 20, color: Colors.black),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: const Icon(Icons.close, size: 20, color: Colors.black),
+              ),
               const SizedBox(height: 30),
 
               Expanded(
@@ -121,7 +142,7 @@ class _UsernameState extends State<Username> {
                           Input(
                             controller: usernameController,
                             hint: "Enter username",
-                            onChanged: generateSuggestions,
+                            onChanged: fetchSuggestions,
                           ),
                         ],
                       ),
@@ -145,18 +166,17 @@ class _UsernameState extends State<Username> {
                             Wrap(
                               spacing: 10,
                               runSpacing: 10,
-                              children:
-                                  suggestions
-                                      .map(
-                                        (s) => SuggestionBox(
-                                          text: s,
-                                          onTap: () {
-                                            usernameController.text = s;
-                                            generateSuggestions(s);
-                                          },
-                                        ),
-                                      )
-                                      .toList(),
+                              children: suggestions
+                                  .map(
+                                    (s) => SuggestionBox(
+                                      text: s,
+                                      onTap: () {
+                                        usernameController.text = s;
+                                        fetchSuggestions(s);
+                                      },
+                                    ),
+                                  )
+                                  .toList(),
                             ),
                           ],
                         ),
@@ -170,7 +190,8 @@ class _UsernameState extends State<Username> {
                 padding: const EdgeInsets.only(top: 10),
                 child: OnboardingButton(
                   title: 'Continue',
-                  ontap: () => _navigateToPermissionScreen(context),
+                  isLoading: authProvider.isLoading,
+                  ontap: _handleContinue,
                 ),
               ),
             ],

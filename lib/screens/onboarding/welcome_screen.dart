@@ -10,6 +10,7 @@ class WelcomeScreen extends StatelessWidget {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
+        reverseTransitionDuration: const Duration(milliseconds: 400),
         pageBuilder:
             (context, animation, secondaryAnimation) => const GetStarted(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -31,79 +32,79 @@ class WelcomeScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start, //
-            mainAxisSize: MainAxisSize.max, //
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-
               Text(
-                'Title',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                'Quest',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.5,
                 ),
               ),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               Text(
                 'Quizzes,\nPuzzles,\nPlay with\nFriends',
                 style: theme.textTheme.displayMedium?.copyWith(
-                fontSize: 42
+                  fontSize: 40,
+                  fontWeight: FontWeight.w800,
+                  height: 1.15,
+                  letterSpacing: -1.0,
                 ),
               ),
+              const SizedBox(height: 24),
 
-              const SizedBox(height: 15),
-
-              Image.asset("assets/images/Onboarding.png"),
-
-              const SizedBox(height: 20),
-
-              GestureDetector(
-                onTap: () => _navigateToGetStartedScreen(context),
-                child: Container(
-                  width: 110,
-                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: AppTheme.goldAccent,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Play on',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 15,
-                        color: Colors.black,
-                      ),
-                    ],
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Image.asset(
+                      "assets/images/Onboarding.png",
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
 
-              const Spacer(),
-
+              ElevatedButton.icon(
+                onPressed: () => _navigateToGetStartedScreen(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.goldAccent,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  textStyle: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                icon: const Text('Play on'),
+                label: const Icon(Icons.arrow_forward_ios, size: 14),
+              ),
+              const SizedBox(height: 40),
 
               Text(
-                '“Your word is a lamp to my feet and a light to my path.” — Psalm 119:105',
-                textAlign: TextAlign.left,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade500,
+                '“Your word is a lamp to my feet and a light to my path.” \n— Psalm 119:105',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color:
+                      theme.brightness == Brightness.dark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
                   fontStyle: FontStyle.italic,
+                  height: 1.4,
                 ),
               ),
             ],
-          )
-
+          ),
         ),
       ),
     );

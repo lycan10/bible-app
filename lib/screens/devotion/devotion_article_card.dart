@@ -39,12 +39,19 @@ class DevotionArticleCard extends StatelessWidget {
           /// IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.asset(
-              imagePath,
-              width: 62,
-              height: 62,
-              fit: BoxFit.cover,
-            ),
+            child: imagePath.startsWith('http')
+                ? Image.network(
+                    imagePath,
+                    width: 62,
+                    height: 62,
+                    fit: BoxFit.cover,
+                  )
+                : Image.asset(
+                    imagePath,
+                    width: 62,
+                    height: 62,
+                    fit: BoxFit.cover,
+                  ),
           ),
 
           const SizedBox(width: 10),

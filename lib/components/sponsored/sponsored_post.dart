@@ -394,7 +394,6 @@ class _CommentItemState extends State<CommentItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Container(
       padding: const EdgeInsets.all(15),
       margin: const EdgeInsets.only(bottom: 12),
@@ -552,8 +551,6 @@ class _CommentItemState extends State<CommentItem> {
 class _PostMenuDialogBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

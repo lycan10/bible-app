@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "296541538988",
+    "project_id": "bible-quest-e00ee",
+    "storage_bucket": "bible-quest-e00ee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296541538988:android:a29251e0a160cc737eed09",
+        "android_client_info": {
+          "package_name": "com.bible.quest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCh-_00xYuvCnvlj7OG9r2-KgLhVni-b6g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

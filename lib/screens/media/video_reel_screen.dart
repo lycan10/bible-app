@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
-import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 
 class VideoReelScreen extends StatelessWidget {
   final String? title;

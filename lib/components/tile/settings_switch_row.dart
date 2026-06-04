@@ -60,7 +60,6 @@ class SettingsSwitchRow extends StatelessWidget {
                           title,
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
                             fontSize: 14,
                           ),
                         ),
@@ -86,7 +85,7 @@ class SettingsSwitchRow extends StatelessWidget {
             Switch(
               value: switchValue,
               onChanged: onSwitchChanged,
-              activeColor: Colors.white,
+              activeThumbColor: Colors.white,
               activeTrackColor: AppTheme.greenColor,
             ),
           ],

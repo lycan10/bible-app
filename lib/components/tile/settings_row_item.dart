@@ -29,6 +29,7 @@ class SettingsRowItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
         children: [
           Row(
@@ -62,7 +63,6 @@ class SettingsRowItem extends StatelessWidget {
                         title,
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
                           fontSize: 14,
                         ),
                       ),

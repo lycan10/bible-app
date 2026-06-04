@@ -25,7 +25,6 @@ class SavedBooksCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Column(
       children: [
         Container(
@@ -33,7 +32,7 @@ class SavedBooksCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white,
+            color: theme.colorScheme.surface,
             border: Border.all(width: 0.15, color: AppTheme.textColor2),
           ),
           clipBehavior: Clip.hardEdge,
@@ -54,7 +53,7 @@ class SavedBooksCard extends StatelessWidget {
                         fontSize: 16,
                         height: 1,
                         fontWeight: FontWeight.normal,
-                        color: Colors.black,
+                        color: theme.textTheme.bodyMedium?.color,
                       ),
                     ),
                   ),
@@ -90,7 +89,7 @@ class SavedBooksCard extends StatelessWidget {
                           text: author,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
-                            color: Colors.black,
+                            color: theme.textTheme.bodyMedium?.color,
                             fontWeight: FontWeight.normal,
                           ),
                         ),
@@ -116,7 +115,7 @@ class SavedBooksCard extends StatelessWidget {
               HugeIcon(
                 icon: HugeIcons.strokeRoundedBookmark02,
                 size: 18,
-                color: Colors.black,
+                color: theme.textTheme.bodyMedium?.color ?? Colors.black,
                 strokeWidth: 1,
               ),
             ],
@@ -124,40 +123,6 @@ class SavedBooksCard extends StatelessWidget {
         ),
         SizedBox(height: 10),
       ],
-    );
-  }
-
-  Widget _actionItem(ThemeData theme, IconData icon, String label) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(icon, size: 14, color: AppTheme.textColor2),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontSize: 12,
-            color: Colors.black,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _iconButton(dynamic icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: HugeIcon(icon: icon, size: 18, color: color, strokeWidth: 1),
     );
   }
 }

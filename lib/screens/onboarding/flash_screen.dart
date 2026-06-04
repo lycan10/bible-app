@@ -17,6 +17,7 @@ class _FlashScreenState extends State<FlashScreen> {
     super.initState();
 
     Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(

@@ -28,16 +28,8 @@ class TitleOne extends StatelessWidget {
           onTap: leadingIconTap,
           child: Container(
             padding: EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: HugeIcon(
-              icon: leadingIcon,
-              size: 22,
-              color: Colors.black,
-              strokeWidth: 1,
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(100)),
+            child: HugeIcon(icon: leadingIcon, size: 22, strokeWidth: 1),
           ),
         ),
         Text(
@@ -45,7 +37,6 @@ class TitleOne extends StatelessWidget {
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontSize: 14,
-            color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -53,16 +44,8 @@ class TitleOne extends StatelessWidget {
           onTap: trailingIconTap,
           child: Container(
             padding: EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: HugeIcon(
-              icon: trailingIcon,
-              size: 22,
-              color: Colors.black,
-              strokeWidth: 2,
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(100)),
+            child: HugeIcon(icon: trailingIcon, size: 22, strokeWidth: 2),
           ),
         ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/services/api_service.dart';
 
 class CircleStuff extends StatelessWidget {
   final String title;
@@ -9,6 +10,7 @@ class CircleStuff extends StatelessWidget {
   final double? titleWidth;
   final double? descriptionFont;
   final double? height;
+  final String? avatarUrl;
   final VoidCallback onTap;
 
   const CircleStuff({
@@ -20,6 +22,7 @@ class CircleStuff extends StatelessWidget {
     this.titleFont,
     this.descriptionFont,
     this.titleWidth,
+    this.avatarUrl,
     required this.onTap,
   });
 
@@ -34,11 +37,22 @@ class CircleStuff extends StatelessWidget {
             width: width ?? 80,
             height: height ?? 80,
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(50),
+              image: avatarUrl != null && avatarUrl!.isNotEmpty
+                  ? DecorationImage(
+                      image: ApiService.getFullImageUrl(avatarUrl!).startsWith('http')
+                          ? NetworkImage(ApiService.getFullImageUrl(avatarUrl!))
+                          : AssetImage(ApiService.getFullImageUrl(avatarUrl!)) as ImageProvider,
+                      fit: BoxFit.cover,
+                    )
+                  : const DecorationImage(
+                      image: AssetImage('assets/images/boy.png'),
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           SizedBox(
             width: titleWidth ?? 100,
             child: Text(
@@ -53,7 +67,7 @@ class CircleStuff extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Text(
             description,
             textAlign: TextAlign.center,

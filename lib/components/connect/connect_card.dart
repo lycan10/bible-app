@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
 
 class ConnectCard extends StatelessWidget {

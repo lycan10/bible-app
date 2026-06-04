@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- White silhouette icon required for Android 5+ notification tray -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <!-- Simple cross / bell shape as a placeholder notification icon -->
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M12,2C10.343,2 9,3.343 9,5L9,5.26C6.668,6.022 5,8.197 5,10.8L5,17L3,19L3,20L21,20L21,19L19,17L19,10.8C19,8.197 17.332,6.022 15,5.26L15,5C15,3.343 13.657,2 12,2ZM12,4C12.552,4 13,4.448 13,5L11,5C11,4.448 11.448,4 12,4ZM12,22C13.105,22 14,21.105 14,20L10,20C10,21.105 10.895,22 12,22Z"/>
+</vector>

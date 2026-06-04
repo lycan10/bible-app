@@ -28,7 +28,6 @@ class TitleTwo extends StatelessWidget {
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 16,
-              color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),

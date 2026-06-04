@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
-import 'package:quest/components/community/community_guidelines.dart';
 import 'package:quest/screens/profileScreen/profile_screen.dart';
 import 'package:quest/theme/theme.dart';
 

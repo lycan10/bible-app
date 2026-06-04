@@ -36,12 +36,7 @@ class ActionPillButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center, // ✅ center content
           children: [
             if (icon != null) ...[
-              HugeIcon(
-                icon: icon!,
-                size: 18,
-                color: iconColor ?? Colors.black,
-                strokeWidth: 1,
-              ),
+              HugeIcon(icon: icon!, size: 18, strokeWidth: 1),
               const SizedBox(width: 6),
             ],
             Text(
@@ -49,7 +44,6 @@ class ActionPillButton extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
-                color: textColor ?? Colors.black,
               ),
             ),
           ],

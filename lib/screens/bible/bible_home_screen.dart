@@ -1,455 +1,854 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:quest/main.dart';
+import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/devotion/ongoing_devotion_card.dart';
-import 'package:quest/components/menu/discover_more.dart';
-import 'package:quest/components/tile/settings_switch_row.dart';
-import 'package:quest/components/titles/section_header.dart';
-import 'package:quest/components/titles/title_one.dart';
-import 'package:quest/components/titles/title_two.dart';
-import 'package:quest/screens/devotion/devotion_article_card.dart';
-import 'package:quest/screens/devotion/devotion_screen.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:quest/providers/bible_provider.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/services/bible_service.dart';
+import 'package:quest/screens/bible/saved_verses_screen.dart';
+import 'package:quest/screens/bible/highlights_screen.dart';
+import 'package:quest/screens/bible/bible_settings_screen.dart';
+import 'bible_search_delegate.dart';
 
-import 'package:quest/theme/theme.dart';
+class BibleHomeScreen extends StatefulWidget {
+  final int? initialScrollIndex;
+  
+  const BibleHomeScreen({super.key, this.initialScrollIndex});
 
-class BibleHomeScreen extends StatelessWidget {
-  const BibleHomeScreen({super.key});
+  @override
+  State<BibleHomeScreen> createState() => _BibleHomeScreenState();
+}
 
-  void _navigateToDevotionScreen(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder:
-            (context, animation, secondaryAnimation) => DevotionScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.scaled,
-            child: child,
-          );
-        },
-      ),
-    );
+class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
+  final ItemScrollController _itemScrollController = ItemScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.token != null) {
+        Provider.of<BibleProvider>(
+          context,
+          listen: false,
+        ).syncData(authProvider.token!);
+      }
+      if (widget.initialScrollIndex != null) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_itemScrollController.isAttached) {
+            _itemScrollController.scrollTo(
+              index: widget.initialScrollIndex!,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      }
+    });
   }
 
-  void _openMenu(BuildContext context) {
-    showGeneralDialog(
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      Provider.of<BibleProvider>(
+        context,
+        listen: false,
+      ).syncData(authProvider.token!);
+    }
+  }
+
+  void _showBookChapterPicker(
+    BuildContext context,
+    BibleProvider bibleProvider,
+  ) {
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return const Center(child: _PostListMenuDialogBox());
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return _BookChapterVersePicker(
+          bibleProvider: bibleProvider,
+          itemScrollController: _itemScrollController,
+        );
       },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          children: [
-            Center(
-              child: Text(
-                "Bible Home Screen",
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
-          ],
-        ),
+  void _showVerseActionSheet(
+    BuildContext context,
+    BibleProvider bibleProvider,
+    String token,
+    int verseCount,
+    String verseText,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-    );
-  }
-}
-
-class _PostListMenuDialogBox extends StatelessWidget {
-  const _PostListMenuDialogBox();
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            SizedBox(height: 15),
-            SettingsSwitchRow(
-              icon: HugeIcons.strokeRoundedAiVideo,
-              title: 'Auto Scroll',
-              subtitle: 'Turn on video autoplay',
-              switchValue: false,
-            ),
-            SettingsSwitchRow(
-              icon: HugeIcons.strokeRoundedNotification01,
-              title: 'Allow notifications',
-              subtitle: 'Turn on or off',
-              switchValue: false,
-            ),
-            SettingsSwitchRow(
-              icon: HugeIcons.strokeRoundedSmartPhone03,
-              title: 'Haptic Feedback',
-              subtitle: 'Turn on haptic feedback',
-              switchValue: false,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class MediaCard extends StatelessWidget {
-  final String imagePath;
-  final String title;
-  final String author;
-  final String likes;
-  final VoidCallback? onTap;
-
-  const MediaCard({
-    super.key,
-    required this.imagePath,
-    required this.title,
-    required this.author,
-    required this.likes,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 215,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              /// 🔹 Background Image
-              Image.asset(imagePath, fit: BoxFit.cover),
-
-              /// 🔹 Gradient Overlay (better UI)
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
-                  ),
-                ),
-              ),
-
-              /// 🔹 Bottom Content
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(15),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      /// LEFT CONTENT
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-
-                            const SizedBox(height: 4),
-
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'From: ',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontSize: 12,
-                                      color: Colors.white70,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: author,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 6),
-
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white30,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Icon(
-                                    Icons.favorite_border,
-                                    size: 14,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  likes,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      /// PLAY BUTTON
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            width: 0.5,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow_rounded,
-                          size: 28,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Reusable function to show the Start Plan modal
-void showStartPlanModal({
-  required BuildContext context,
-  required String planTitle,
-  required String planImagePath,
-  required String authorName,
-  required String authorHandle,
-  String reminderText = "Set daily reminder",
-  String reminderTime = "9:41 AM",
-  required VoidCallback onStart,
-}) {
-  final theme = Theme.of(context);
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withOpacity(0.4),
-    builder: (context) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            TitleTwo(
-              leadingIcon: HugeIcons.strokeRoundedCancel01,
-              title: 'Start Plan',
-            ),
-            const SizedBox(height: 20),
-
-            // Plan Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.asset(
-                planImagePath,
-                width: 62,
-                height: 62,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 5),
-
-            // Plan Title
-            SizedBox(
-              width: 300,
-              child: Text(
-                planTitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  fontSize: 19,
-                ),
-              ),
-            ),
-            const SizedBox(height: 3),
-
-            // Duration
-            Text(
-              '365 days',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Author Row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      builder: (context) {
+        bool isBookmarked = bibleProvider.isBookmarked(verseCount);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: Image.asset(
-                    'assets/images/user_test.jpg', // optional: make dynamic
-                    width: 42,
-                    height: 42,
-                    fit: BoxFit.cover,
+                Text(
+                  BibleService.formatReference(
+                    bibleProvider.currentBookIndex,
+                    bibleProvider.currentChapter,
+                    verseCount,
+                  ),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(
-                      authorName,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontSize: 14,
-                      ),
+                    _buildActionIcon(
+                      context: context,
+                      icon:
+                          isBookmarked
+                              ? HugeIcons.strokeRoundedBookmark02
+                              : HugeIcons.strokeRoundedBookmark01,
+                      label: "Bookmark",
+                      color: isBookmarked ? Colors.blue : null,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        bool success = await bibleProvider.toggleBookmark(
+                          token,
+                          verseCount,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? "Bookmark updated successfully"
+                                    : "Failed to update bookmark",
+                              ),
+                            ),
+                          );
+                        }
+                      },
                     ),
-                    const SizedBox(height: 1),
-                    Text(
-                      authorHandle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                        color: AppTheme.textColor2,
-                      ),
+                    _buildActionIcon(
+                      context: context,
+                      icon: HugeIcons.strokeRoundedPaintBrush01,
+                      label: "Highlight",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showHighlightColorPicker(
+                          context,
+                          bibleProvider,
+                          token,
+                          verseCount,
+                        );
+                      },
+                    ),
+                    _buildActionIcon(
+                      context: context,
+                      icon: HugeIcons.strokeRoundedNote01,
+                      label: "Note",
+                      onTap: () {
+                        // TODO: Implement Notes
+                        Navigator.pop(context);
+                      },
+                    ),
+                    _buildActionIcon(
+                      context: context,
+                      icon: HugeIcons.strokeRoundedCopy01,
+                      label: "Copy",
+                      onTap: () {
+                        Clipboard.setData(
+                          ClipboardData(
+                            text:
+                                "${BibleService.formatReference(bibleProvider.currentBookIndex, bibleProvider.currentChapter, verseCount)}\n$verseText",
+                          ),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Verse copied to clipboard"),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      },
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+          ),
+        );
+      },
+    );
+  }
 
-            // Reminder Row
-            Row(
+  void _showHighlightColorPicker(
+    BuildContext context,
+    BibleProvider bibleProvider,
+    String token,
+    int verseCount,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final colors = [
+          {'name': 'Yellow', 'value': '#FFFF00'},
+          {'name': 'Green', 'value': '#00FF00'},
+          {'name': 'Blue', 'value': '#0000FF'},
+          {'name': 'Pink', 'value': '#FFC0CB'},
+        ];
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Reminder (expanded)
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xff673aff).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Text(
-                      reminderText,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xff673aff),
-                      ),
-                    ),
-                  ),
+                const Text(
+                  "Choose Highlight Color",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
-                const SizedBox(width: 10),
-
-                // Reminder time
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Text(
-                    reminderTime,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children:
+                      colors.map((c) {
+                        Color bgColor = Color(
+                          int.parse(c['value']!.replaceFirst('#', '0xFF')),
+                        );
+                        return InkWell(
+                          onTap: () async {
+                            Navigator.pop(context);
+                            bool success = await bibleProvider.addHighlight(
+                              token,
+                              verseCount,
+                              c['value']!,
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    success
+                                        ? "Highlight added"
+                                        : "Failed to add highlight",
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: bgColor.withValues(alpha: 0.5),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: bgColor, width: 2),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    bool success = await bibleProvider.removeHighlight(
+                      token,
+                      verseCount,
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            success
+                                ? "Highlight removed"
+                                : "Failed to remove highlight",
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    "Remove Highlight",
+                    style: TextStyle(color: Colors.red),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 15),
+          ),
+        );
+      },
+    );
+  }
 
-            // Start button
-            GestureDetector(
-              onTap: onStart,
-              child: SizedBox(
-                width: double.infinity,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 15,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "Start",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+  Widget _buildActionIcon({
+    required BuildContext context,
+    required dynamic icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    final iconColor = color ?? Theme.of(context).iconTheme.color ?? Colors.grey;
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+            ),
+            child: HugeIcon(icon: icon, color: iconColor, size: 24),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bibleProvider = Provider.of<BibleProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        centerTitle: true,
+        title: InkWell(
+          onTap: () => _showBookChapterPicker(context, bibleProvider),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "${BibleService.bookNames[bibleProvider.currentBookIndex]} ${bibleProvider.currentChapter}",
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowDown01,
+                  color:
+                      Theme.of(context).textTheme.bodyMedium?.color ??
+                      Colors.black,
+                  size: 16,
+                ),
+              ],
             ),
-            const SizedBox(height: 30),
-          ],
+          ),
         ),
-      );
-    },
-  );
+        actions: [
+          IconButton(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedSearch01,
+              color:
+                  Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black,
+              size: 24,
+            ),
+            onPressed: () async {
+              var result = await showSearch<Map<String, dynamic>?>(
+                context: context,
+                delegate: BibleSearchDelegate(),
+              );
+              if (result != null && context.mounted) {
+                int book = result['Book'];
+                int chapter = result['Chapter'];
+                int verse = result['Versecount'];
+
+                if (bibleProvider.currentBookIndex != book ||
+                    bibleProvider.currentChapter != chapter) {
+                  await bibleProvider.loadVerses(book, chapter);
+                }
+
+                // Header is index 0, verse 1 is index 1, so verse index is `verse`
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  if (_itemScrollController.isAttached) {
+                    _itemScrollController.scrollTo(
+                      index: verse,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                });
+              }
+            },
+          ),
+          PopupMenuButton<String>(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedMenu01,
+              color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black,
+              size: 24,
+            ),
+            onSelected: (value) {
+              if (value == 'bookmarks') {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedVersesScreen()));
+              } else if (value == 'highlights') {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const HighlightsScreen()));
+              } else if (value == 'settings') {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const BibleSettingsScreen()));
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'bookmarks',
+                child: Text('Bookmarks'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'highlights',
+                child: Text('Highlights'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'settings',
+                child: Text('Settings'),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body:
+          bibleProvider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ScrollablePositionedList.builder(
+                itemScrollController: _itemScrollController,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
+                itemCount:
+                    bibleProvider.verses.length +
+                    2, // +2 for header and footer spacing
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text(
+                        "${BibleService.bookNames[bibleProvider.currentBookIndex]} ${bibleProvider.currentChapter}",
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                    );
+                  }
+                  if (index == bibleProvider.verses.length + 1) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 30),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              bibleProvider.previousChapter();
+                              _itemScrollController.jumpTo(index: 0);
+                            },
+                            icon: const Icon(Icons.arrow_back),
+                            label: const Text("Previous"),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              bibleProvider.nextChapter();
+                              _itemScrollController.jumpTo(index: 0);
+                            },
+                            icon: const Icon(Icons.arrow_forward),
+                            label: const Text("Next"),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final verseData = bibleProvider.verses[index - 1];
+                  final verseCount = verseData['Versecount'] as int;
+                  final text = verseData['verse'] as String;
+
+                  final highlightColorHex = bibleProvider.getHighlightColor(
+                    verseCount,
+                  );
+                  Color? highlightColor;
+                  if (highlightColorHex != null) {
+                    highlightColor = Color(
+                      int.parse(highlightColorHex.replaceFirst('#', '0xFF')),
+                    ).withValues(alpha: 0.3);
+                  }
+
+                  final isBookmarked = bibleProvider.isBookmarked(verseCount);
+
+                  return InkWell(
+                    onLongPress: () {
+                      if (authProvider.token != null) {
+                        _showVerseActionSheet(
+                          context,
+                          bibleProvider,
+                          authProvider.token!,
+                          verseCount,
+                          text,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Please sign in to use these features",
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: highlightColor ?? Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 4,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 30,
+                            child: Text(
+                              "$verseCount",
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              text,
+                              style: TextStyle(
+                                fontSize: bibleProvider.fontSize,
+                                height: 1.5,
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
+                              ),
+                            ),
+                          ),
+                          if (isBookmarked)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedBookmark02,
+                                size: 16,
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color ??
+                                    Colors.black,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+    );
+  }
+}
+
+class _BookChapterVersePicker extends StatefulWidget {
+  final BibleProvider bibleProvider;
+  final ItemScrollController itemScrollController;
+
+  const _BookChapterVersePicker({
+    required this.bibleProvider,
+    required this.itemScrollController,
+  });
+
+  @override
+  State<_BookChapterVersePicker> createState() =>
+      _BookChapterVersePickerState();
+}
+
+class _BookChapterVersePickerState extends State<_BookChapterVersePicker>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int _selectedBookIndex = 0;
+  int _selectedChapter = 1;
+  int _chaptersCount = 0;
+  int _versesCount = 0;
+  bool _isLoadingVerses = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _selectedBookIndex = widget.bibleProvider.currentBookIndex;
+    _selectedChapter = widget.bibleProvider.currentChapter;
+    _chaptersCount = widget.bibleProvider.chaptersCount;
+  }
+
+  Future<void> _loadChaptersCount() async {
+    int count = await BibleService.getChaptersCount(_selectedBookIndex);
+    if (mounted) {
+      setState(() {
+        _chaptersCount = count;
+        _tabController.animateTo(1);
+      });
+    }
+  }
+
+  Future<void> _loadVersesCount() async {
+    setState(() {
+      _isLoadingVerses = true;
+    });
+    var verses = await BibleService.getVerses(
+      _selectedBookIndex,
+      _selectedChapter,
+    );
+    if (mounted) {
+      setState(() {
+        _versesCount = verses.length;
+        _isLoadingVerses = false;
+        _tabController.animateTo(2);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.7,
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+          Container(
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          TabBar(
+            controller: _tabController,
+            labelColor: Theme.of(context).textTheme.bodyMedium?.color,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Theme.of(context).textTheme.bodyMedium?.color,
+            tabs: const [
+              Tab(text: "Books"),
+              Tab(text: "Chapters"),
+              Tab(text: "Verses"),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Books Tab
+                ListView.builder(
+                  itemCount: BibleService.bookNames.length,
+                  itemBuilder: (context, index) {
+                    bool isSelected = _selectedBookIndex == index;
+                    return ListTile(
+                      title: Text(
+                        BibleService.bookNames[index],
+                        style: TextStyle(
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          color:
+                              isSelected
+                                  ? Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.color
+                                  : Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color
+                                      ?.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      trailing:
+                          isSelected
+                              ? Icon(
+                                Icons.check,
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
+                              )
+                              : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedBookIndex = index;
+                          _selectedChapter = 1;
+                        });
+                        _loadChaptersCount();
+                      },
+                    );
+                  },
+                ),
+                // Chapters Tab
+                GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: _chaptersCount,
+                  itemBuilder: (context, index) {
+                    int chapter = index + 1;
+                    bool isSelected = _selectedChapter == chapter;
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedChapter = chapter;
+                        });
+                        _loadVersesCount();
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black)
+                                  : Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          "$chapter",
+                          style: TextStyle(
+                            color:
+                                isSelected
+                                    ? (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.black
+                                        : Colors.white)
+                                    : Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                // Verses Tab
+                _isLoadingVerses
+                    ? const Center(child: CircularProgressIndicator())
+                    : GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                      itemCount: _versesCount,
+                      itemBuilder: (context, index) {
+                        int verse = index + 1;
+                        return InkWell(
+                          onTap: () async {
+                            Navigator.pop(context);
+                            if (widget.bibleProvider.currentBookIndex !=
+                                    _selectedBookIndex ||
+                                widget.bibleProvider.currentChapter !=
+                                    _selectedChapter) {
+                              await widget.bibleProvider.loadVerses(
+                                _selectedBookIndex,
+                                _selectedChapter,
+                              );
+                            }
+                            // Jump to verse, header is index 0, verse 1 is index 1
+                            Future.delayed(
+                              const Duration(milliseconds: 100),
+                              () {
+                                if (widget.itemScrollController.isAttached) {
+                                  widget.itemScrollController.scrollTo(
+                                    index: verse,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                }
+                              },
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              "$verse",
+                              style: TextStyle(
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

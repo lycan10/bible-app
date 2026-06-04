@@ -6,6 +6,8 @@ import 'package:quest/screens/home/home_screen.dart';
 import 'package:quest/screens/more/more_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:quest/components/daily_feeling_popup.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});
@@ -26,9 +28,28 @@ class _NavigationScreenState extends State<NavigationScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _checkAndShowFeelingPopup();
+  }
+
+  Future<void> _checkAndShowFeelingPopup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String todayDate = DateTime.now().toIso8601String().split('T').first;
+    final String? lastPopupDate = prefs.getString('last_feeling_popup_date');
+
+    if (lastPopupDate != todayDate) {
+      await prefs.setString('last_feeling_popup_date', todayDate);
+      if (mounted) {
+        await DailyFeelingPopup.show(context);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(index: _currentIndex, children: _screens),
 
       bottomNavigationBar: SafeArea(
@@ -45,7 +66,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surfaceContainer,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Row(
@@ -108,7 +129,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.black : Colors.transparent,
+            color:
+                isSelected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Colors.transparent,
             width: isSelected ? 1 : 0,
           ),
         ),
@@ -117,7 +141,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
             HugeIcon(
               icon: icon,
               size: 18,
-              color: isSelected ? Colors.black : Colors.grey,
+              color:
+                  isSelected
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Colors.grey,
             ),
 
             const SizedBox(width: 4),
@@ -125,7 +152,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
               isSelected ? label : '',
               style: TextStyle(
                 fontSize: 12,
-                color: isSelected ? Colors.black : Colors.grey,
+                color:
+                    isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Colors.grey,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

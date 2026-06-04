@@ -15,6 +15,28 @@ class BadgeCard extends StatelessWidget {
     required this.progress,
   });
 
+  ImageProvider _getBadgeImage(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return NetworkImage(imagePath);
+    }
+    // Map backend default seeds to existing assets
+    if (imagePath.contains('first_word')) {
+      return const AssetImage('assets/images/bronze.png');
+    }
+    if (imagePath.contains('quiz_master')) {
+      return const AssetImage('assets/images/silver.png');
+    }
+    if (imagePath.contains('streak_builder')) {
+      return const AssetImage('assets/images/gold.png');
+    }
+
+    final cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    if (cleanPath.startsWith('assets/')) {
+      return AssetImage(cleanPath);
+    }
+    return AssetImage('assets/images/$cleanPath');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -55,18 +77,21 @@ class BadgeCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: progress,
                     strokeWidth: strokeWidth,
-                    color: Color(0xff00d4ff),
+                    color: const Color(0xff00d4ff),
                     backgroundColor: Colors.transparent,
                   ),
                 ),
 
                 // Avatar perfectly fits inside the ring
                 Container(
-                  width: size - strokeWidth, // <-- subtract strokeWidth
+                  width: size - strokeWidth,
                   height: size - strokeWidth,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    image: DecorationImage(image: AssetImage(badgeImage)),
+                    image: DecorationImage(
+                      image: _getBadgeImage(badgeImage),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ],
@@ -80,6 +105,8 @@ class BadgeCard extends StatelessWidget {
               children: [
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -89,6 +116,8 @@ class BadgeCard extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   progressStat,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 12,
                     color: AppTheme.textColor2,

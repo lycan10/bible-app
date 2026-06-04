@@ -1,33 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:quest/screens/onboarding/username.dart';
+import 'package:provider/provider.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/screens/navigation_screen.dart';
 import '../../components/onboarding_button.dart';
-import 'package:animations/animations.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-class Permission extends StatelessWidget {
+class Permission extends StatefulWidget {
   const Permission({super.key});
 
-  void _navigateToCommunitySuggestionScreen(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder:
-            (context, animation, secondaryAnimation) => const Username(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.scaled,
-            child: child,
-          );
-        },
-      ),
+  @override
+  State<Permission> createState() => _PermissionState();
+}
+
+class _PermissionState extends State<Permission> {
+  void _navigateToNavigationScreen(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const NavigationScreen()),
+      (route) => false,
     );
+  }
+
+  Future<void> _handleAllowAccess() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.grantPermissions();
+
+    if (mounted) {
+      if (success) {
+        _navigateToNavigationScreen(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.errorMessage ?? 'Failed to update permissions.')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // Default country
+    final theme = Theme.of(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final firstName = authProvider.user?['firstName'] ?? 'User';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -36,8 +49,11 @@ class Permission extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.close, size: 20, color: Colors.black),
-              SizedBox(height: 30),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: const Icon(Icons.close, size: 20, color: Colors.black),
+              ),
+              const SizedBox(height: 30),
 
               // Main Content
               Expanded(
@@ -50,15 +66,15 @@ class Permission extends StatelessWidget {
                         width: 123,
                         height: 123,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text(
-                        'Hello, Gabe',
+                        'Hello, $firstName',
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w300,
                           color: Colors.grey.shade500,
                         ),
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       Text(
                         'We need your permission!',
                         textAlign: TextAlign.center,
@@ -67,7 +83,7 @@ class Permission extends StatelessWidget {
                           color: Colors.black,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text(
                         'To give you the best experience, our app\nrequires the following permissions:',
                         textAlign: TextAlign.center,
@@ -76,35 +92,33 @@ class Permission extends StatelessWidget {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
 
                       Column(
                         children: [
-                          PermissionItem(
-                            iconColor: const Color(0xFF0088FF),
+                          const PermissionItem(
+                            iconColor: Color(0xFF0088FF),
                             icon: HugeIcons.strokeRoundedCamera01,
                             title: "Camera/Photos",
-                            description:
-                                "to let you upload or update your profile picture.",
+                            description: "to let you upload or update your profile picture.",
                           ),
-                          SizedBox(height: 20),
-                          PermissionItem(
-                            iconColor: const Color(0xFF4A3AFF),
+                          const SizedBox(height: 20),
+                          const PermissionItem(
+                            iconColor: Color(0xFF4A3AFF),
                             icon: HugeIcons.strokeRoundedLocation01,
                             title: "Location",
-                            description:
-                                "to provide location-based services and recommendations.",
+                            description: "to provide location-based services and recommendations.",
                           ),
-                          SizedBox(height: 20),
-                          PermissionItem(
-                            iconColor: const Color(0xFFFF383C),
-                            icon: HugeIcons.strokeRoundedCamera01,
-                            title: "Camera/Photos",
+                          const SizedBox(height: 20),
+                          const PermissionItem(
+                            iconColor: Color(0xFFFF383C),
+                            icon: HugeIcons.strokeRoundedNotification03,
+                            title: "Notifications",
                             description: "so you don’t miss important updates.",
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text(
                         'We only use these permissions to improve your experience. You’re always in control — you can manage or revoke permissions at any time in your device settings.',
                         textAlign: TextAlign.center,
@@ -114,7 +128,7 @@ class Permission extends StatelessWidget {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -125,7 +139,8 @@ class Permission extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 10),
                 child: OnboardingButton(
                   title: 'Allow Access',
-                  ontap: () => _navigateToCommunitySuggestionScreen(context),
+                  isLoading: authProvider.isLoading,
+                  ontap: _handleAllowAccess,
                 ),
               ),
             ],

@@ -83,7 +83,7 @@ class PostCardLong extends StatelessWidget {
                         children: [
                           Text(
                             postText,
-                            maxLines: 2,
+                            maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 14,
@@ -101,11 +101,15 @@ class PostCardLong extends StatelessWidget {
                                 color: Color(0xff8e8e93),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                groupName,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 11,
-                                  color: AppTheme.textColor2,
+                              Expanded(
+                                child: Text(
+                                  groupName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 11,
+                                    color: AppTheme.textColor2,
+                                  ),
                                 ),
                               ),
                             ],
@@ -143,25 +147,32 @@ class PostCardLong extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(width: 15),
-
-                    /// POST IMAGE
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.asset(
-                        postImage,
-                        width: 90,
-                        height: 90,
-                        fit: BoxFit.cover,
+                    if (postImage.isNotEmpty) ...[
+                      const SizedBox(width: 15),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: postImage.startsWith('http')
+                            ? Image.network(
+                                postImage,
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                postImage,
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.cover,
+                              ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],
             ),
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
       ],
     );
   }
@@ -182,7 +193,12 @@ class _Avatar extends StatelessWidget {
         ),
         shape: BoxShape.circle,
       ),
-      child: CircleAvatar(radius: 10, backgroundImage: AssetImage(image)),
+      child: CircleAvatar(
+        radius: 10,
+        backgroundImage: image.startsWith('http')
+            ? NetworkImage(image)
+            : AssetImage(image) as ImageProvider,
+      ),
     );
   }
 }

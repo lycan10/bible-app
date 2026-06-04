@@ -39,7 +39,9 @@ class AudioReelCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               /// 🔹 Background Image
-              Image.asset(backgroundImage, fit: BoxFit.cover),
+              backgroundImage.startsWith('http')
+                  ? Image.network(backgroundImage, fit: BoxFit.cover)
+                  : Image.asset(backgroundImage, fit: BoxFit.cover),
 
               /// 🔹 Dark overlay for readability
               Container(color: Colors.black.withValues(alpha: 0.5)),

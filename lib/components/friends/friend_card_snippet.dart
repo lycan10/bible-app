@@ -77,7 +77,7 @@ class FriendCardSnippet extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
       ],
     );
   }
@@ -100,7 +100,12 @@ class _Avatar extends StatelessWidget {
         ),
         shape: BoxShape.circle,
       ),
-      child: CircleAvatar(radius: 10, backgroundImage: AssetImage(image)),
+      child: CircleAvatar(
+        radius: 10,
+        backgroundImage: image.startsWith('http')
+            ? NetworkImage(image)
+            : AssetImage(image) as ImageProvider,
+      ),
     );
   }
 }

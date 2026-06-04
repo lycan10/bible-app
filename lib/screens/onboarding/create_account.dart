@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:animations/animations.dart';
+import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/onboarding/username.dart';
 import '../../components/onboarding_button.dart';
 
-class CreateAccount extends StatelessWidget {
+class CreateAccount extends StatefulWidget {
   const CreateAccount({super.key});
+
+  @override
+  State<CreateAccount> createState() => _CreateAccountState();
+}
+
+class _CreateAccountState extends State<CreateAccount> {
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String? _selectedGender;
+  bool _obscurePassword = true;
 
   void _navigateToUsernameScreen(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder:
-            (context, animation, secondaryAnimation) => const Username(),
+        pageBuilder: (context, animation, secondaryAnimation) => const Username(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -24,9 +36,42 @@ class CreateAccount extends StatelessWidget {
     );
   }
 
+  void _handleContinue() {
+    final first = _firstNameController.text.trim();
+    final last = _lastNameController.text.trim();
+    final pass = _passwordController.text.trim();
+    if (first.isEmpty || last.isEmpty || pass.isEmpty || _selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields, including password, and select your gender.')),
+      );
+      return;
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.stashDetails(
+      firstName: first,
+      lastName: last,
+      gender: _selectedGender!,
+    );
+    authProvider.stashPasswordAndCode(
+      code: authProvider.code ?? '',
+      password: pass,
+    );
+
+    _navigateToUsernameScreen(context);
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // Default country
+    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -36,8 +81,11 @@ class CreateAccount extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.close, size: 20, color: Colors.black),
-              SizedBox(height: 30),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: const Icon(Icons.close, size: 20, color: Colors.black),
+              ),
+              const SizedBox(height: 30),
 
               // Main Content
               Expanded(
@@ -50,9 +98,9 @@ class CreateAccount extends StatelessWidget {
                         width: 100,
                         height: 100,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text(
-                        'Hi, Let\'s know\nyour name ',
+                        'Hi, Let\'s know\nyour name',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.normal,
@@ -60,16 +108,16 @@ class CreateAccount extends StatelessWidget {
                           fontSize: 32,
                         ),
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       Text(
-                        'You information will be kept secure and handled\naccording to our Privacy Policy.',
+                        'Your information will be kept secure and handled\naccording to our Privacy Policy.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey.shade500,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
-                      SizedBox(height: 30),
+                      const SizedBox(height: 30),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -81,10 +129,13 @@ class CreateAccount extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 15),
-                          const Input(hint: "Enter first name"),
+                          Input(
+                            controller: _firstNameController,
+                            hint: "Enter first name",
+                          ),
                         ],
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -96,11 +147,13 @@ class CreateAccount extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 15),
-                          const Input(hint: "Enter last name"),
+                          Input(
+                            controller: _lastNameController,
+                            hint: "Enter last name",
+                          ),
                         ],
                       ),
-                      SizedBox(height: 15),
-
+                      const SizedBox(height: 15),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -112,17 +165,17 @@ class CreateAccount extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 15),
-
                           DropdownButtonFormField<String>(
+                            initialValue: _selectedGender,
                             decoration: InputDecoration(
                               filled: true,
-                              fillColor: Color(0xFFF2F2F7),
+                              fillColor: const Color(0xFFF2F2F7),
                               hintText: "Select gender",
                               hintStyle: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 11,
                                 color: Colors.black,
                               ),
-                              suffixIcon: Icon(
+                              suffixIcon: const Icon(
                                 Icons.arrow_drop_down,
                               ), // Right side icon
                               border: OutlineInputBorder(
@@ -138,21 +191,67 @@ class CreateAccount extends StatelessWidget {
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            items:
-                                ["Male", "Female", "Other"]
-                                    .map(
-                                      (gender) => DropdownMenuItem(
-                                        value: gender,
-                                        child: Text(gender),
-                                      ),
-                                    )
-                                    .toList(),
-                            onChanged: (value) {},
+                            items: ["Male", "Female", "Other"]
+                                .map(
+                                  (gender) => DropdownMenuItem(
+                                    value: gender,
+                                    child: Text(gender),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedGender = value;
+                              });
+                            },
                           ),
                         ],
                       ),
-
-                      SizedBox(height: 25),
+                      const SizedBox(height: 15),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Password',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F2F7),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: TextField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: "Enter password",
+                                border: InputBorder.none,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 25),
                     ],
                   ),
                 ),
@@ -163,7 +262,7 @@ class CreateAccount extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 10),
                 child: OnboardingButton(
                   title: 'Continue',
-                  ontap: () => _navigateToUsernameScreen(context),
+                  ontap: _handleContinue,
                 ),
               ),
             ],

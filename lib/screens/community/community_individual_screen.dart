@@ -1,7 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/action_pill/action_pill_button_2.dart';
 import 'package:quest/components/event/event_details_card.dart';
 import 'package:quest/components/event/event_dotted_card.dart';
@@ -100,7 +99,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: "Filter",
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, animation, secondaryAnimation) {
         return const Center(child: _PostListMenuDialogBox());

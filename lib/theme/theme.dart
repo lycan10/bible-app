@@ -7,7 +7,7 @@ class AppTheme {
   /// 🎨 Brand Colors
   static const Color primaryBlue = Color(0xFF1E3A8A);
   static const Color goldAccent = Color(0xFFF6DA00);
-  static const Color textColor2 = Color(0xFF8e8e93);
+  static const Color textColor2 = Color.fromARGB(255, 73, 73, 73);
   static const Color completedColor = Color(0xFF22C55E);
   static const Color inCompletedColor = Color(0xFFFFB300);
   static const Color buttonColor = Color(0xFF4838fc);
@@ -25,6 +25,9 @@ class AppTheme {
       seedColor: backgroundColor,
       primary: backgroundColor,
       secondary: goldAccent,
+      error: Colors.red,
+      onPrimary: Colors.black,
+      onSecondary: textColor2,
     ),
     scaffoldBackgroundColor: backgroundColor,
 
@@ -55,6 +58,12 @@ class AppTheme {
       ),
     ),
 
+    textSelectionTheme: const TextSelectionThemeData(
+      cursorColor: buttonColor,
+      selectionColor: Color(0x444838AA), // Translucent buttonColor
+      selectionHandleColor: buttonColor,
+    ),
+
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryBlue,
@@ -73,6 +82,7 @@ class AppTheme {
       seedColor: primaryBlue,
       brightness: Brightness.dark,
       primary: primaryBlue,
+      onPrimary: Colors.white70,
       secondary: goldAccent,
     ),
     scaffoldBackgroundColor: const Color(0xFF0F172A),
@@ -94,6 +104,13 @@ class AppTheme {
         bodySmall: TextStyle(fontSize: 13, height: 1.5),
       ),
     ),
+
+    textSelectionTheme: const TextSelectionThemeData(
+      cursorColor: goldAccent,
+      selectionColor: Color(0x44F6DA00), // Translucent goldAccent
+      selectionHandleColor: goldAccent,
+    ),
+
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryBlue,

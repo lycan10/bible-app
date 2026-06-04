@@ -1,16 +1,11 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/circle_stuff.dart';
 import 'package:quest/components/media/video/video_card.dart';
 import 'package:quest/components/menu/discover_more.dart';
-import 'package:quest/components/tile/community_image_tile.dart';
 import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
-import 'package:quest/components/user_details/community_profile_card.dart';
-import 'package:quest/screens/community/community_individual_screen.dart';
-import 'package:quest/screens/post/post_screen.dart';
 import 'package:quest/screens/media/video_reel_screen.dart';
 import 'package:quest/theme/theme.dart';
 
@@ -369,7 +364,7 @@ class MediaCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
                   ),
                 ),
               ),
@@ -461,7 +456,7 @@ class MediaCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           border: Border.all(
                             width: 0.5,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                           shape: BoxShape.circle,
                         ),

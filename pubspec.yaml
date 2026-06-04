@@ -2,8 +2,7 @@ name: quest
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
 
@@ -23,6 +22,28 @@ dependencies:
   pinput: ^6.0.2
   glassmorphism: ^3.0.0
   simple_animation_progress_bar: ^1.9.2
+  http: ^1.2.1
+  provider: ^6.1.2
+  shared_preferences: ^2.2.3
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^8.0.0
+  sqflite: ^2.4.2+1
+  path: ^1.9.1
+  image_picker: ^1.2.2
+  scrollable_positioned_list: ^0.3.8
+  audioplayers: ^6.7.0
+  firebase_core: ^4.10.0
+  firebase_messaging: ^16.3.0
+  flutter_local_notifications: ^17.2.1
+  timezone: ^0.9.0
+  flutter_quill: ^11.5.1
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
+  audio_waveforms: ^2.0.2
+  path_provider: ^2.1.5
+  share_plus: ^12.0.2
+  flutter_paypal: ^0.2.1
 
 dev_dependencies:
   flutter_test:
@@ -40,12 +61,13 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/bible/
+    - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -63,17 +85,17 @@ flutter:
 #      fonts:
 #        - asset: assets/fonts/Poppins-Regular.ttf
 #        - asset: assets/fonts/Poppins-Bold.ttf
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+# fonts:
+#   - family: Schyler
+#     fonts:
+#       - asset: fonts/Schyler-Regular.ttf
+#       - asset: fonts/Schyler-Italic.ttf
+#         style: italic
+#   - family: Trajan Pro
+#     fonts:
+#       - asset: fonts/TrajanPro.ttf
+#       - asset: fonts/TrajanPro_Bold.ttf
+#         weight: 700
+#
+# For details regarding fonts from package dependencies,
+# see https://flutter.dev/to/font-from-package

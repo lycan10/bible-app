@@ -9,6 +9,7 @@ class SavedCard extends StatelessWidget {
   final List<String> verses;
   final String time;
   final double? width;
+  final VoidCallback? onDelete;
 
   const SavedCard({
     super.key,
@@ -20,19 +21,19 @@ class SavedCard extends StatelessWidget {
     this.time = "Today • 2:49pm",
 
     this.width, // ✅ important for horizontal list
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Column(
       children: [
         Container(
           width: width ?? double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white,
+            color: theme.colorScheme.surface,
             border: Border.all(width: 0.15, color: AppTheme.textColor2),
           ),
           clipBehavior: Clip.hardEdge,
@@ -51,7 +52,7 @@ class SavedCard extends StatelessWidget {
                         HugeIcon(
                           icon: HugeIcons.strokeRoundedChurch,
                           size: 18,
-                          color: Colors.black,
+                          color: theme.textTheme.bodyMedium?.color ?? Colors.black,
                           strokeWidth: 1,
                         ),
                         SizedBox(width: 5),
@@ -65,17 +66,25 @@ class SavedCard extends StatelessWidget {
                               fontSize: 16,
                               height: 1,
                               fontWeight: FontWeight.normal,
-                              color: Colors.black,
+                              color: theme.textTheme.bodyMedium?.color,
                             ),
                           ),
                         ),
                         Spacer(),
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedBookmark02,
-                          size: 18,
-                          color: Colors.black,
-                          strokeWidth: 1,
-                        ),
+                        if (onDelete != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                            onPressed: onDelete,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          )
+                        else
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedBookmark02,
+                            size: 18,
+                            color: theme.textTheme.bodyMedium?.color ?? Colors.black,
+                            strokeWidth: 1,
+                          ),
                       ],
                     ),
                     SizedBox(height: 8),
@@ -110,7 +119,7 @@ class SavedCard extends StatelessWidget {
                             text: time,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 14,
-                              color: Colors.black,
+                              color: theme.textTheme.bodyMedium?.color,
                               fontWeight: FontWeight.normal,
                             ),
                           ),
@@ -133,37 +142,4 @@ class SavedCard extends StatelessWidget {
     );
   }
 
-  Widget _actionItem(ThemeData theme, IconData icon, String label) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(icon, size: 14, color: AppTheme.textColor2),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontSize: 12,
-            color: Colors.black,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _iconButton(dynamic icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: HugeIcon(icon: icon, size: 18, color: color, strokeWidth: 1),
-    );
-  }
 }
