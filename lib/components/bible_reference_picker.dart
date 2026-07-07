@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:quest/services/bible_service.dart';
 
-void showBibleReferencePicker(BuildContext context, Function(String?) onSelected) async {
+void showBibleReferencePicker(
+  BuildContext context,
+  Function(String?) onSelected,
+) async {
   int? selectedBook;
   int? selectedChapter;
   List<int> selectedVerses = [];
@@ -86,12 +89,14 @@ void showBibleReferencePicker(BuildContext context, Function(String?) onSelected
                           if (selectedVerses.isEmpty) {
                             selectedVerses.add(vNum);
                           } else if (selectedVerses.length == 1) {
-                            final start = selectedVerses.first < vNum
-                                ? selectedVerses.first
-                                : vNum;
-                            final end = selectedVerses.first > vNum
-                                ? selectedVerses.first
-                                : vNum;
+                            final start =
+                                selectedVerses.first < vNum
+                                    ? selectedVerses.first
+                                    : vNum;
+                            final end =
+                                selectedVerses.first > vNum
+                                    ? selectedVerses.first
+                                    : vNum;
                             selectedVerses = List.generate(
                               end - start + 1,
                               (i) => start + i,
@@ -103,9 +108,10 @@ void showBibleReferencePicker(BuildContext context, Function(String?) onSelected
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.blue.withValues(alpha: 0.2)
-                              : Colors.transparent,
+                          color:
+                              isSelected
+                                  ? Colors.blue.withValues(alpha: 0.2)
+                                  : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
@@ -150,8 +156,8 @@ void showBibleReferencePicker(BuildContext context, Function(String?) onSelected
                       selectedBook == null
                           ? "Select Book"
                           : selectedChapter == null
-                              ? "Select Chapter"
-                              : "Select Verse(s)",
+                          ? "Select Chapter"
+                          : "Select Verse(s)",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -177,13 +183,16 @@ void showBibleReferencePicker(BuildContext context, Function(String?) onSelected
                         final bookName = BibleService.bookNames[selectedBook!];
                         if (selectedVerses.isEmpty ||
                             (totalVersesInChapter != null &&
-                                selectedVerses.length == totalVersesInChapter)) {
+                                selectedVerses.length ==
+                                    totalVersesInChapter)) {
                           ref = "$bookName $selectedChapter";
                         } else if (selectedVerses.length == 1) {
-                          ref = "$bookName $selectedChapter:${selectedVerses.first}";
+                          ref =
+                              "$bookName $selectedChapter:${selectedVerses.first}";
                         } else {
                           selectedVerses.sort();
-                          ref = "$bookName $selectedChapter:${selectedVerses.first}-${selectedVerses.last}";
+                          ref =
+                              "$bookName $selectedChapter:${selectedVerses.first}-${selectedVerses.last}";
                         }
                         Navigator.pop(context);
                         onSelected(ref);

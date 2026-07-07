@@ -7,16 +7,21 @@ class SponsoredVideo extends StatelessWidget {
   const SponsoredVideo({super.key});
 
   void _navigateToVideo(BuildContext context) {
+    final sponsored = {
+      'id': 'sponsored-1',
+      'title': 'Battle of the Mind',
+      'author': 'Joyce Meyer',
+      'likes': 300000,
+      'imageUrl': 'assets/images/boy.png',
+      // A public HLS stream so it actually plays
+      'mediaUrl': 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+    };
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
         pageBuilder:
-            (context, animation, secondaryAnimation) => VideoReelScreen(
-              title: "Battle of the Mind",
-              author: "Joyce Meyer",
-              likes: "300k",
-              backgroundImage: "assets/images/boy.png",
-            ),
+            (context, animation, secondaryAnimation) =>
+                VideoReelScreen(videos: [sponsored], initialIndex: 0),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,

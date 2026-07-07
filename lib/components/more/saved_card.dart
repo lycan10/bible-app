@@ -52,7 +52,8 @@ class SavedCard extends StatelessWidget {
                         HugeIcon(
                           icon: HugeIcons.strokeRoundedChurch,
                           size: 18,
-                          color: theme.textTheme.bodyMedium?.color ?? Colors.black,
+                          color:
+                              theme.textTheme.bodyMedium?.color ?? Colors.black,
                           strokeWidth: 1,
                         ),
                         SizedBox(width: 5),
@@ -73,7 +74,11 @@ class SavedCard extends StatelessWidget {
                         Spacer(),
                         if (onDelete != null)
                           IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
                             onPressed: onDelete,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -82,7 +87,9 @@ class SavedCard extends StatelessWidget {
                           HugeIcon(
                             icon: HugeIcons.strokeRoundedBookmark02,
                             size: 18,
-                            color: theme.textTheme.bodyMedium?.color ?? Colors.black,
+                            color:
+                                theme.textTheme.bodyMedium?.color ??
+                                Colors.black,
                             strokeWidth: 1,
                           ),
                       ],
@@ -141,5 +148,4 @@ class SavedCard extends StatelessWidget {
       ],
     );
   }
-
 }

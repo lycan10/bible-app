@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/stats/stats.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/components/avatar.dart';
 
 class PostCardLong extends StatelessWidget {
   final String userName;
@@ -13,6 +14,7 @@ class PostCardLong extends StatelessWidget {
   final String comments;
   final String time;
   final VoidCallback onTap;
+  final VoidCallback? onAvatarTap;
 
   const PostCardLong({
     super.key,
@@ -25,6 +27,7 @@ class PostCardLong extends StatelessWidget {
     required this.comments,
     required this.time,
     required this.onTap,
+    this.onAvatarTap,
   });
 
   @override
@@ -38,9 +41,12 @@ class PostCardLong extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(width: 1, color: Colors.grey.shade200),
+              border: Border.all(
+                width: 1,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              ),
             ),
             child: Column(
               children: [
@@ -48,23 +54,26 @@ class PostCardLong extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        _Avatar(image: userImage),
-                        const SizedBox(width: 10),
-                        Text(
-                          userName,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontSize: 14,
-                            color: AppTheme.textColor2,
+                    GestureDetector(
+                      onTap: onAvatarTap,
+                      child: Row(
+                        children: [
+                          CustomAvatar(imageUrl: userImage, radius: 15.0, hasBorder: true),
+                          const SizedBox(width: 10),
+                          Text(
+                            userName,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontSize: 14,
+                              color: AppTheme.textColor2,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     HugeIcon(
                       icon: HugeIcons.strokeRoundedMoreVertical,
                       size: 18,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                       strokeWidth: 3,
                     ),
                   ],
@@ -87,7 +96,7 @@ class PostCardLong extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 14,
-                              color: Colors.black,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
 
@@ -151,19 +160,20 @@ class PostCardLong extends StatelessWidget {
                       const SizedBox(width: 15),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: postImage.startsWith('http')
-                            ? Image.network(
-                                postImage,
-                                width: 90,
-                                height: 90,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.asset(
-                                postImage,
-                                width: 90,
-                                height: 90,
-                                fit: BoxFit.cover,
-                              ),
+                        child:
+                            postImage.startsWith('http')
+                                ? Image.network(
+                                  postImage,
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover,
+                                )
+                                : Image.asset(
+                                  postImage,
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover,
+                                ),
                       ),
                     ],
                   ],
@@ -174,31 +184,6 @@ class PostCardLong extends StatelessWidget {
         ),
         const SizedBox(height: 10),
       ],
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final String image;
-
-  const _Avatar({required this.image});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(5),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xff00d4ff), Color(0xff4a3aff)],
-        ),
-        shape: BoxShape.circle,
-      ),
-      child: CircleAvatar(
-        radius: 10,
-        backgroundImage: image.startsWith('http')
-            ? NetworkImage(image)
-            : AssetImage(image) as ImageProvider,
-      ),
     );
   }
 }

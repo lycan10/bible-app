@@ -41,7 +41,7 @@ class EditorToolbar extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.05),
+                        ).colorScheme.onSurface.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
                       ),
                       child: HugeIcon(
@@ -69,7 +69,7 @@ class EditorToolbar extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.05),
+                      ).colorScheme.onSurface.withValues(alpha: 0.05),
                       shape: BoxShape.circle,
                     ),
                     child: HugeIcon(
@@ -97,7 +97,7 @@ class EditorToolbar extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.05),
+                      ).colorScheme.onSurface.withValues(alpha: 0.05),
                       shape: BoxShape.circle,
                     ),
                     child: HugeIcon(
@@ -136,7 +136,9 @@ class EditorToolbar extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -194,7 +196,7 @@ class EditorToolbar extends StatelessWidget {
                 size: 24,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.54),
+                ).colorScheme.onSurface.withValues(alpha: 0.54),
               ),
               onPressed: onMicPressed,
               tooltip: 'Voice Input',

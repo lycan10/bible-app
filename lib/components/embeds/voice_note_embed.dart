@@ -19,19 +19,23 @@ class VoiceNoteEmbedBuilder extends EmbedBuilder {
   String get key => 'voiceNote';
 
   @override
-  Widget build(
-    BuildContext context,
-    EmbedContext embedContext,
-  ) {
+  Widget build(BuildContext context, EmbedContext embedContext) {
     final audioUrl = embedContext.node.value.data as String;
-    return VoiceNotePlayerWidget(audioUrl: audioUrl, embedContext: embedContext);
+    return VoiceNotePlayerWidget(
+      audioUrl: audioUrl,
+      embedContext: embedContext,
+    );
   }
 }
 
 class VoiceNotePlayerWidget extends StatefulWidget {
   final String audioUrl;
   final EmbedContext? embedContext;
-  const VoiceNotePlayerWidget({super.key, required this.audioUrl, this.embedContext});
+  const VoiceNotePlayerWidget({
+    super.key,
+    required this.audioUrl,
+    this.embedContext,
+  });
 
   @override
   State<VoiceNotePlayerWidget> createState() => _VoiceNotePlayerWidgetState();
@@ -48,30 +52,31 @@ class _VoiceNotePlayerWidgetState extends State<VoiceNotePlayerWidget> {
   @override
   void initState() {
     super.initState();
-    _playerController = PlayerController()
-      ..setFinishMode(finishMode: FinishMode.pause)
-      ..onPlayerStateChanged.listen((state) {
-        if (mounted) {
-          setState(() {
-            _isPlaying = state == PlayerState.playing;
+    _playerController =
+        PlayerController()
+          ..setFinishMode(finishMode: FinishMode.pause)
+          ..onPlayerStateChanged.listen((state) {
+            if (mounted) {
+              setState(() {
+                _isPlaying = state == PlayerState.playing;
+              });
+            }
+          })
+          ..onCurrentDurationChanged.listen((duration) {
+            if (mounted) {
+              setState(() {
+                _currentDuration = duration;
+              });
+            }
+          })
+          ..onCompletion.listen((_) {
+            if (mounted) {
+              setState(() {
+                _isPlaying = false;
+                _currentDuration = _maxDuration;
+              });
+            }
           });
-        }
-      })
-      ..onCurrentDurationChanged.listen((duration) {
-        if (mounted) {
-          setState(() {
-            _currentDuration = duration;
-          });
-        }
-      })
-      ..onCompletion.listen((_) {
-        if (mounted) {
-          setState(() {
-            _isPlaying = false;
-            _currentDuration = _maxDuration;
-          });
-        }
-      });
     _preparePlayer();
   }
 
@@ -80,13 +85,16 @@ class _VoiceNotePlayerWidgetState extends State<VoiceNotePlayerWidget> {
       String path = widget.audioUrl;
 
       // If it's a remote URL, download it to a temp file first
-      if (widget.audioUrl.startsWith('http') || widget.audioUrl.startsWith('/api')) {
+      if (widget.audioUrl.startsWith('http') ||
+          widget.audioUrl.startsWith('/api')) {
         final fullUrl = ApiService.getFullImageUrl(widget.audioUrl);
         final uri = Uri.parse(fullUrl);
 
         final response = await http.get(uri);
         final tempDir = await getTemporaryDirectory();
-        final file = File('${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.aac');
+        final file = File(
+          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.aac',
+        );
         await file.writeAsBytes(response.bodyBytes);
         path = file.path;
       }
@@ -134,41 +142,55 @@ class _VoiceNotePlayerWidgetState extends State<VoiceNotePlayerWidget> {
   void _confirmDelete() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Audio'),
-        content: const Text('Are you sure you want to permanently delete this voice note?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              
-              final isRemote = widget.audioUrl.startsWith('http') || widget.audioUrl.startsWith('/api');
-              if (isRemote) {
-                final token = Provider.of<AuthProvider>(context, listen: false).token;
-                if (token != null) {
-                  try {
-                    await ApiService.deleteMedia(token, widget.audioUrl);
-                  } catch (e) {
-                    debugPrint('Failed to delete remote audio: $e');
-                  }
-                }
-              }
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete Audio'),
+            content: const Text(
+              'Are you sure you want to permanently delete this voice note?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
 
-              // Remove from Quill Editor if we have embedContext
-              if (widget.embedContext != null) {
-                final nodeOffset = widget.embedContext!.node.documentOffset;
-                final nodeLength = widget.embedContext!.node.length;
-                widget.embedContext!.controller.replaceText(nodeOffset, nodeLength, '', TextSelection.collapsed(offset: nodeOffset));
-              }
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                  final isRemote =
+                      widget.audioUrl.startsWith('http') ||
+                      widget.audioUrl.startsWith('/api');
+                  if (isRemote) {
+                    final token =
+                        Provider.of<AuthProvider>(context, listen: false).token;
+                    if (token != null) {
+                      try {
+                        await ApiService.deleteMedia(token, widget.audioUrl);
+                      } catch (e) {
+                        debugPrint('Failed to delete remote audio: $e');
+                      }
+                    }
+                  }
+
+                  // Remove from Quill Editor if we have embedContext
+                  if (widget.embedContext != null) {
+                    final nodeOffset = widget.embedContext!.node.documentOffset;
+                    final nodeLength = widget.embedContext!.node.length;
+                    widget.embedContext!.controller.replaceText(
+                      nodeOffset,
+                      nodeLength,
+                      '',
+                      TextSelection.collapsed(offset: nodeOffset),
+                    );
+                  }
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -192,10 +214,12 @@ class _VoiceNotePlayerWidgetState extends State<VoiceNotePlayerWidget> {
     // Use MediaQuery for a concrete, finite width — LayoutBuilder fails during
     // Quill's offstage measurement pass where constraints can be unbounded.
     final screenWidth = MediaQuery.of(context).size.width;
-    final bool showDeleteButton = widget.embedContext != null && !widget.embedContext!.readOnly;
+    final bool showDeleteButton =
+        widget.embedContext != null && !widget.embedContext!.readOnly;
     final deleteButtonWidth = showDeleteButton ? 56.0 : 0.0;
     // Account for editor horizontal padding (24*2) + icon (48) + gap (8) + deleteButton (56)
-    final waveWidth = (screenWidth - 24 * 2 - 48 - 8 - 24 - deleteButtonWidth).clamp(80.0, screenWidth);
+    final waveWidth = (screenWidth - 24 * 2 - 48 - 8 - 24 - deleteButtonWidth)
+        .clamp(80.0, screenWidth);
 
     return SizedBox(
       height: 64,
@@ -213,7 +237,9 @@ class _VoiceNotePlayerWidgetState extends State<VoiceNotePlayerWidget> {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               icon: Icon(
-                _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                _isPlaying
+                    ? Icons.pause_circle_filled
+                    : Icons.play_circle_filled,
                 color: const Color(0xFF4C4DFF),
                 size: 32,
               ),
@@ -230,7 +256,9 @@ class _VoiceNotePlayerWidgetState extends State<VoiceNotePlayerWidget> {
                   enableSeekGesture: true,
                   waveformType: WaveformType.fitWidth,
                   playerWaveStyle: PlayerWaveStyle(
-                    fixedWaveColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.26),
+                    fixedWaveColor: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.26),
                     liveWaveColor: const Color(0xFF4C4DFF),
                     spacing: 6,
                   ),
@@ -238,18 +266,25 @@ class _VoiceNotePlayerWidgetState extends State<VoiceNotePlayerWidget> {
                 Text(
                   '${_formatDuration(_currentDuration)} / ${_formatDuration(_maxDuration)}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                     fontSize: 10,
                   ),
                 ),
               ],
             ),
-            if (widget.embedContext != null && !widget.embedContext!.readOnly) ...[
+            if (widget.embedContext != null &&
+                !widget.embedContext!.readOnly) ...[
               const SizedBox(width: 8),
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.redAccent,
+                  size: 24,
+                ),
                 onPressed: _confirmDelete,
               ),
             ],

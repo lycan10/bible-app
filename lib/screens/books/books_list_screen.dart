@@ -1,20 +1,15 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/circle_stuff.dart';
-import 'package:quest/components/media/video/video_card.dart';
 import 'package:quest/components/menu/discover_more.dart';
-import 'package:quest/components/tile/community_image_tile.dart';
 import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
-import 'package:quest/components/user_details/community_profile_card.dart';
 import 'package:quest/screens/books/book_screen.dart';
-import 'package:quest/screens/community/community_individual_screen.dart';
-import 'package:quest/screens/explore/explore_screen.dart';
-import 'package:quest/screens/post/post_screen.dart';
-import 'package:quest/screens/media/video_reel_screen.dart';
-import 'package:quest/theme/theme.dart';
+import 'package:quest/screens/explore/explore_screen.dart'; // For BooksReelCard
+import 'package:provider/provider.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/services/api_service.dart';
 
 final List<Map<String, String>> posts = [
   {
@@ -60,14 +55,52 @@ final List<Map<String, String>> posts = [
   },
 ];
 
-class BooksListScreen extends StatelessWidget {
+class BooksListScreen extends StatefulWidget {
   const BooksListScreen({super.key});
 
-  void _navigateToBookScreen(BuildContext context) {
+  @override
+  State<BooksListScreen> createState() => _BooksListScreenState();
+}
+
+class _BooksListScreenState extends State<BooksListScreen> {
+  List<dynamic> _books = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBooks();
+  }
+
+  Future<void> _fetchBooks() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.token != null) {
+      try {
+        final data = await ApiService.fetchBooks(auth.token!);
+        if (mounted) {
+          setState(() {
+            _books = data;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _navigateToBookScreen(BuildContext context, Map<String, dynamic> book) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => BookScreen(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => BookScreen(book: book),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -97,7 +130,7 @@ class BooksListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
@@ -147,13 +180,13 @@ class BooksListScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: HugeIcon(
                       icon: HugeIcons.strokeRoundedLeftToRightListBullet,
                       size: 22,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                       strokeWidth: 1,
                     ),
                   ),
@@ -169,7 +202,7 @@ class BooksListScreen extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
@@ -177,7 +210,7 @@ class BooksListScreen extends StatelessWidget {
                         HugeIcon(
                           icon: HugeIcons.strokeRoundedSearch01,
                           size: 18,
-                          color: AppTheme.textColor2,
+                          color: theme.colorScheme.onSurface,
                         ),
 
                         const SizedBox(width: 8),
@@ -200,73 +233,52 @@ class BooksListScreen extends StatelessWidget {
               ],
             ),
 
-            /// HEADER
-            SectionHeader(title: "Sponsored", seeAllText: "See more"),
-            SizedBox(
-              height: 200,
-              child: ListView.separated(
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_books.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(
+                    "No books found",
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ),
+              )
+            else ...[
+              SectionHeader(title: "All Books", seeAllText: ""),
+              GridView.builder(
                 shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-
-                scrollDirection: Axis.horizontal,
-                itemCount: 5,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _books.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 0.85,
+                ),
                 itemBuilder: (context, index) {
+                  final book = _books[index];
                   return BooksReelCard(
-                    title: 'The Battle',
-                    author: 'Joyce Meyer',
-                    likes: '300k',
-                    backgroundImage: 'assets/images/book.jpeg',
+                    title: book['title'] ?? '',
+                    author: book['author'] ?? '',
+                    likes: book['_count']?['reactions']?.toString() ?? '0',
+                    backgroundImage:
+                        book['imageUrl'] ?? 'assets/images/book.jpeg',
                     onTap: () {
-                      _navigateToBookScreen(context);
+                      _navigateToBookScreen(context, book);
                     },
                   );
                 },
               ),
-            ),
-            SectionHeader(title: "Best Sellers", seeAllText: "See all"),
-            SizedBox(
-              height: 200,
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-
-                scrollDirection: Axis.horizontal,
-                itemCount: 5,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (context, index) {
-                  return BooksReelCard(
-                    title: 'The Battle',
-                    author: 'Joyce Meyer',
-                    likes: '300k',
-                    backgroundImage: 'assets/images/book.jpeg',
-                    onTap: () {},
-                  );
-                },
-              ),
-            ),
-            SectionHeader(title: "More Books", seeAllText: "See all"),
-            GridView.builder(
-              shrinkWrap: true, // ✅ IMPORTANT
-              physics:
-                  const NeverScrollableScrollPhysics(), // ✅ disables inner scroll
-              itemCount: 10,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 0.85,
-              ),
-              itemBuilder: (context, index) {
-                return BooksReelCard(
-                  title: 'The Battle',
-                  author: 'Joyce Meyer',
-                  likes: '300k',
-                  backgroundImage: 'assets/images/book.jpeg',
-                  onTap: () {},
-                );
-              },
-            ),
+            ],
           ],
         ),
       ),
@@ -279,8 +291,9 @@ class _PostListMenuDialogBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -352,7 +365,10 @@ class MediaCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7),
+                    ],
                   ),
                 ),
               ),
@@ -444,7 +460,7 @@ class MediaCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           border: Border.all(
                             width: 0.5,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                           shape: BoxShape.circle,
                         ),

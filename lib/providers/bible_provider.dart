@@ -89,7 +89,9 @@ class BibleProvider with ChangeNotifier {
     if (_currentChapter > 1) {
       await loadVerses(_currentBookIndex, _currentChapter - 1);
     } else if (_currentBookIndex > 0) {
-      int prevBookChapters = await BibleService.getChaptersCount(_currentBookIndex - 1);
+      int prevBookChapters = await BibleService.getChaptersCount(
+        _currentBookIndex - 1,
+      );
       await loadVerses(_currentBookIndex - 1, prevBookChapters);
     }
   }
@@ -105,10 +107,10 @@ class BibleProvider with ChangeNotifier {
 
       final bRes = await ApiService.getBookmarks(token, page: 1);
       final hRes = await ApiService.getHighlights(token, page: 1);
-      
+
       _bookmarks = bRes;
       _highlights = hRes;
-      
+
       if (bRes.length < 20) _hasMoreBookmarks = false;
       if (hRes.length < 20) _hasMoreHighlights = false;
 
@@ -123,7 +125,10 @@ class BibleProvider with ChangeNotifier {
     _isLoadingMoreBookmarks = true;
     notifyListeners();
     try {
-      final bRes = await ApiService.getBookmarks(token, page: _bookmarksPage + 1);
+      final bRes = await ApiService.getBookmarks(
+        token,
+        page: _bookmarksPage + 1,
+      );
       _bookmarksPage++;
       _bookmarks.addAll(bRes);
       if (bRes.length < 20) _hasMoreBookmarks = false;
@@ -140,7 +145,10 @@ class BibleProvider with ChangeNotifier {
     _isLoadingMoreHighlights = true;
     notifyListeners();
     try {
-      final hRes = await ApiService.getHighlights(token, page: _highlightsPage + 1);
+      final hRes = await ApiService.getHighlights(
+        token,
+        page: _highlightsPage + 1,
+      );
       _highlightsPage++;
       _highlights.addAll(hRes);
       if (hRes.length < 20) _hasMoreHighlights = false;
@@ -153,12 +161,20 @@ class BibleProvider with ChangeNotifier {
   }
 
   bool isBookmarked(int verseCount) {
-    String ref = BibleService.formatReference(_currentBookIndex, _currentChapter, verseCount);
+    String ref = BibleService.formatReference(
+      _currentBookIndex,
+      _currentChapter,
+      verseCount,
+    );
     return _bookmarks.any((b) => b['verseRef'] == ref);
   }
 
   String? getHighlightColor(int verseCount) {
-    String ref = BibleService.formatReference(_currentBookIndex, _currentChapter, verseCount);
+    String ref = BibleService.formatReference(
+      _currentBookIndex,
+      _currentChapter,
+      verseCount,
+    );
     for (var h in _highlights) {
       if (h['verseRef'] == ref) {
         return h['color'];
@@ -168,7 +184,11 @@ class BibleProvider with ChangeNotifier {
   }
 
   Future<bool> toggleBookmark(String token, int verseCount) async {
-    String ref = BibleService.formatReference(_currentBookIndex, _currentChapter, verseCount);
+    String ref = BibleService.formatReference(
+      _currentBookIndex,
+      _currentChapter,
+      verseCount,
+    );
     var existing = _bookmarks.where((b) => b['verseRef'] == ref).toList();
     if (existing.isNotEmpty) {
       // Remove
@@ -177,7 +197,7 @@ class BibleProvider with ChangeNotifier {
         _bookmarks.removeWhere((b) => b['id'] == existing.first['id']);
         notifyListeners();
         return true;
-      } catch(e) {
+      } catch (e) {
         // print("Error deleting bookmark: $e");
         return false;
       }
@@ -185,13 +205,14 @@ class BibleProvider with ChangeNotifier {
       // Add
       try {
         var res = await ApiService.createBookmark(token, ref);
-        if (res['id'] != null) { // backend returns the created object directly
+        if (res['id'] != null) {
+          // backend returns the created object directly
           _bookmarks.add(res);
           notifyListeners();
           return true;
         }
         return false;
-      } catch(e) {
+      } catch (e) {
         // print("Error creating bookmark: $e");
         return false;
       }
@@ -199,15 +220,19 @@ class BibleProvider with ChangeNotifier {
   }
 
   Future<bool> addHighlight(String token, int verseCount, String color) async {
-    String ref = BibleService.formatReference(_currentBookIndex, _currentChapter, verseCount);
-    
+    String ref = BibleService.formatReference(
+      _currentBookIndex,
+      _currentChapter,
+      verseCount,
+    );
+
     // check if it exists, maybe delete old one first
     var existing = _highlights.where((h) => h['verseRef'] == ref).toList();
     for (var h in existing) {
       try {
         await ApiService.deleteHighlight(token, h['id']);
         _highlights.removeWhere((item) => item['id'] == h['id']);
-      } catch(_) {}
+      } catch (_) {}
     }
 
     try {
@@ -218,14 +243,18 @@ class BibleProvider with ChangeNotifier {
         return true;
       }
       return false;
-    } catch(e) {
+    } catch (e) {
       // print("Error creating highlight: $e");
       return false;
     }
   }
 
   Future<bool> removeHighlight(String token, int verseCount) async {
-    String ref = BibleService.formatReference(_currentBookIndex, _currentChapter, verseCount);
+    String ref = BibleService.formatReference(
+      _currentBookIndex,
+      _currentChapter,
+      verseCount,
+    );
     var existing = _highlights.where((h) => h['verseRef'] == ref).toList();
     if (existing.isNotEmpty) {
       try {
@@ -233,7 +262,7 @@ class BibleProvider with ChangeNotifier {
         _highlights.removeWhere((h) => h['id'] == existing.first['id']);
         notifyListeners();
         return true;
-      } catch(e) {
+      } catch (e) {
         // print("Error deleting highlight: $e");
         return false;
       }

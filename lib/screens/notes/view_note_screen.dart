@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
-import 'package:flutter/gestures.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/bible_service.dart';
@@ -17,7 +16,7 @@ import '../../components/bible_reference_picker.dart';
 import '../../components/modals/voice_recorder_modal.dart';
 import '../../components/embeds/smart_image_embed.dart';
 import '../../components/embeds/voice_note_embed.dart';
-import '../../components/feeling_selector.dart';
+import '../../components/daily_feeling_popup.dart';
 
 class ViewNoteScreen extends StatefulWidget {
   final String id;
@@ -45,7 +44,7 @@ class ViewNoteScreen extends StatefulWidget {
 
 class _ViewNoteScreenState extends State<ViewNoteScreen> {
   late QuillController _controller;
-  
+
   late String _title;
   late String _date;
   bool _isFavorite = false;
@@ -54,7 +53,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
   late List<String> _selectedFeelings;
 
   void _showFeelingSelector() {
-    FeelingSelector.show(
+    DailyFeelingPopup.show(
       context,
       onSelected: (feeling, emoji) {
         setState(() {
@@ -67,15 +66,15 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
   void _updateNote() async {
     if (_isSaving) return;
     final bodyText = _controller.document.toPlainText();
-    
+
     setState(() => _isSaving = true);
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token != null) {
-        final extractedVerses = RegExp(r'\[Verse:(.*?)\]')
-            .allMatches(bodyText)
-            .map((m) => m.group(1)!)
-            .toList();
+        final extractedVerses =
+            RegExp(
+              r'\[Verse:(.*?)\]',
+            ).allMatches(bodyText).map((m) => m.group(1)!).toList();
 
         final bodyJson = jsonEncode(_controller.document.toDelta().toJson());
 
@@ -100,25 +99,29 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
         }
         if (mounted) {
           setState(() => _isEditMode = false);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note updated!')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Note updated!')));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
-  
+
   @override
   void initState() {
     super.initState();
     _title = widget.title;
     _date = widget.time;
     _selectedFeelings = List.from(widget.feelings);
-    
+
     Document document;
     try {
       final deltaJson = jsonDecode(widget.bodyText);
@@ -126,7 +129,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
     } catch (e) {
       document = Document()..insert(0, widget.bodyText);
     }
-    
+
     _controller = QuillController(
       document: document,
       selection: const TextSelection.collapsed(offset: 0),
@@ -140,7 +143,9 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token != null) {
         try {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading image...')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Uploading image...')));
           final res = await ApiService.uploadMedia(token, pickedFile.path);
           final url = res['fileUrl'];
           if (url != null) {
@@ -148,7 +153,10 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
             _controller.document.insert(index, BlockEmbed.image(url));
           }
         } catch (e) {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+          if (mounted)
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
         }
       }
     }
@@ -160,7 +168,9 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token != null) {
         try {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading voice note...')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Uploading voice note...')),
+          );
           final res = await ApiService.uploadMedia(token, path);
           final url = res['fileUrl'];
           if (url != null) {
@@ -168,7 +178,10 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
             _controller.document.insert(index, VoiceNoteBlockEmbed(url));
           }
         } catch (e) {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+          if (mounted)
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
         }
       }
     }
@@ -214,10 +227,15 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                     const SizedBox(height: 16),
                     if (snapshot.connectionState == ConnectionState.waiting)
                       const Center(child: CircularProgressIndicator())
-                    else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null)
+                    else if (snapshot.hasError ||
+                        !snapshot.hasData ||
+                        snapshot.data == null)
                       Text(
                         'Could not load verse text.',
-                        style: GoogleFonts.inter(fontSize: 16, color: Colors.black54),
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
                       )
                     else
                       Text(
@@ -318,7 +336,9 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
             contentWidgets.add(
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: VoiceNotePlayerWidget(audioUrl: map['voiceNote'] as String),
+                child: VoiceNotePlayerWidget(
+                  audioUrl: map['voiceNote'] as String,
+                ),
               ),
             );
           }
@@ -388,7 +408,11 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: Theme.of(context).colorScheme.onSurface, size: 24),
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: Theme.of(context).colorScheme.onSurface,
+            size: 24,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -407,11 +431,27 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
               radius: 18,
               child: IconButton(
                 padding: EdgeInsets.zero,
-                icon: _isEditMode
-                    ? (_isSaving
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const HugeIcon(icon: HugeIcons.strokeRoundedSent, color: Colors.white, size: 20))
-                    : const HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit01, color: Colors.white, size: 20),
+                icon:
+                    _isEditMode
+                        ? (_isSaving
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const HugeIcon(
+                              icon: HugeIcons.strokeRoundedSent,
+                              color: Colors.white,
+                              size: 20,
+                            ))
+                        : const HugeIcon(
+                          icon: HugeIcons.strokeRoundedPencilEdit01,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                 onPressed: () {
                   if (_isEditMode) {
                     _updateNote();
@@ -421,7 +461,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                 },
               ),
             ),
-          )
+          ),
         ],
       ),
       body: SafeArea(
@@ -429,7 +469,10 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
                 children: [
                   // Title Row
                   Row(
@@ -447,8 +490,15 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                       ),
                       IconButton(
                         icon: HugeIcon(
-                          icon: _isFavorite ? HugeIcons.strokeRoundedFavourite : HugeIcons.strokeRoundedFavourite,
-                          color: _isFavorite ? Colors.red : Theme.of(context).colorScheme.onSurface.withOpacity(0.26),
+                          icon:
+                              _isFavorite
+                                  ? HugeIcons.strokeRoundedFavourite
+                                  : HugeIcons.strokeRoundedFavourite,
+                          color:
+                              _isFavorite
+                                  ? Colors.red
+                                  : Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.26),
                           size: 24,
                         ),
                         onPressed: () {
@@ -456,16 +506,18 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                             _isFavorite = !_isFavorite;
                           });
                         },
-                      )
+                      ),
                     ],
                   ),
-                  
+
                   // Date
                   Text(
                     _date,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.54),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -477,13 +529,15 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4C4DFF).withOpacity(0.1),
+                          color: const Color(0xFF4C4DFF).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: const Color(0xFF4C4DFF).withOpacity(0.2),
+                              backgroundColor: const Color(
+                                0xFF4C4DFF,
+                              ).withValues(alpha: 0.2),
                               child: HugeIcon(
                                 icon: HugeIcons.strokeRoundedLeaf01,
                                 color: const Color(0xFF4C4DFF),
@@ -501,14 +555,20 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                                         : 'Feelings: ${_selectedFeelings.join(', ')}',
                                     style: GoogleFonts.inter(
                                       fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                     ),
                                   ),
                                   Text(
-                                    'Today ${_date}', // Using the passed _date for simplicity
+                                    'Today $_date', // Using the passed _date for simplicity
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.54),
                                     ),
                                   ),
                                 ],
@@ -529,7 +589,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                     ),
                     const SizedBox(height: 24),
                   ],
-                  
+
                   // Rich Text Editor (View/Edit)
                   if (_isEditMode)
                     QuillEditor.basic(
@@ -555,7 +615,8 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                   controller: _controller,
                   onAddPressed: _pickImage,
                   onInsertBible: _insertBibleVerse,
-                  onLogFeelings: widget.type == 'Journal' ? _showFeelingSelector : null,
+                  onLogFeelings:
+                      widget.type == 'Journal' ? _showFeelingSelector : null,
                   showMic: true,
                   onMicPressed: _recordVoiceNote,
                 ),

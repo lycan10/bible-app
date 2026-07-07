@@ -7,83 +7,45 @@ import 'package:quest/components/tile/community_image_tile.dart';
 import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
-import 'package:quest/components/user_details/community_profile_card.dart';
 import 'package:quest/screens/community/community_individual_screen.dart';
-import 'package:quest/screens/post/post_screen.dart';
 import 'package:quest/theme/theme.dart';
 
-final List<Map<String, String>> posts = [
-  {
-    "userName": "Lenny Olabisi",
-    "userImage": "assets/images/boy.png",
-    "postText":
-        "Christian fellowship is a beautiful expression of faith and unity.",
-    "groupName": "Lekki Christian Youths",
-    "postImage": "assets/images/test.jpg",
-    "likes": "370k",
-    "comments": "29",
-    "time": "Today 3:25pm",
-  },
-  {
-    "userName": "Sarah Johnson",
-    "userImage": "assets/images/boy.png",
-    "postText": "Sunday service was powerful today. Feeling blessed!",
-    "groupName": "Faith Builders",
-    "postImage": "assets/images/test.jpg",
-    "likes": "120k",
-    "comments": "15",
-    "time": "Today 1:10pm",
-  },
-  {
-    "userName": "Michael Ade",
-    "userImage": "assets/images/boy.png",
-    "postText": "Prayer changes everything. Never stop believing.",
-    "groupName": "Prayer Warriors",
-    "postImage": "assets/images/test.jpg",
-    "likes": "92k",
-    "comments": "8",
-    "time": "Today 12:05pm",
-  },
-  {
-    "userName": "David Smith",
-    "userImage": "assets/images/boy.png",
-    "postText": "Grateful for another day to serve God.",
-    "groupName": "Global Fellowship",
-    "postImage": "assets/images/test.jpg",
-    "likes": "54k",
-    "comments": "4",
-    "time": "Today 10:40am",
-  },
-];
+import 'package:provider/provider.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/community_provider.dart';
 
-class CommunityListScreen extends StatelessWidget {
+class CommunityListScreen extends StatefulWidget {
   const CommunityListScreen({super.key});
 
-  void _navigateToPostScreen(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder:
-            (context, animation, secondaryAnimation) => const PostScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.scaled,
-            child: child,
-          );
-        },
-      ),
-    );
+  @override
+  State<CommunityListScreen> createState() => _CommunityListScreenState();
+}
+
+class _CommunityListScreenState extends State<CommunityListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.token != null) {
+        context.read<CommunityProvider>().loadCommunities(authProvider.token!);
+      }
+    });
   }
 
-  void _navigateToCommunityScreen(BuildContext context) {
+  void _navigateToCommunityScreen(
+    BuildContext context,
+    Map<String, dynamic> community,
+  ) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
         pageBuilder:
             (context, animation, secondaryAnimation) =>
-                const CommunityIndividualScreen(),
+                CommunityIndividualScreen(
+                  communityId: community['id'],
+                  initialData: community,
+                ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -101,7 +63,7 @@ class CommunityListScreen extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: "Filter",
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, animation, secondaryAnimation) {
         return const Center(child: _PostListMenuDialogBox());
@@ -111,8 +73,13 @@ class CommunityListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final communityProvider = context.watch<CommunityProvider>();
+    final myCommunities = communityProvider.communities;
+    final recommended = communityProvider.recommendedCommunities;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
@@ -162,13 +129,13 @@ class CommunityListScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: HugeIcon(
                       icon: HugeIcons.strokeRoundedLeftToRightListBullet,
                       size: 22,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                       strokeWidth: 1,
                     ),
                   ),
@@ -184,7 +151,7 @@ class CommunityListScreen extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
@@ -224,104 +191,61 @@ class CommunityListScreen extends StatelessWidget {
             const SizedBox(height: 15),
 
             /// COMMUNITY LIST
-            SizedBox(
-              height: 160,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: 8,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.only(right: 12),
-                    child: CircleStuff(
-                      onTap: () => _navigateToCommunityScreen(context),
-                      width: 100,
-                      height: 100,
-                      title: 'Lekki Christians',
-                      description: '2898',
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SectionHeader(
-              title: "Communities in Lekki",
-              seeAllText: 'see more',
-            ),
-
-            /// POSTS
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemCount: 2,
-              itemBuilder: (context, index) {
-                final post = posts[index];
-
-                return CommunityImageTile(
-                  name: "Lekki Christain Youth $index",
-                  message: "Random message from user $index",
-                  imagePath: "assets/images/user_test.jpg",
-                  trailing: Text(
-                    "${index + 1}m",
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  // onLongPress: () {
-                  //   showModalBottomSheet(
-                  //     context: context,
-                  //     isScrollControlled: true,
-                  //     backgroundColor: Colors.transparent,
-                  //     builder: (context) {
-                  //       return _ChatPressedOption();
-                  //     },
-                  //   );
-                  // },
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return CommunityProfileCard();
-                      },
+            if (myCommunities.isNotEmpty)
+              SizedBox(
+                height: 160,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: myCommunities.length,
+                  itemBuilder: (context, index) {
+                    final com = myCommunities[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: CircleStuff(
+                        onTap: () => _navigateToCommunityScreen(context, com),
+                        width: 100,
+                        height: 100,
+                        title: com['name'] ?? 'Community',
+                        description:
+                            '${com['_count']?['members'] ?? 0} members',
+                        image: com['image'],
+                      ),
                     );
                   },
-                );
-              },
-            ),
+                ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text("You haven't joined any communities yet."),
+              ),
+
+            /// POSTS (Mocked or empty for local area)
+            // Removed static area communities list to focus on user's recommendations
             const SectionHeader(
               title: "Suggested communities",
               seeAllText: 'see more',
             ),
 
-            /// POSTS
+            /// SUGGESTED COMMUNITIES
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemCount: posts.length,
+              itemCount: recommended.length,
               itemBuilder: (context, index) {
-                final post = posts[index];
-
+                final com = recommended[index];
                 return CommunityImageTile(
-                  name: "Lekki Christain Youth $index",
-                  message: "Random message from user $index",
-                  imagePath: "assets/images/user_test.jpg",
-                  trailing: Text(
-                    "${index + 1}m",
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  name: com['name'] ?? 'Community',
+                  message: com['description'] ?? '',
+                  imagePath: com['image'] ?? "assets/images/user_test.jpg",
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey,
+                    size: 20,
                   ),
-                  // onLongPress: () {
-                  //   showModalBottomSheet(
-                  //     context: context,
-                  //     isScrollControlled: true,
-                  //     backgroundColor: Colors.transparent,
-                  //     builder: (context) {
-                  //       return _ChatPressedOption();
-                  //     },
-                  //   );
-                  // },
-                  onTap: () => _navigateToCommunityScreen(context),
+                  onTap: () => _navigateToCommunityScreen(context, com),
                 );
               },
             ),

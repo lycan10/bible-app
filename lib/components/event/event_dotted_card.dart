@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:quest/theme/theme.dart';
-
+import 'package:intl/intl.dart';
 class EventDottedCard extends StatelessWidget {
+  final Map<String, dynamic> event;
+  final bool isAttending;
   final VoidCallback onTap;
-  const EventDottedCard({super.key, required this.onTap});
+  const EventDottedCard({super.key, required this.event, required this.isAttending, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -25,23 +27,24 @@ class EventDottedCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Tech Conference 2026',
+                    event['title'] ?? 'Tech Conference 2026',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'Exploring the latest in technology and innovation',
+                    event['description'] ??
+                        'Exploring the latest in technology and innovation',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -49,6 +52,24 @@ class EventDottedCard extends StatelessWidget {
                       fontSize: 14,
                       color: AppTheme.textColor2,
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedLocation01,
+                        size: 14,
+                        color: Color(0xff8e8e93),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        event['location'] ?? 'No location specified',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: AppTheme.textColor2,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
 
@@ -66,22 +87,22 @@ class EventDottedCard extends StatelessWidget {
                               children: const [
                                 Positioned(
                                   left: 0,
-                                  child: Avatar(image: 'assets/images/boy.png'),
+                                  child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
                                 ),
                                 Positioned(
                                   left: 15,
-                                  child: Avatar(image: 'assets/images/boy.png'),
+                                  child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
                                 ),
                                 Positioned(
                                   left: 30,
-                                  child: Avatar(image: 'assets/images/boy.png'),
+                                  child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            "23 others",
+                            "${(event['attendees'] as List?)?.length ?? 0} attending",
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 11,
                               color: AppTheme.textColor2,
@@ -90,67 +111,51 @@ class EventDottedCard extends StatelessWidget {
                         ],
                       ),
 
-                      Row(
-                        children: [
-                          const HugeIcon(
-                            icon: HugeIcons.strokeRoundedFavourite,
-                            size: 16,
-                            color: Color(0xff8e8e93),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            "160",
-
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 11,
-                              color: AppTheme.textColor2,
-                            ),
-                          ),
-                        ],
-                      ),
+                      // Removed hardcoded favorites
                     ],
                   ),
 
                   const SizedBox(height: 15),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.purpleColor.withValues(alpha: 0.1),
+                  if (isAttending)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.purpleColor.withValues(alpha: 0.1),
 
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              'You\'re attending',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.purpleColor,
-                                fontSize: 13,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'You\'re attending',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.purpleColor,
+                                  fontSize: 13,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 7),
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedArrowDown01,
-                              size: 18,
-                              color: AppTheme.purpleColor,
-                            ),
-                          ],
+                              const SizedBox(width: 7),
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowDown01,
+                                size: 18,
+                                color: AppTheme.purpleColor,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                   const SizedBox(height: 15),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -173,9 +178,13 @@ class EventDottedCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          '24',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontSize: 14, color: Colors.black),
+                          '${DateTime.tryParse(event['date'] ?? '')?.day ?? 24}',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(width: 0),
 
@@ -187,10 +196,16 @@ class EventDottedCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'June 20',
+                          event['date'] != null
+                              ? DateFormat('MMM yyyy').format(DateTime.parse(event['date']))
+                              : '',
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontSize: 14, color: Colors.black),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(width: 15),
                         HugeIcon(
@@ -200,9 +215,13 @@ class EventDottedCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          '12pm - 3pm',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontSize: 14, color: Colors.black),
+                          event['time'] ?? '12pm - 3pm',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
                       ],
                     ),

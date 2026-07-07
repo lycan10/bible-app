@@ -4,9 +4,14 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/feed_provider.dart';
 
 class DailyFeelingPopup extends StatefulWidget {
-  const DailyFeelingPopup({super.key});
+  final Function(String feeling, String emoji)? onSelected;
 
-  static Future<void> show(BuildContext context) async {
+  const DailyFeelingPopup({super.key, this.onSelected});
+
+  static Future<void> show(
+    BuildContext context, {
+    Function(String feeling, String emoji)? onSelected,
+  }) async {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -14,7 +19,7 @@ class DailyFeelingPopup extends StatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => const DailyFeelingPopup(),
+      builder: (context) => DailyFeelingPopup(onSelected: onSelected),
     );
   }
 
@@ -30,7 +35,20 @@ class _DailyFeelingPopupState extends State<DailyFeelingPopup> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<FeedProvider>(context, listen: false).loadFeelingsMetadata();
+      final provider = Provider.of<FeedProvider>(context, listen: false);
+      provider.loadFeelingsMetadata().then((_) {
+        if (mounted) {
+          final index = provider.feelingsMetadata.indexWhere(
+            (f) => f['feeling'].toString().toLowerCase() == 'thanksful' || 
+                   f['feeling'].toString().toLowerCase() == 'thankful'
+          );
+          if (index != -1) {
+            setState(() {
+              _currentSliderValue = index.toDouble();
+            });
+          }
+        }
+      });
     });
   }
 
@@ -41,14 +59,20 @@ class _DailyFeelingPopupState extends State<DailyFeelingPopup> {
     try {
       final index = _currentSliderValue.toInt();
       final feelingData = feedProvider.feelingsMetadata[index];
+      final feeling = feelingData['feeling'];
+      final emoji = feelingData['emoji'];
 
-      final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token != null) {
-        await feedProvider.changeFeeling(
-          token,
-          feelingData['feeling'],
-          feelingData['emoji'],
-        );
+      if (widget.onSelected != null) {
+        widget.onSelected!(feeling, emoji);
+      } else {
+        final token = Provider.of<AuthProvider>(context, listen: false).token;
+        if (token != null) {
+          await feedProvider.changeFeeling(
+            token,
+            feeling,
+            emoji,
+          );
+        }
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -170,14 +194,14 @@ class _DailyFeelingPopupState extends State<DailyFeelingPopup> {
                   data: SliderThemeData(
                     activeTrackColor: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.24),
+                    ).colorScheme.onSurface.withValues(alpha: 0.24),
                     inactiveTrackColor: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.1),
+                    ).colorScheme.onSurface.withValues(alpha: 0.1),
                     thumbColor: Theme.of(context).colorScheme.onSurface,
                     overlayColor: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.24),
+                    ).colorScheme.onSurface.withValues(alpha: 0.24),
                     trackHeight: 30,
                     thumbShape: const RoundSliderThumbShape(
                       enabledThumbRadius: 15,

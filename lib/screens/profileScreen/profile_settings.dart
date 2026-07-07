@@ -29,21 +29,24 @@ class ProfileSettings extends StatelessWidget {
   Future<void> _deleteAccount(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete Account'),
+            content: const Text(
+              'Are you sure you want to delete your account? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true && context.mounted) {
@@ -69,7 +72,9 @@ class ProfileSettings extends StatelessWidget {
         auth.updateUserLocally({'location': newLocation});
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update location')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to update location')));
         }
       }
     }
@@ -82,28 +87,29 @@ class ProfileSettings extends StatelessWidget {
 
     final newLocation = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Update Location'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'e.g. New York, USA',
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Update Location'),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(hintText: 'e.g. New York, USA'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, null),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+                child: const Text('Save'),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
     );
 
-    if (newLocation != null && newLocation != currentLocation && context.mounted) {
+    if (newLocation != null &&
+        newLocation != currentLocation &&
+        context.mounted) {
       await _updateLocation(context, newLocation);
     }
   }
@@ -150,19 +156,20 @@ class ProfileSettings extends StatelessWidget {
                       borderRadius: BorderRadius.circular(
                         50,
                       ), // half of image width/height
-                      child: formattedAvatarUrl.startsWith('http')
-                          ? Image.network(
-                              formattedAvatarUrl,
-                              width: 52,
-                              height: 52,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.asset(
-                              formattedAvatarUrl,
-                              width: 52,
-                              height: 52,
-                              fit: BoxFit.cover,
-                            ),
+                      child:
+                          formattedAvatarUrl.startsWith('http')
+                              ? Image.network(
+                                formattedAvatarUrl,
+                                width: 52,
+                                height: 52,
+                                fit: BoxFit.cover,
+                              )
+                              : Image.asset(
+                                formattedAvatarUrl,
+                                width: 52,
+                                height: 52,
+                                fit: BoxFit.cover,
+                              ),
                     ),
                   ),
                   SizedBox(width: 10),
@@ -174,7 +181,8 @@ class ProfileSettings extends StatelessWidget {
                         RichText(
                           text: TextSpan(
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                              color:
+                                  Theme.of(context).textTheme.bodyMedium?.color,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               height: 2,
@@ -212,7 +220,7 @@ class ProfileSettings extends StatelessWidget {
                   SettingsRowItem(
                     icon: HugeIcons.strokeRoundedNotification01,
                     iconBackgroundColor: AppTheme.redColor,
-                    title: "Notofications & Sounds",
+                    title: "Notifications & Sounds",
                     onTap: () {
                       showModalBottomSheet(
                         context: context,
@@ -333,30 +341,53 @@ class _ReminderOptionsSheetState extends State<_ReminderOptionsSheet> {
 
   Future<void> _updateSettings(String key, dynamic value) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    
+
     // Manage local scheduled notifications
     if (key == 'reminderMorning') {
       if (value) {
-        NotificationService().scheduleDailyReminder(1, 'Good Morning! ☀️', 'Time for your morning devotion.', const TimeOfDay(hour: 8, minute: 0));
+        NotificationService().scheduleDailyReminder(
+          1,
+          'Good Morning! ☀️',
+          'Time for your morning devotion.',
+          const TimeOfDay(hour: 8, minute: 0),
+        );
       } else {
         NotificationService().cancelReminder(1);
       }
     } else if (key == 'reminderAfternoon') {
       if (value) {
-        NotificationService().scheduleDailyReminder(2, 'Good Afternoon! 📖', 'Take a break and read the word.', const TimeOfDay(hour: 13, minute: 0));
+        NotificationService().scheduleDailyReminder(
+          2,
+          'Good Afternoon! 📖',
+          'Take a break and read the word.',
+          const TimeOfDay(hour: 13, minute: 0),
+        );
       } else {
         NotificationService().cancelReminder(2);
       }
     } else if (key == 'reminderEvening') {
       if (value) {
-        NotificationService().scheduleDailyReminder(3, 'Good Evening! 🌙', 'Reflect on your day with the scripture.', const TimeOfDay(hour: 18, minute: 0));
+        NotificationService().scheduleDailyReminder(
+          3,
+          'Good Evening! 🌙',
+          'Reflect on your day with the scripture.',
+          const TimeOfDay(hour: 18, minute: 0),
+        );
       } else {
         NotificationService().cancelReminder(3);
       }
     } else if (key == 'reminderCustomTime' && value != null) {
       final parts = (value as String).split(':');
-      final time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-      NotificationService().scheduleDailyReminder(4, 'Time to Study! 📚', 'Your custom reminder to read the word.', time);
+      final time = TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
+      );
+      NotificationService().scheduleDailyReminder(
+        4,
+        'Time to Study! 📚',
+        'Your custom reminder to read the word.',
+        time,
+      );
     }
 
     if (auth.token != null) {
@@ -375,7 +406,8 @@ class _ReminderOptionsSheetState extends State<_ReminderOptionsSheet> {
       initialTime: TimeOfDay.now(),
     );
     if (picked != null) {
-      final formattedTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      final formattedTime =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       setState(() {
         _customTime = formattedTime;
       });
@@ -439,7 +471,10 @@ class _ReminderOptionsSheetState extends State<_ReminderOptionsSheet> {
                     alpha: 0.1,
                   ),
                   title: "Custom Time",
-                  subtitle: _customTime != null ? 'Remind at $_customTime' : 'Set custom reminder',
+                  subtitle:
+                      _customTime != null
+                          ? 'Remind at $_customTime'
+                          : 'Set custom reminder',
                   onTap: () => _selectCustomTime(context),
                   iconColor: AppTheme.textColor2,
                 ),
@@ -454,7 +489,8 @@ class _ReminderOptionsSheetState extends State<_ReminderOptionsSheet> {
 
 class _AppearanceOptionsSheet extends StatefulWidget {
   @override
-  State<_AppearanceOptionsSheet> createState() => _AppearanceOptionsSheetState();
+  State<_AppearanceOptionsSheet> createState() =>
+      _AppearanceOptionsSheetState();
 }
 
 class _AppearanceOptionsSheetState extends State<_AppearanceOptionsSheet> {
@@ -471,7 +507,7 @@ class _AppearanceOptionsSheetState extends State<_AppearanceOptionsSheet> {
     setState(() {
       _appearance = value;
     });
-    
+
     final auth = Provider.of<AuthProvider>(context, listen: false);
     if (auth.token != null) {
       try {
@@ -481,7 +517,7 @@ class _AppearanceOptionsSheetState extends State<_AppearanceOptionsSheet> {
         // Handle error silently or show a toast
       }
     }
-    
+
     if (mounted) {
       Navigator.pop(context);
     }
@@ -522,7 +558,10 @@ class _AppearanceOptionsSheetState extends State<_AppearanceOptionsSheet> {
     final isSelected = _appearance == value;
     return ListTile(
       title: Text(label),
-      trailing: isSelected ? const Icon(Icons.check, color: AppTheme.purpleColor) : null,
+      trailing:
+          isSelected
+              ? const Icon(Icons.check, color: AppTheme.purpleColor)
+              : null,
       onTap: () => _updateAppearance(value),
     );
   }

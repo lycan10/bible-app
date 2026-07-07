@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:quest/components/feeling_selector.dart';
+import 'package:quest/components/daily_feeling_popup.dart';
 import 'package:quest/components/more/inline_verse_text.dart';
 import 'package:quest/components/more/tag_text_editing_controller.dart';
 import 'package:quest/providers/auth_provider.dart';
@@ -137,7 +137,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
                         const SizedBox(width: 10),
                         TextButton(
                           onPressed: () {
-                            FeelingSelector.show(
+                            DailyFeelingPopup.show(
                               context,
                               onSelected: (feeling, emoji) {
                                 setModalState(() {
@@ -316,8 +316,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
               content = FutureBuilder<int>(
                 future: BibleService.getChaptersCount(selectedBook!),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData)
+                  if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
+                  }
                   final count = snapshot.data!;
                   return GridView.builder(
                     shrinkWrap: true,
@@ -346,8 +347,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
               content = FutureBuilder<List<Map<String, dynamic>>>(
                 future: BibleService.getVerses(selectedBook!, selectedChapter!),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData)
+                  if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
+                  }
                   final verses = snapshot.data!;
                   totalVersesInChapter = verses.length;
                   return GridView.builder(

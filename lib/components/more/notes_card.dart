@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/components/more/inline_verse_text.dart';
-import 'package:quest/screens/more/details_screen.dart';
 import 'package:quest/screens/notes/view_note_screen.dart';
 import 'package:quest/utils/text_parser.dart';
 

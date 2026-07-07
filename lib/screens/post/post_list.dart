@@ -2,7 +2,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/posts/post_card_long.dart';
-import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/screens/post/post_screen.dart';
@@ -115,11 +114,12 @@ final List<Map<String, String>> posts = [
 class PostList extends StatelessWidget {
   const PostList({super.key});
 
-  void _navigateToPostScreen(BuildContext context) {
+  void _navigateToPostScreen(BuildContext context, Map<String, dynamic> post) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => PostScreen(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => PostScreen(post: post),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -177,7 +177,7 @@ class PostList extends StatelessWidget {
                       likes: post["likes"]!,
                       comments: post["comments"]!,
                       time: post["time"]!,
-                      onTap: () => _navigateToPostScreen(context),
+                      onTap: () => _navigateToPostScreen(context, post),
                     );
                   },
                 ),

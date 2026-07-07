@@ -1,31 +1,160 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/stats/stats.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/titles/title_one.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class BookScreen extends StatelessWidget {
-  const BookScreen({super.key});
+class BookScreen extends StatefulWidget {
+  final Map<String, dynamic>? book;
+  const BookScreen({super.key, this.book});
+
+  @override
+  State<BookScreen> createState() => _BookScreenState();
+}
+
+class _BookScreenState extends State<BookScreen> {
+  bool _isLoading = true;
+  List<dynamic> _comments = [];
+  List<dynamic> _reactions = [];
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchData() async {
+    if (widget.book == null || widget.book!['id'] == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final token = auth.token;
+    if (token == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final commentsRes = await ApiService.fetchBookComments(
+        token,
+        widget.book!['id'],
+      );
+      final reactionsRes = await ApiService.fetchBookReactions(
+        token,
+        widget.book!['id'],
+      );
+
+      if (mounted) {
+        setState(() {
+          _comments = commentsRes;
+          _reactions = reactionsRes;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _addComment() async {
+    if (_commentController.text.trim().isEmpty) return;
+    if (widget.book == null || widget.book!['id'] == null) return;
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final token = auth.token;
+    if (token == null) return;
+
+    try {
+      final newComment = await ApiService.addBookComment(
+        token,
+        widget.book!['id'],
+        _commentController.text.trim(),
+      );
+      _commentController.clear();
+
+      setState(() {
+        _comments.insert(0, newComment);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to add comment.")));
+    }
+  }
+
+  Future<void> _toggleReaction() async {
+    if (widget.book == null || widget.book!['id'] == null) return;
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final token = auth.token;
+    final currentUser = auth.user;
+    if (token == null || currentUser == null) return;
+
+    try {
+      final res = await ApiService.reactToBook(token, widget.book!['id'], '🤩');
+
+      setState(() {
+        if (res['added'] == true) {
+          _reactions.add(res['reaction']);
+        } else {
+          _reactions.removeWhere(
+            (r) => r['userId'] == currentUser['id'] && r['emoji'] == '🤩',
+          );
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to react.")));
+    }
+  }
+
+  Future<void> _launchUrl() async {
+    if (widget.book == null || widget.book!['downloadUrl'] == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Download URL not available.")));
+      return;
+    }
+
+    final url = Uri.parse(widget.book!['downloadUrl']);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Could not launch $url")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final comments = List.generate(
-      5,
-      (index) => CommentModel(
-        name: "Lola Able",
-        username: "@lola.a",
-        time: "${index + 1}m",
-        message:
-            "Building something from scratch is never just about the final product. "
-            "It’s about the quiet hours, the tiny improvements, and the lessons learned "
-            "along the way. Growth happens in small steps taken daily.",
-      ),
-    );
+
+    int reactionCount = _reactions.where((r) => r['emoji'] == '🤩').length;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
@@ -53,45 +182,64 @@ class BookScreen extends StatelessWidget {
               ),
               SizedBox(height: 25),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                child:
+                    _isLoading
+                        ? Center(child: CircularProgressIndicator())
+                        : SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                  50,
-                                ), // half of image width/height
-                                child: Image.asset(
-                                  'assets/images/user_test.jpg',
-                                  width: 42,
-                                  height: 42,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
+                              Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'Lola Able',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                    ),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          50,
+                                        ), // half of image width/height
+                                        child: Image.asset(
+                                          'assets/images/user_test.jpg', // Should be book author avatar if available
+                                          width: 42,
+                                          height: 42,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            widget.book?['author'] ??
+                                                'Unknown Author',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color:
+                                                      theme
+                                                          .colorScheme
+                                                          .onSurface,
+                                                  fontSize: 14,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 3),
                                   Text(
-                                    "@lola.a",
+                                    widget.book != null &&
+                                            widget.book!['createdAt'] != null
+                                        ? widget.book!['createdAt']
+                                            .toString()
+                                            .substring(0, 10)
+                                        : "Today",
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontSize: 12,
                                       color: AppTheme.textColor2,
@@ -99,53 +247,155 @@ class BookScreen extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                          Text(
-                            "Today 3:15pm",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 12,
-                              color: AppTheme.textColor2,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Row(
-                            children: [
-                              Stat(
-                                icon: HugeIcons.strokeRoundedThumbsUp,
-                                text: "20",
-                                iconSize: 18,
-                                textColor: AppTheme.textColor2,
-                                textSize: 12,
+                              SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Stat(
+                                        icon: HugeIcons.strokeRoundedThumbsUp,
+                                        text: "$reactionCount",
+                                        iconSize: 18,
+                                        textColor: AppTheme.textColor2,
+                                        textSize: 12,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Stat(
+                                        icon: HugeIcons.strokeRoundedComment01,
+                                        text: "${_comments.length}",
+                                        iconSize: 18,
+                                        textColor: AppTheme.textColor2,
+                                        textSize: 12,
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      ActionPillButton(
+                                        icon: HugeIcons.strokeRoundedShare08,
+                                        label: "Share",
+                                        onTap: () {},
+                                      ),
+                                      SizedBox(width: 10),
+                                      GestureDetector(
+                                        onTap: _toggleReaction,
+                                        child: Container(
+                                          height: 40,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 13,
+                                            vertical: 10,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Color(
+                                              0xff673aff,
+                                            ).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                "React ($reactionCount)",
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Color(0xff673aff),
+                                                      fontSize: 12,
+                                                    ),
+                                              ),
+                                              const SizedBox(width: 5),
+                                              const VerticalDivider(
+                                                width: 4,
+                                                thickness: 1.5,
+                                                color: Color(0xff673aff),
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                "🤩",
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Color(0xff673aff),
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 10),
-                              Stat(
-                                icon: HugeIcons.strokeRoundedComment01,
-                                text: "29",
-                                iconSize: 18,
-                                textColor: AppTheme.textColor2,
-                                textSize: 12,
+                              SizedBox(height: 25),
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 180,
+                                    height: 200,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      child:
+                                          widget.book != null &&
+                                                  widget.book!['imageUrl'] !=
+                                                      null
+                                              ? Image.network(
+                                                widget.book!['imageUrl'],
+                                                fit: BoxFit.cover,
+                                              )
+                                              : Image.asset(
+                                                'assets/images/book.jpeg',
+                                                fit: BoxFit.cover,
+                                              ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              ActionPillButton(
-                                icon: HugeIcons.strokeRoundedShare08,
-                                label: "Share",
-                                onTap: () {},
+                              SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    widget.book?['title'] ?? "Unknown Title",
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 24,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(width: 10),
+                              SizedBox(height: 5),
+
+                              Text(
+                                widget.book?['description'] ??
+                                    "No description available.",
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  height: 1.4,
+                                  color: AppTheme.textColor2,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              SizedBox(height: 15),
                               GestureDetector(
-                                onTap: () {},
+                                onTap: _launchUrl,
                                 child: Container(
-                                  height: 40,
+                                  width: double.infinity,
+                                  height: 50,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 13,
                                     vertical: 10,
@@ -157,202 +407,121 @@ class BookScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        "React (384)",
+                                        "Read",
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              color: Color(0xff673aff),
-                                              fontSize: 12,
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                              fontSize: 14,
                                             ),
                                       ),
                                       const SizedBox(width: 5),
-                                      const VerticalDivider(
-                                        width: 4,
-                                        thickness: 1.5,
-
+                                      HugeIcon(
+                                        icon:
+                                            HugeIcons
+                                                .strokeRoundedArrowUpRight01,
+                                        size: 16,
                                         color: Color(0xff673aff),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        "🤩",
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xff673aff),
-                                            ),
+                                        strokeWidth: 2,
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 25),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 180,
-                            height: 200,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: Image.asset(
-                                'assets/images/book.jpeg',
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "1984",
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                              fontSize: 32,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-
-                      Text(
-                        "A chilling vision of a totalitarian future where Big Brother watches all.",
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.normal,
-                          height: 1.4,
-                          color: AppTheme.textColor2,
-                          fontSize: 14,
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Container(
-                          width: double.infinity,
-                          height: 50,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 13,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color(0xff673aff).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
+                              SizedBox(height: 25),
                               Text(
-                                "Read",
+                                "Comments(${_comments.length})",
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                  fontSize: 14,
+                                  color: theme.colorScheme.onSurface,
                                 ),
                               ),
-                              const SizedBox(width: 5),
-                              HugeIcon(
-                                icon: HugeIcons.strokeRoundedArrowUpRight01,
-                                size: 16,
-                                color: Color(0xff673aff),
-                                strokeWidth: 2,
+                              SizedBox(height: 10),
+                              Column(
+                                children:
+                                    _comments
+                                        .map(
+                                          (comment) =>
+                                              CommentItem(comment: comment),
+                                        )
+                                        .toList(),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.surface,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: HugeIcon(
+                                        icon: HugeIcons.strokeRoundedAdd01,
+                                        size: 22,
+                                        color: theme.colorScheme.onSurface,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.surface,
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
+                                        ),
+                                        child: TextField(
+                                          controller: _commentController,
+                                          decoration: InputDecoration(
+                                            hintText: "Type a message...",
+                                            border: InputBorder.none,
+                                            hintStyle: TextStyle(
+                                              color: theme.colorScheme.onSurface
+                                                  .withValues(alpha: 0.5),
+                                            ),
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 14.0,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                          onSubmitted: (_) => _addComment(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: _addComment,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.completedColor,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const HugeIcon(
+                                          icon: HugeIcons.strokeRoundedSent,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      SizedBox(height: 25),
-                      Text(
-                        "Comments(29)",
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Column(
-                        children:
-                            comments
-                                .map((comment) => CommentItem(comment: comment))
-                                .toList(),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const HugeIcon(
-                                icon: HugeIcons.strokeRoundedAdd01,
-                                size: 22,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: const TextField(
-                                  decoration: InputDecoration(
-                                    hintText: "Type a message...",
-                                    border: InputBorder.none,
-                                  ),
-                                  style: TextStyle(
-                                    fontSize: 14.0,
-                                    color:
-                                        Colors
-                                            .black, // Set the desired font size
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppTheme.completedColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const HugeIcon(
-                                icon: HugeIcons.strokeRoundedSent,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
@@ -362,22 +531,8 @@ class BookScreen extends StatelessWidget {
   }
 }
 
-class CommentModel {
-  final String name;
-  final String username;
-  final String message;
-  final String time;
-
-  CommentModel({
-    required this.name,
-    required this.username,
-    required this.message,
-    required this.time,
-  });
-}
-
 class CommentItem extends StatefulWidget {
-  final CommentModel comment;
+  final Map<String, dynamic> comment;
 
   const CommentItem({super.key, required this.comment});
 
@@ -391,13 +546,14 @@ class _CommentItemState extends State<CommentItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final user = widget.comment['user'] ?? {};
 
     return Container(
       padding: const EdgeInsets.all(15),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Colors.white,
+        color: theme.colorScheme.surface,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,27 +566,39 @@ class _CommentItemState extends State<CommentItem> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(50),
-                    child: Image.asset(
-                      'assets/images/user_test.jpg',
-                      width: 30,
-                      height: 30,
-                      fit: BoxFit.cover,
-                    ),
+                    child:
+                        user['avatarUrl'] != null
+                            ? Image.network(
+                              user['avatarUrl'],
+                              width: 30,
+                              height: 30,
+                              fit: BoxFit.cover,
+                            )
+                            : Image.asset(
+                              'assets/images/user_test.jpg',
+                              width: 30,
+                              height: 30,
+                              fit: BoxFit.cover,
+                            ),
                   ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.comment.name,
+                        "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
+                                .trim()
+                                .isEmpty
+                            ? "Unknown"
+                            : "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}",
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
-                          color: Colors.black,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       Text(
-                        widget.comment.username,
+                        user['username'] != null ? "@${user['username']}" : "",
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 10,
                           color: AppTheme.textColor2,
@@ -441,7 +609,9 @@ class _CommentItemState extends State<CommentItem> {
                 ],
               ),
               Text(
-                widget.comment.time,
+                widget.comment['createdAt'] != null
+                    ? widget.comment['createdAt'].toString().substring(0, 10)
+                    : "",
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 12,
                   color: AppTheme.textColor2,
@@ -456,10 +626,10 @@ class _CommentItemState extends State<CommentItem> {
           LayoutBuilder(
             builder: (context, constraints) {
               final span = TextSpan(
-                text: widget.comment.message,
+                text: widget.comment['content'] ?? "",
                 style: theme.textTheme.bodySmall?.copyWith(
                   height: 1.6,
-                  color: Colors.black,
+                  color: theme.colorScheme.onSurface,
                 ),
               );
 
@@ -477,7 +647,7 @@ class _CommentItemState extends State<CommentItem> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.comment.message,
+                    widget.comment['content'] ?? "",
                     maxLines: isExpanded ? null : 5,
                     overflow:
                         isExpanded
@@ -485,7 +655,7 @@ class _CommentItemState extends State<CommentItem> {
                             : TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       height: 1.6,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   if (isOverflowing && !isExpanded)
@@ -519,7 +689,7 @@ class _CommentItemState extends State<CommentItem> {
             children: [
               Stat(
                 icon: HugeIcons.strokeRoundedThumbsUp,
-                text: "454",
+                text: "0",
                 iconSize: 18,
                 textColor: AppTheme.textColor2,
                 textSize: 12,
@@ -535,7 +705,7 @@ class _CommentItemState extends State<CommentItem> {
                 "Reply",
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 12,
-                  color: Colors.black,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ],
@@ -552,7 +722,7 @@ class _PostMenuDialogBox extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),

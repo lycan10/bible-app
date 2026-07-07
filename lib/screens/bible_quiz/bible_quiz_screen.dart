@@ -1,21 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/services/game_service.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:quest/components/avatar.dart';
+import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/game_settings_provider.dart';
-import 'package:quest/screens/games/game_settings_sheet.dart';
-import '../../theme/theme.dart';
-import 'quiz_finish_screen.dart';
+import 'package:quest/services/game_service.dart';
 
 class BibleQuizScreen extends StatefulWidget {
-  final String difficulty;
+  final int level;
 
-  const BibleQuizScreen({
-    super.key,
-    required this.difficulty,
-  });
+  const BibleQuizScreen({super.key, required this.level});
 
   @override
   State<BibleQuizScreen> createState() => _BibleQuizScreenState();
@@ -24,19 +20,17 @@ class BibleQuizScreen extends StatefulWidget {
 class _BibleQuizScreenState extends State<BibleQuizScreen> {
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   List<dynamic> _questions = [];
   int _currentQuestionIndex = 0;
   int? _selectedOptionIndex;
   bool _isAnswerLocked = false;
   int _score = 0;
-  
-  late int _timerDuration;
-  late int _secondsLeft;
-  Timer? _timer;
+  int _maxLevel = 302;
 
   int _topScore = 0;
   int _lastScore = 0;
+  final int _coins = 0;
 
   GameSettingsProvider? _gameSettings;
 
@@ -57,21 +51,24 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
 
   Future<void> _loadData() async {
     try {
-      final res = await GameService.fetchBibleQuizQuestions(widget.difficulty);
+      // we assume the game service fetch uses the level instead of difficulty
+      final res = await GameService.fetchBibleQuizQuestions(widget.level);
       final scores = await GameService.fetchScores('BIBLE_QUIZ');
-      
+
       if (!mounted) return;
       setState(() {
         _questions = res['questions'];
-        _timerDuration = res['durationSecs'] ?? 30;
-        _secondsLeft = _timerDuration;
         _topScore = scores['topScore'] ?? 0;
         _lastScore = scores['lastScore'] ?? 0;
+        _maxLevel = res['maxLevel'] ?? 302;
         _isLoading = false;
       });
 
       if (_questions.isNotEmpty) {
-        _startTimer();
+        setState(() {
+          _isAnswerLocked = false;
+          _selectedOptionIndex = null;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -83,66 +80,209 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
     }
   }
 
-  void _startTimer() {
-    _timer?.cancel();
+  void _selectOption(int index) {
+    if (_isAnswerLocked) return;
     setState(() {
-      _secondsLeft = _timerDuration;
+      _selectedOptionIndex = index;
+      _isAnswerLocked = true;
+    });
+
+    final question = _questions[_currentQuestionIndex];
+    if (index == question['correctAnswerIndex']) {
+      _score++;
+      _gameSettings?.playCorrectSound();
+
+      // Delay before next question
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) _advanceOrSubmit();
+      });
+    } else {
+      _gameSettings?.playIncorrectSound();
+      _showIncorrectDialog();
+    }
+  }
+
+  void _showIncorrectDialog() {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final firstName = user?['firstName'] ?? 'Player';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset('assets/images/star.png', height: 150),
+                const SizedBox(height: 16),
+                Text(
+                  'That is Incorrect, $firstName',
+                  style: const TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // close dialog
+                    _retryLevel();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD700),
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: const Text(
+                    'Try again',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // close dialog
+                    Navigator.pop(context); // leave screen
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[100],
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _retryLevel() {
+    setState(() {
+      _currentQuestionIndex = 0;
+      _score = 0;
       _isAnswerLocked = false;
       _selectedOptionIndex = null;
     });
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_secondsLeft > 1) {
-        setState(() => _secondsLeft--);
-      } else {
-        timer.cancel();
-        setState(() => _secondsLeft = 0);
-        _onTimerExpired();
-      }
-    });
   }
 
-  void _onTimerExpired() {
-    if (!mounted || _isAnswerLocked) return;
-    setState(() => _isAnswerLocked = true);
+  void _showBadgeUnlockedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/star.png',
+                  height: 150,
+                ), // using star.png as substitute for the stairs/star graphic
+                const SizedBox(height: 16),
+                const Text(
+                  "You're winning!",
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "You have unlocked a new badge",
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context); // close dialog
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) _advanceOrSubmit();
-    });
-  }
+                    // Increment level and persist
+                    final authProvider = Provider.of<AuthProvider>(
+                      context,
+                      listen: false,
+                    );
+                    authProvider.updateUserLocally({
+                      'bibleQuizLevel': widget.level + 1,
+                    });
 
-  void _selectOption(int index) {
-    if (_isAnswerLocked) return;
-    setState(() => _selectedOptionIndex = index);
-  }
-
-  Future<void> _nextQuestion() async {
-    if (_selectedOptionIndex == null || _isAnswerLocked) return;
-
-    _timer?.cancel();
-    setState(() => _isAnswerLocked = true);
-
-    final question = _questions[_currentQuestionIndex];
-    if (_selectedOptionIndex == question['correctAnswerIndex']) {
-      _score++;
-      _gameSettings?.playCorrectSound();
-    } else {
-      _gameSettings?.playIncorrectSound();
-    }
-
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (mounted) _advanceOrSubmit();
+                    if (!mounted) return;
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                BibleQuizScreen(level: widget.level + 1),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: const Text(
+                    'Play On',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // close dialog
+                    Navigator.pop(context); // exit to games screen
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[100],
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _advanceOrSubmit() async {
     if (_currentQuestionIndex < _questions.length - 1) {
       setState(() {
         _currentQuestionIndex++;
+        _isAnswerLocked = false;
+        _selectedOptionIndex = null;
       });
-      _startTimer();
     } else {
       await _submitAnswers();
     }
@@ -152,33 +292,24 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
-    // Play end-of-game sound: win if score > 50%, otherwise lose
-    _gameSettings?.playGameEndSound(
-      won: _questions.isNotEmpty && _score / _questions.length >= 0.5,
-    );
-
     try {
-      await GameService.submitScore('BIBLE_QUIZ', widget.difficulty, _score);
+      await GameService.submitScore(
+        'BIBLE_QUIZ',
+        widget.level.toString(),
+        _score,
+      );
     } catch (e) {
       debugPrint('Failed to submit score: $e');
     }
 
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder:
-            (_) => QuizFinishScreen(
-              score: _score,
-              totalQuestions: _questions.length,
-              difficulty: widget.difficulty,
-            ),
-      ),
-    );
+    setState(() => _isLoading = false);
+
+    _showBadgeUnlockedDialog();
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     _gameSettings?.stopBackgroundMusic();
     super.dispose();
   }
@@ -186,21 +317,39 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading && _questions.isEmpty) {
-      return const Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: const Color(0xFF3C38C3),
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
       );
     }
 
     if (_errorMessage != null || _questions.isEmpty) {
-      return _ErrorScreen(
-        message: _errorMessage ?? 'No questions found.',
-        onBack: () => Navigator.pop(context),
+      return Scaffold(
+        backgroundColor: const Color(0xFF3C38C3),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 56, color: Colors.white),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage ?? 'No questions found.',
+                style: const TextStyle(fontSize: 16, color: Colors.white),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     final question = _questions[_currentQuestionIndex];
-    // parse options if it's a string
     List<dynamic> options = [];
     if (question['options'] is String) {
       options = json.decode(question['options']);
@@ -208,265 +357,346 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
       options = question['options'];
     }
 
+    final user = Provider.of<AuthProvider>(context).user;
+    final firstName = user?['firstName'] ?? 'Player';
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: const Color(0xFF3C38C3),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top scores
-              Row(
+        child: Column(
+          children: [
+            // Top Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Top Score: $_topScore',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Image.asset(
+                          'assets/images/bible_game.png',
+                          width: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Bible Quiz',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'Last Score: $_lastScore',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // App bar
-              Row(
-                children: [
                   GestureDetector(
                     onTap: () => _showExitDialog(context),
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowLeft01,
-                      size: 25.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Text(
-                      'Bible Quiz',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                        fontSize: 18,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(50),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 20,
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                        ),
-                        builder: (context) => const GameSettingsSheet(),
-                      );
-                    },
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedSettings02,
-                      size: 26,
-                      color: Colors.black,
+                ],
+              ),
+            ),
+
+            // Profile & Level info
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // User Profile Pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(30),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      children: [
+                        const CustomAvatar(
+                          radius: 12,
+                          imageUrl: 'assets/images/boy.png',
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          firstName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Level and coin
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Level',
+                            style: TextStyle(
+                              color: Colors.white.withAlpha(200),
+                              fontSize: 12,
+                            ),
+                          ),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${widget.level}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '/$_maxLevel',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white.withAlpha(150),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      Image.asset('assets/images/gold.png', width: 28),
+                    ],
                   ),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-              // Timer + Question count
-              _QuestionHeader(
-                currentQuestionIndex: _currentQuestionIndex,
-                totalQuestions: _questions.length,
-                secondsLeft: _secondsLeft,
-                timerDuration: _timerDuration,
-              ),
-
-              const SizedBox(height: 14),
-
-              // Dot progress
-              _DotProgressBar(
-                currentQuestionIndex: _currentQuestionIndex,
-                totalQuestions: _questions.length,
-              ),
-
-              const SizedBox(height: 32),
-
-              // Question card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppTheme.goldAccent,
-                    width: 2,
+            // Main Game Area (expanded to push bottom illustrations down)
+            Expanded(
+              child: Stack(
+                children: [
+                  // Bottom illustrations placeholder (using opacity or basic shapes if no exact image)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 150,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withAlpha(50),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  color: AppTheme.goldAccent.withAlpha(35),
-                ),
-                child: Text(
-                  question['questionText'] ?? '',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.black,
-                    height: 1.4,
-                  ),
-                ),
-              ),
 
-              const SizedBox(height: 24),
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        // Two top images
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/images/bible-quiz-top1.png',
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) => Container(
+                                        height: 120,
+                                        color: Colors.grey,
+                                      ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/images/bible-quiz-top2.png',
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) => Container(
+                                        height: 120,
+                                        color: Colors.grey,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
 
-              // Options
-              Expanded(
-                child: ListView.separated(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: options.length,
-                  separatorBuilder:
-                      (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final option = options[index];
-                    final isSelected = _selectedOptionIndex == index;
-                    final isTimedOut =
-                        _isAnswerLocked &&
-                        _secondsLeft == 0 &&
-                        !isSelected;
-
-                    bool isCorrectAnswer = false;
-                    bool isWrongAnswer = false;
-
-                    if (_isAnswerLocked) {
-                      if (index == question['correctAnswerIndex']) {
-                        isCorrectAnswer = true;
-                      } else if (isSelected) {
-                        isWrongAnswer = true;
-                      }
-                    }
-
-                    Color borderColor = Colors.grey.shade300;
-                    Color bgColor = Colors.white;
-                    Color textColor = Colors.black87;
-
-                    if (isCorrectAnswer) {
-                      borderColor = Colors.green;
-                      bgColor = Colors.green.withAlpha(40);
-                    } else if (isWrongAnswer) {
-                      borderColor = Colors.red;
-                      bgColor = Colors.red.withAlpha(40);
-                    } else if (isSelected) {
-                      borderColor = AppTheme.primaryBlue;
-                      bgColor = AppTheme.primaryBlue.withAlpha(200);
-                      textColor = Colors.white;
-                    } else if (isTimedOut) {
-                      bgColor = Colors.grey.shade100;
-                    }
-
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      child: GestureDetector(
-                        onTap: () => _selectOption(index),
-                        child: Container(
+                        // Question Card
+                        Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
+                            horizontal: 24,
+                            vertical: 32,
                           ),
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              width: (isSelected || isCorrectAnswer || isWrongAnswer) ? 2 : 1,
-                              color: borderColor,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            color: bgColor,
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(24),
                           ),
-                          child: Row(
+                          child: Column(
                             children: [
-                              // Option letter badge
-                              Container(
-                                width: 30,
-                                height: 30,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color:
-                                      isSelected
-                                          ? Colors.white.withAlpha(60)
-                                          : AppTheme.primaryBlue
-                                              .withAlpha(30),
-                                ),
-                                child: Text(
-                                  String.fromCharCode(
-                                    65 + index,
-                                  ), // A, B, C, D
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : AppTheme.primaryBlue,
-                                  ),
+                              Text(
+                                'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
+                                style: TextStyle(
+                                  color: Colors.white.withAlpha(150),
+                                  fontSize: 14,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  option.toString(),
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              const SizedBox(height: 16),
+                              Text(
+                                question['questionText'] ?? '',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.4,
                                 ),
                               ),
-                              if (isCorrectAnswer)
-                                const Icon(Icons.check_circle, color: Colors.green),
-                              if (isWrongAnswer)
-                                const Icon(Icons.cancel, color: Colors.red),
                             ],
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+                        const SizedBox(height: 24),
 
-              const SizedBox(height: 16),
+                        // Pick the correct answer text
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Pick the correct answer',
+                            style: TextStyle(color: Colors.white, fontSize: 14),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
 
-              // Next button
-              ElevatedButton(
-                onPressed:
-                    (_selectedOptionIndex != null && !_isAnswerLocked)
-                        ? () => _nextQuestion()
-                        : null,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                        // Options grid (2x2)
+                        Expanded(
+                          child: GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: 2.5,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                ),
+                            itemCount: options.length,
+                            itemBuilder: (context, index) {
+                              final option = options[index];
+                              final isSelected = _selectedOptionIndex == index;
+
+                              bool isCorrectAnswer = false;
+                              bool isWrongAnswer = false;
+
+                              if (_isAnswerLocked) {
+                                if (index == question['correctAnswerIndex']) {
+                                  isCorrectAnswer = true;
+                                } else if (isSelected) {
+                                  isWrongAnswer = true;
+                                }
+                              }
+
+                              Color bgColor = const Color(
+                                0xFF4C46E8,
+                              ); // default pill blue
+                              if (isCorrectAnswer) bgColor = Colors.green;
+                              if (isWrongAnswer) bgColor = Colors.red;
+
+                              return GestureDetector(
+                                onTap: () => _selectOption(index),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: bgColor,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            String.fromCharCode(
+                                              97 + index,
+                                            ), // a, b, c, d
+                                            style: TextStyle(
+                                              color: bgColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          option.toString(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                child: Text(
-                  _currentQuestionIndex == _questions.length - 1
-                      ? 'Submit'
-                      : 'Next',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                ],
               ),
-
-              const SizedBox(height: 8),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -493,176 +723,6 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
               ),
             ],
           ),
-    );
-  }
-}
-
-// ── Supporting widgets ──────────────────────────────────────────────────────
-
-class _QuestionHeader extends StatelessWidget {
-  final int currentQuestionIndex;
-  final int totalQuestions;
-  final int secondsLeft;
-  final int timerDuration;
-
-  const _QuestionHeader({
-    required this.currentQuestionIndex,
-    required this.totalQuestions,
-    required this.secondsLeft,
-    required this.timerDuration,
-  });
-
-  Color get _timerColor {
-    if (secondsLeft > timerDuration / 2) return AppTheme.primaryBlue;
-    if (secondsLeft > timerDuration / 4) return Colors.orange;
-    return Colors.red;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Question',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-                fontSize: 13,
-              ),
-            ),
-            Text(
-              '${currentQuestionIndex + 1} / $totalQuestions',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(
-          width: 68,
-          height: 68,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 64,
-                height: 64,
-                child: CircularProgressIndicator(
-                  value: secondsLeft / timerDuration,
-                  strokeWidth: 5,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: AlwaysStoppedAnimation<Color>(_timerColor),
-                ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$secondsLeft',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: _timerColor,
-                    ),
-                  ),
-                  Text(
-                    'sec',
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DotProgressBar extends StatelessWidget {
-  final int currentQuestionIndex;
-  final int totalQuestions;
-
-  const _DotProgressBar({
-    required this.currentQuestionIndex,
-    required this.totalQuestions,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (totalQuestions <= 15) {
-      return Row(
-        children: List.generate(totalQuestions, (i) {
-          final isDone = i < currentQuestionIndex;
-          final isCurrent = i == currentQuestionIndex;
-          return Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              height: isCurrent ? 8 : 5,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color:
-                    isDone
-                        ? AppTheme.primaryBlue
-                        : isCurrent
-                        ? AppTheme.primaryBlue.withAlpha(180)
-                        : Colors.grey.shade300,
-              ),
-            ),
-          );
-        }),
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: LinearProgressIndicator(
-        value: (currentQuestionIndex + 1) / totalQuestions,
-        minHeight: 6,
-        backgroundColor: Colors.grey.shade300,
-        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
-      ),
-    );
-  }
-}
-
-class _ErrorScreen extends StatelessWidget {
-  final String message;
-  final VoidCallback onBack;
-
-  const _ErrorScreen({required this.message, required this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 56,
-                color: Colors.redAccent,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Colors.black87),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(onPressed: onBack, child: const Text('Go Back')),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

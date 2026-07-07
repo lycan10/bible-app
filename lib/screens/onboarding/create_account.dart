@@ -23,7 +23,8 @@ class _CreateAccountState extends State<CreateAccount> {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => const Username(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => const Username(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -40,9 +41,16 @@ class _CreateAccountState extends State<CreateAccount> {
     final first = _firstNameController.text.trim();
     final last = _lastNameController.text.trim();
     final pass = _passwordController.text.trim();
-    if (first.isEmpty || last.isEmpty || pass.isEmpty || _selectedGender == null) {
+    if (first.isEmpty ||
+        last.isEmpty ||
+        pass.isEmpty ||
+        _selectedGender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields, including password, and select your gender.')),
+        const SnackBar(
+          content: Text(
+            'Please fill all fields, including password, and select your gender.',
+          ),
+        ),
       );
       return;
     }
@@ -191,14 +199,15 @@ class _CreateAccountState extends State<CreateAccount> {
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            items: ["Male", "Female", "Other"]
-                                .map(
-                                  (gender) => DropdownMenuItem(
-                                    value: gender,
-                                    child: Text(gender),
-                                  ),
-                                )
-                                .toList(),
+                            items:
+                                ["Male", "Female", "Other"]
+                                    .map(
+                                      (gender) => DropdownMenuItem(
+                                        value: gender,
+                                        child: Text(gender),
+                                      ),
+                                    )
+                                    .toList(),
                             onChanged: (value) {
                               setState(() {
                                 _selectedGender = value;
@@ -237,7 +246,9 @@ class _CreateAccountState extends State<CreateAccount> {
                                 border: InputBorder.none,
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                     color: Colors.grey,
                                   ),
                                   onPressed: () {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/feeling_selector.dart';
+import 'package:quest/components/daily_feeling_popup.dart';
 import '../../components/editor_toolbar.dart';
 import '../../components/embeds/media_upload_manager.dart';
 import 'dart:convert';
@@ -22,7 +22,8 @@ class NewJournalScreen extends StatefulWidget {
   State<NewJournalScreen> createState() => _NewJournalScreenState();
 }
 
-class _NewJournalScreenState extends State<NewJournalScreen> with MediaUploadMixin<NewJournalScreen> {
+class _NewJournalScreenState extends State<NewJournalScreen>
+    with MediaUploadMixin<NewJournalScreen> {
   final QuillController _controller = QuillController.basic();
   final TextEditingController _titleController = TextEditingController();
   List<String> _selectedFeelings = [];
@@ -32,7 +33,7 @@ class _NewJournalScreenState extends State<NewJournalScreen> with MediaUploadMix
   QuillController get quillController => _controller;
 
   void _showFeelingSelector() {
-    FeelingSelector.show(
+    DailyFeelingPopup.show(
       context,
       onSelected: (feeling, emoji) {
         setState(() {
@@ -119,7 +120,9 @@ class _NewJournalScreenState extends State<NewJournalScreen> with MediaUploadMix
     showBibleReferencePicker(context, (reference) {
       if (reference != null) {
         final index = _controller.selection.baseOffset;
-        final length = _controller.selection.extentOffset - _controller.selection.baseOffset;
+        final length =
+            _controller.selection.extentOffset -
+            _controller.selection.baseOffset;
         _controller.replaceText(index, length, '[Verse:$reference] ', null);
       }
     });
@@ -209,7 +212,9 @@ class _NewJournalScreenState extends State<NewJournalScreen> with MediaUploadMix
                         hintStyle: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.26),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.26),
                         ),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
@@ -244,13 +249,15 @@ class _NewJournalScreenState extends State<NewJournalScreen> with MediaUploadMix
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4C4DFF).withOpacity(0.1),
+                    color: const Color(0xFF4C4DFF).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: const Color(0xFF4C4DFF).withOpacity(0.2),
+                        backgroundColor: const Color(
+                          0xFF4C4DFF,
+                        ).withValues(alpha: 0.2),
                         child: HugeIcon(
                           icon: HugeIcons.strokeRoundedLeaf01,
                           color: const Color(0xFF4C4DFF),
@@ -275,7 +282,9 @@ class _NewJournalScreenState extends State<NewJournalScreen> with MediaUploadMix
                               'Today ${DateFormat('h:mma').format(DateTime.now()).toLowerCase()}',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.54),
                               ),
                             ),
                           ],

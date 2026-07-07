@@ -30,7 +30,8 @@ class BadgeCard extends StatelessWidget {
       return const AssetImage('assets/images/gold.png');
     }
 
-    final cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    final cleanPath =
+        imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
     if (cleanPath.startsWith('assets/')) {
       return AssetImage(cleanPath);
     }

@@ -8,13 +8,13 @@ import 'bible_quiz_screen.dart';
 class QuizFinishScreen extends StatelessWidget {
   final int score;
   final int totalQuestions;
-  final String difficulty;
+  final int level;
 
   const QuizFinishScreen({
     super.key,
     required this.score,
     required this.totalQuestions,
-    required this.difficulty,
+    required this.level,
   });
 
   double get _percentage =>
@@ -118,8 +118,8 @@ class QuizFinishScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   _StatCard(
-                    label: 'Difficulty',
-                    value: difficulty.substring(0, 1).toUpperCase() + difficulty.substring(1),
+                    label: 'Level',
+                    value: '$level',
                     icon: Icons.emoji_events_rounded,
                     color: AppTheme.goldAccent,
                   ),
@@ -135,10 +135,7 @@ class QuizFinishScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder:
-                            (_) => BibleQuizScreen(
-                              difficulty: difficulty,
-                            ),
+                        builder: (_) => BibleQuizScreen(level: level),
                       ),
                     );
                   },
@@ -164,8 +161,8 @@ class QuizFinishScreen extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.of(context)
-                      ..pop() 
-                      ..pop(); 
+                      ..pop()
+                      ..pop();
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -175,7 +172,7 @@ class QuizFinishScreen extends StatelessWidget {
                     side: BorderSide(color: Colors.grey.shade400),
                   ),
                   child: const Text(
-                    'Back to Difficulties',
+                    'Back to Levels',
                     style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                 ),

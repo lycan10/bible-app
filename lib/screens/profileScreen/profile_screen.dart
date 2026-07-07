@@ -133,11 +133,12 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     );
   }
 
-  void _navigateToPostScreen(BuildContext context) {
+  void _navigateToPostScreen(BuildContext context, Map<String, dynamic> post) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => PostScreen(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => PostScreen(post: post),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -456,6 +457,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                             onTap:
                                                 () => _navigateToPostScreen(
                                                   context,
+                                                  post,
                                                 ),
                                           );
                                         }).toList(),
@@ -499,8 +501,10 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                           final fUsername =
                                               '@${friend['username'] ?? 'anonymous'}';
                                           final fAvatar =
-                                              friend['avatarUrl'] != null 
-                                                  ? ApiService.getFullImageUrl(friend['avatarUrl']) 
+                                              friend['avatarUrl'] != null
+                                                  ? ApiService.getFullImageUrl(
+                                                    friend['avatarUrl'],
+                                                  )
                                                   : 'assets/images/boy.png';
                                           return FriendCardSnippet(
                                             userName: fUsername,

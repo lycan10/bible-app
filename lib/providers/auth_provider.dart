@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -385,5 +384,16 @@ class AuthProvider with ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<bool> blockUser(String targetUserId) async {
+    if (_token == null) return false;
+    try {
+      await ApiService.blockUser(_token!, targetUserId);
+      return true;
+    } catch (e) {
+      debugPrint("Error blocking user: $e");
+      return false;
+    }
   }
 }

@@ -53,7 +53,10 @@ class QuizProvider with ChangeNotifier {
 
   // Submit quiz answers
   Future<Map<String, dynamic>?> submitQuizAnswers(
-      String token, String quizId, List<Map<String, dynamic>> answers) async {
+    String token,
+    String quizId,
+    List<Map<String, dynamic>> answers,
+  ) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();

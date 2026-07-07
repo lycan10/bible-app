@@ -16,7 +16,12 @@ class TagTextEditingController extends TextEditingController {
 
     for (final match in matches) {
       if (match.start > lastMatchEnd) {
-        children.add(TextSpan(text: text.substring(lastMatchEnd, match.start), style: style));
+        children.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
       }
 
       children.add(

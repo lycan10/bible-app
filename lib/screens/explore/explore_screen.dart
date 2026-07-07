@@ -7,23 +7,27 @@ import 'package:quest/components/media/video/video_card.dart';
 import 'package:quest/components/menu/discover_more.dart';
 import 'package:quest/components/posts/post_card_long.dart';
 import 'package:quest/components/posts/post_card_short.dart';
-import 'package:quest/components/sponsored/sponsored_post.dart';
-import 'package:quest/components/sponsored/sponsored_post_card.dart';
-import 'package:quest/components/sponsored/sponsored_video.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:provider/provider.dart';
+import 'package:quest/providers/community_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/screens/books/books_list_screen.dart';
 import 'package:quest/screens/community/community_list_screen.dart';
+import 'package:quest/screens/media/audio_reel_screen.dart';
+import 'package:quest/screens/media/video_reel_screen.dart';
+import 'package:quest/screens/media/audio_list_screen.dart';
 import 'package:quest/screens/connect/connect_screen.dart';
 import 'package:quest/screens/devotion/devotion_list_screen.dart';
-import 'package:quest/screens/messages/message_list.dart';
 import 'package:quest/screens/messages/message_list_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/screens/post/post_list.dart';
 import 'package:quest/screens/post/post_screen.dart';
 import 'package:quest/screens/profileScreen/profile_screen.dart';
+import 'package:quest/screens/devotion/devotion_screen.dart';
+import 'package:quest/screens/community/community_individual_screen.dart';
+import 'package:quest/components/user_details/user_profile_card.dart';
+import 'package:quest/components/event/event_details_card.dart';
 import 'package:quest/screens/media/video_list_screen.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
@@ -38,6 +42,8 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -46,8 +52,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
       final feedProvider = Provider.of<FeedProvider>(context, listen: false);
       if (authProvider.token != null) {
         feedProvider.loadExploreData(authProvider.token!);
+        feedProvider.loadProfileDetails(authProvider.token!);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showComingSoon(BuildContext context, String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature coming soon!'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppTheme.purpleColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   void _navigateToNotification(BuildContext context) {
@@ -72,7 +96,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => MessageList(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => MessageListScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -103,29 +128,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  void _navigateToPostScreen(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => PostScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.scaled,
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-
-  void _navigateToSponsoredPostScreen(BuildContext context) {
+  void _navigateToPostScreen(BuildContext context, Map<String, dynamic> post) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
         pageBuilder:
-            (context, animation, secondaryAnimation) => SponsoredPostScreen(),
+            (context, animation, secondaryAnimation) => PostScreen(post: post),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -165,9 +173,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final videos = explore?['videos'] as List<dynamic>? ?? [];
     final audios = explore?['audios'] as List<dynamic>? ?? [];
     final posts = explore?['posts'] as List<dynamic>? ?? [];
+    final events = explore?['events'] as List<dynamic>? ?? [];
+    final friends = feedProvider.friends;
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(top: 15, left: 16, right: 16),
@@ -186,7 +196,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             'Explore',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: Colors.black,
+                              color: theme.colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -200,7 +210,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             child: HugeIcon(
                               icon: HugeIcons.strokeRoundedMessage02,
                               size: 20.0,
-                              color: Colors.black,
+                              color: theme.colorScheme.onSurface,
                               strokeWidth: 1.5,
                             ),
                           ),
@@ -210,7 +220,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             child: HugeIcon(
                               icon: HugeIcons.strokeRoundedNotification01,
                               size: 20.0,
-                              color: Colors.black,
+                              color: theme.colorScheme.onSurface,
                               strokeWidth: 1.5,
                             ),
                           ),
@@ -237,12 +247,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 borderRadius: BorderRadius.circular(
                                   25,
                                 ), // half of image width/height
-                                child: Image.asset(
-                                  'assets/images/boy.png',
-                                  width: 20,
-                                  height: 20,
-                                  fit: BoxFit.cover,
-                                ),
+                                child:
+                                    (feedProvider.friends.isNotEmpty &&
+                                            feedProvider
+                                                    .friends[0]['avatarUrl'] !=
+                                                null)
+                                        ? Image.network(
+                                          feedProvider.friends[0]['avatarUrl'],
+                                          width: 20,
+                                          height: 20,
+                                          fit: BoxFit.cover,
+                                        )
+                                        : Icon(
+                                          Icons.person,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
                               ),
                             ),
                           ),
@@ -269,13 +289,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: HugeIcon(
                             icon: HugeIcons.strokeRoundedLeftToRightListBullet,
                             size: 22,
-                            color: Colors.black,
+                            color: theme.colorScheme.onSurface,
                             strokeWidth: 1,
                           ),
                         ),
@@ -291,7 +311,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(
@@ -307,6 +327,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               /// Search Input
                               Expanded(
                                 child: TextField(
+                                  controller: _searchController,
+                                  onSubmitted:
+                                      (value) =>
+                                          _showComingSoon(context, 'Search'),
                                   decoration: const InputDecoration(
                                     hintText:
                                         "Search for devotions, books, communities...",
@@ -396,7 +420,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         ),
                         FeatureGuard(
                           featureKey: 'games',
-                          child: TagChip(label: "Games", onTap: () {}),
+                          child: TagChip(
+                            label: "Games",
+                            onTap: () => _showComingSoon(context, 'Games'),
+                          ),
                         ),
                         FeatureGuard(
                           featureKey: 'connect',
@@ -427,10 +454,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           height: 200,
                           child:
                               devotionPlans.isEmpty
-                                  ? const Center(
+                                  ? Center(
                                     child: Text(
                                       "No plans available",
-                                      style: TextStyle(color: Colors.black54),
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.54),
+                                      ),
                                     ),
                                   )
                                   : ListView.separated(
@@ -447,10 +477,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                         author: plan['authorName'] ?? 'Shalom',
                                         likes:
                                             '${plan['durationDays'] ?? 0} Days',
-                                        backgroundImage:
-                                            plan['image'] ??
-                                            'assets/images/book.jpeg',
-                                        onTap: () {},
+                                        backgroundImage: plan['image'] ?? '',
+                                        onTap: () {
+                                          if (plan['id'] != null) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) => DevotionScreen(
+                                                      planId: plan['id'],
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                        },
                                       );
                                     },
                                   ),
@@ -462,15 +502,29 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     featureKey: 'videos',
                     child: Column(
                       children: [
-                        SectionHeader(title: "Video", seeAllText: "See more"),
+                        SectionHeader(
+                          title: "Video",
+                          seeAllText: "See more",
+                          onSeeAllTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const VideoListScreen(),
+                              ),
+                            );
+                          },
+                        ),
                         SizedBox(
                           height: 200,
                           child:
                               videos.isEmpty
-                                  ? const Center(
+                                  ? Center(
                                     child: Text(
                                       "No videos available",
-                                      style: TextStyle(color: Colors.black54),
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.54),
+                                      ),
                                     ),
                                   )
                                   : ListView.separated(
@@ -488,10 +542,42 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                         likes: '${m['likes'] ?? 0}',
                                         height: 150,
                                         width: 150,
-                                        backgroundImage:
-                                            m['imageUrl'] ??
-                                            'assets/images/boy.png',
-                                        onTap: () {},
+                                        backgroundImage: m['imageUrl'] ?? '',
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            PageRouteBuilder(
+                                              transitionDuration:
+                                                  const Duration(
+                                                    milliseconds: 600,
+                                                  ),
+                                              pageBuilder:
+                                                  (
+                                                    context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                  ) => VideoReelScreen(
+                                                    videos: videos,
+                                                    initialIndex: index,
+                                                  ),
+                                              transitionsBuilder: (
+                                                context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child,
+                                              ) {
+                                                return SharedAxisTransition(
+                                                  animation: animation,
+                                                  secondaryAnimation:
+                                                      secondaryAnimation,
+                                                  transitionType:
+                                                      SharedAxisTransitionType
+                                                          .scaled,
+                                                  child: child,
+                                                );
+                                              },
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   ),
@@ -506,15 +592,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         SectionHeader(
                           title: "Audio Messages",
                           seeAllText: "See more",
+                          onSeeAllTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AudioListScreen(),
+                              ),
+                            );
+                          },
                         ),
                         SizedBox(
                           height: 165,
                           child:
                               audios.isEmpty
-                                  ? const Center(
+                                  ? Center(
                                     child: Text(
                                       "No audio messages available",
-                                      style: TextStyle(color: Colors.black54),
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.54),
+                                      ),
                                     ),
                                   )
                                   : ListView.separated(
@@ -530,10 +627,42 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                         title: m['title'] ?? '',
                                         author: m['author'] ?? '',
                                         likes: '${m['likes'] ?? 0}',
-                                        backgroundImage:
-                                            m['imageUrl'] ??
-                                            'assets/images/alucard.png',
-                                        onTap: () {},
+                                        backgroundImage: m['imageUrl'] ?? '',
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            PageRouteBuilder(
+                                              transitionDuration:
+                                                  const Duration(
+                                                    milliseconds: 600,
+                                                  ),
+                                              pageBuilder:
+                                                  (
+                                                    context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                  ) => AudioReelScreen(
+                                                    audios: audios,
+                                                    initialIndex: index,
+                                                  ),
+                                              transitionsBuilder: (
+                                                context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child,
+                                              ) {
+                                                return SharedAxisTransition(
+                                                  animation: animation,
+                                                  secondaryAnimation:
+                                                      secondaryAnimation,
+                                                  transitionType:
+                                                      SharedAxisTransitionType
+                                                          .scaled,
+                                                  child: child,
+                                                );
+                                              },
+                                            ),
+                                          );
+                                        },
                                         width: 147,
                                         height: 150,
                                         duration: m['duration'] ?? "2:30",
@@ -556,10 +685,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           height: 175,
                           child:
                               communities.isEmpty
-                                  ? const Center(
+                                  ? Center(
                                     child: Text(
                                       "No communities found",
-                                      style: TextStyle(color: Colors.black54),
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.54),
+                                      ),
                                     ),
                                   )
                                   : ListView.builder(
@@ -580,14 +712,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                           description:
                                               '${c['_count']?['members'] ?? 0} members',
                                           avatarUrl: c['avatarUrl'],
-                                          onTap: () {},
+                                          onTap: () {
+                                            if (c['id'] != null) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          CommunityIndividualScreen(
+                                                            communityId:
+                                                                c['id'],
+                                                          ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          image: c['image'] ?? '',
                                         ),
                                       );
                                     },
                                   ),
-                        ),
-                        SponsoredPostCard(
-                          onTap: () => _navigateToSponsoredPostScreen(context),
                         ),
                         SectionHeader(
                           title: "Community Posts",
@@ -595,12 +739,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           onSeeAllTap: () => _navigateToPostList(context),
                         ),
                         if (posts.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
                             child: Center(
                               child: Text(
                                 "No community posts yet",
-                                style: TextStyle(color: Colors.black54),
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.54,
+                                  ),
+                                ),
                               ),
                             ),
                           )
@@ -615,7 +763,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     ? ApiService.getFullImageUrl(
                                       post['user']!['avatarUrl'],
                                     )
-                                    : 'assets/images/boy.png';
+                                    : '';
                             return PostCardLong(
                               userName: userName,
                               userImage: userImage,
@@ -626,7 +774,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               likes: '${post['reactions']?.length ?? 0}',
                               comments: '${post['comments']?.length ?? 0}',
                               time: "Today",
-                              onTap: () => _navigateToPostScreen(context),
+                              onTap: () => _navigateToPostScreen(context, post),
                             );
                           }),
                       ],
@@ -635,225 +783,281 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   SectionHeader(
                     title: "Devotion for you",
                     seeAllText: "See more",
+                    onSeeAllTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DevotionListScreen(),
+                        ),
+                      );
+                    },
                   ),
                   if (devotionPlans.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Center(
                         child: Text(
                           "No recommended devotions yet",
-                          style: TextStyle(color: Colors.black54),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.54,
+                            ),
+                          ),
                         ),
                       ),
                     )
                   else
                     ...devotionPlans.take(2).map((plan) {
-                      final image =
-                          plan['image'] ?? 'assets/images/user_test.jpg';
+                      final image = plan['image'] ?? '';
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              width: 0.5,
-                              color: AppTheme.buttonColor2,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const DevotionListScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                width: 0.5,
+                                color: AppTheme.buttonColor2,
+                              ),
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(30),
                             ),
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(15),
-                                    child:
-                                        image.startsWith('http')
-                                            ? Image.network(
-                                              image,
-                                              width: 62,
-                                              height: 62,
-                                              fit: BoxFit.cover,
-                                            )
-                                            : Image.asset(
-                                              image,
-                                              width: 62,
-                                              height: 62,
-                                              fit: BoxFit.cover,
+                            child: Column(
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      child:
+                                          (image.isNotEmpty)
+                                              ? (image.startsWith('http')
+                                                  ? Image.network(
+                                                    image,
+                                                    width: 62,
+                                                    height: 62,
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                  : Image.asset(
+                                                    image,
+                                                    width: 62,
+                                                    height: 62,
+                                                    fit: BoxFit.cover,
+                                                  ))
+                                              : Container(
+                                                width: 62,
+                                                height: 62,
+                                                color: Colors.grey,
+                                              ),
+                                    ),
+                                    const SizedBox(width: 10),
+
+                                    /// 🔹 Text Content
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            plan['title'] ?? '',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color:
+                                                  theme.colorScheme.onSurface,
                                             ),
-                                  ),
-                                  const SizedBox(width: 10),
-
-                                  /// 🔹 Text Content
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          plan['title'] ?? '',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.black,
                                           ),
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          plan['tag'] ?? 'Weekly inspiration',
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.normal,
-                                            fontSize: 14,
-                                            color: AppTheme.textColor2,
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            plan['tag'] ?? 'Weekly inspiration',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.copyWith(
+                                              fontWeight: FontWeight.normal,
+                                              fontSize: 14,
+                                              color: AppTheme.textColor2,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 5),
+                                          const SizedBox(height: 5),
 
-                                        RichText(
-                                          text: TextSpan(
+                                          RichText(
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text: 'From: ',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        fontSize: 12,
+                                                        color:
+                                                            AppTheme.textColor2,
+                                                        fontStyle:
+                                                            FontStyle.italic,
+                                                      ),
+                                                ),
+                                                TextSpan(
+                                                  text:
+                                                      plan['authorName'] ??
+                                                      "Believer's Journal",
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        fontSize: 12,
+                                                        color:
+                                                            theme
+                                                                .colorScheme
+                                                                .onSurface,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 5),
+                                          Row(
                                             children: [
-                                              TextSpan(
-                                                text: 'From: ',
+                                              const HugeIcon(
+                                                icon:
+                                                    HugeIcons
+                                                        .strokeRoundedThumbsUp,
+                                                size: 16,
+                                                color: Color(0xff8e8e93),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                "385",
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      fontSize: 11,
+                                                      color:
+                                                          AppTheme.textColor2,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 5),
+                                              Text(
+                                                ' - ${plan['durationDays'] ?? 0} Days Plan',
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .bodyMedium
                                                     ?.copyWith(
                                                       fontSize: 12,
                                                       color:
-                                                          AppTheme.textColor2,
-                                                      fontStyle:
-                                                          FontStyle.italic,
+                                                          theme
+                                                              .colorScheme
+                                                              .onSurface,
                                                     ),
                                               ),
-                                              TextSpan(
-                                                text:
-                                                    plan['authorName'] ??
-                                                    "Believer's Journal",
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyMedium
-                                                    ?.copyWith(
-                                                      fontSize: 12,
-                                                      color: Colors.black,
+                                              const SizedBox(width: 10),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 15,
+                                                      vertical: 7,
                                                     ),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      theme.colorScheme.surface,
+                                                  border: Border.all(
+                                                    width: 1,
+                                                    color:
+                                                        theme
+                                                            .colorScheme
+                                                            .onSurface,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(30),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      'Read',
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color:
+                                                                theme
+                                                                    .colorScheme
+                                                                    .onSurface,
+                                                            fontSize: 13,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ],
                                           ),
-                                        ),
-
-                                        const SizedBox(height: 5),
-                                        Row(
-                                          children: [
-                                            const HugeIcon(
-                                              icon:
-                                                  HugeIcons
-                                                      .strokeRoundedThumbsUp,
-                                              size: 16,
-                                              color: Color(0xff8e8e93),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              "385",
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    fontSize: 11,
-                                                    color: AppTheme.textColor2,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 5),
-                                            Text(
-                                              ' - ${plan['durationDays'] ?? 0} Days Plan',
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium?.copyWith(
-                                                fontSize: 12,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 15,
-                                                    vertical: 7,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                border: Border.all(
-                                                  width: 1,
-                                                  color: Colors.black,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(30),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    'Read',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Colors.black,
-                                                          fontSize: 13,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 20),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(width: 20),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
                     }),
 
-                  SizedBox(height: 15),
-                  SponsoredVideo(),
-                  SectionHeader(
+                  const SizedBox(height: 15),
+                  const SectionHeader(
                     title: "Recommended Messages",
                     seeAllText: "see more",
                   ),
-                  PostCardShort(
-                    postText:
-                        "Christian fellowship is a beautiful expression...",
-                    author: "Lekki Christian Youths",
-                    postImage: "assets/images/test.jpg",
-                    likes: "370k",
-                    comments: "29",
-                    time: "Today 3:25pm",
-                    onTap: () {},
-                  ),
-                  PostCardShort(
-                    postText:
-                        "Christian fellowship is a beautiful expression...",
-                    author: "Lekki Christian Youths",
-                    postImage: "assets/images/test.jpg",
-                    likes: "370k",
-                    comments: "29",
-                    time: "Today 3:25pm",
-                    onTap: () {},
-                  ),
+                  if (posts.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20.0),
+                        child: Text(
+                          "No recommended messages",
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.54,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ...posts.map((post) {
+                      final user = post['user'] ?? {};
+                      return PostCardShort(
+                        postText: post['text'] ?? "No text",
+                        author:
+                            user['firstName'] != null &&
+                                    user['lastName'] != null
+                                ? "${user['firstName']} ${user['lastName']}"
+                                : "Unknown User",
+                        postImage: post['image'],
+                        likes: "${post['_count']?['reactions'] ?? 0}",
+                        comments: "${post['_count']?['comments'] ?? 0}",
+                        time: post['createdAt'] != null ? "Recently" : "Today",
+                        avatarUrl: user['avatarUrl'],
+                        onTap: () => _navigateToPostScreen(context, post),
+                      );
+                    }),
                   FeatureGuard(
                     featureKey: 'connect',
                     child: Column(
@@ -861,25 +1065,52 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         SectionHeader(title: "Friend", seeAllText: 'see more'),
                         SizedBox(
                           height: 140,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            shrinkWrap: true,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: 8,
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: EdgeInsets.only(right: 7),
-                                child: CircleStuff(
-                                  titleFont: 14,
-                                  descriptionFont: 12,
-                                  titleWidth: 50,
-                                  title: 'Noah',
-                                  description: 'City',
-                                  onTap: () {},
-                                ),
-                              );
-                            },
-                          ),
+                          child:
+                              friends.isEmpty
+                                  ? Center(
+                                    child: Text(
+                                      "No friends yet",
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.54),
+                                      ),
+                                    ),
+                                  )
+                                  : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: friends.length,
+                                    itemBuilder: (context, index) {
+                                      final friend = friends[index];
+                                      return Padding(
+                                        padding: EdgeInsets.only(right: 7),
+                                        child: CircleStuff(
+                                          titleFont: 14,
+                                          descriptionFont: 12,
+                                          titleWidth: 50,
+                                          image: friend['avatarUrl'] ?? '',
+                                          title:
+                                              friend['firstName'] ?? 'Friend',
+                                          description:
+                                              friend['location'] ?? 'Unknown',
+                                          onTap: () {
+                                            showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              builder: (context) {
+                                                return UserProfileCard(
+                                                  user: friend,
+                                                );
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  ),
                         ),
                       ],
                     ),
@@ -888,7 +1119,60 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     title: "Upcoming community events",
                     showSeeAll: false,
                   ),
-                  EventDottedCard(onTap: () {}),
+                  if (events.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          "No upcoming events",
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.54,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ...events.map((event) {
+                      final eventMap = event as Map<String, dynamic>;
+                      final auth = context.read<AuthProvider>();
+                      final currentUserId = auth.user?['id'];
+                      final attendees = List.from(eventMap['attendees'] ?? []);
+                      final isAttending = attendees.any((a) => a['userId'] == currentUserId);
+
+                      return EventDottedCard(
+                        event: eventMap,
+                        isAttending: isAttending,
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) {
+                              return EventDetailsCard(
+                                event: eventMap,
+                                isAttending: isAttending,
+                                onToggleAttend: () async {
+                                  // Explore screen might not have full toggle logic wired up easily if communityProvider is not available here,
+                                  // but we can wire it up if communityId is present.
+                                  // For now let's just close the sheet or do a placeholder.
+                                  final provider = context.read<CommunityProvider>();
+                                  if (auth.token != null && eventMap['id'] != null) {
+                                      if (isAttending) {
+                                          await provider.unattendEvent(auth.token!, eventMap['id']);
+                                      } else {
+                                          await provider.attendEvent(auth.token!, eventMap['id']);
+                                      }
+                                      if (context.mounted) Navigator.pop(context);
+                                  }
+                                },
+                              );
+                            },
+                          );
+                        },
+                      );
+                    }),
                   const SizedBox(height: 30),
                 ],
               ),
@@ -925,15 +1209,15 @@ class TagChip extends StatelessWidget {
             width: 1,
             color:
                 isSelected
-                    ? Colors.black
+                    ? Theme.of(context).colorScheme.onSurface
                     : AppTheme.textColor2.withValues(alpha: 0.5),
           ),
         ),
         child: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.normal,
           ),
         ),
@@ -973,12 +1257,11 @@ class BooksReelCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              backgroundImage.startsWith('http')
-                  ? Image.network(backgroundImage, fit: BoxFit.cover)
-                  : Image.asset(backgroundImage, fit: BoxFit.cover),
-
-              /// 🔹 Dark overlay for readability
-              Container(color: Colors.black.withValues(alpha: 0.5)),
+              (backgroundImage.isNotEmpty)
+                  ? (backgroundImage.startsWith('http')
+                      ? Image.network(backgroundImage, fit: BoxFit.cover)
+                      : Image.asset(backgroundImage, fit: BoxFit.cover))
+                  : Container(color: Colors.grey.shade800),
 
               /// 🔹 Play Button (Centered)
 

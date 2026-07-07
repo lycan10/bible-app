@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/components/avatar.dart';
 
 class CommunityCardSnippet extends StatelessWidget {
   final String communityName;
@@ -34,7 +35,7 @@ class CommunityCardSnippet extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    _Avatar(image: communityImage),
+                    CustomAvatar(imageUrl: communityImage, radius: 20.5, hasBorder: true),
                     const SizedBox(width: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,28 +74,6 @@ class CommunityCardSnippet extends StatelessWidget {
         ),
         SizedBox(height: 10),
       ],
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final String image;
-
-  const _Avatar({required this.image});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 41,
-      height: 41,
-      padding: const EdgeInsets.all(0),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xff00d4ff), Color(0xff4a3aff)],
-        ),
-        shape: BoxShape.circle,
-      ),
-      child: CircleAvatar(radius: 10, backgroundImage: AssetImage(image)),
     );
   }
 }

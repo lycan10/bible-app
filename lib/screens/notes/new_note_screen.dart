@@ -19,7 +19,8 @@ class NewNoteScreen extends StatefulWidget {
   State<NewNoteScreen> createState() => _NewNoteScreenState();
 }
 
-class _NewNoteScreenState extends State<NewNoteScreen> with MediaUploadMixin<NewNoteScreen> {
+class _NewNoteScreenState extends State<NewNoteScreen>
+    with MediaUploadMixin<NewNoteScreen> {
   final QuillController _controller = QuillController.basic();
   final TextEditingController _titleController = TextEditingController();
   bool _isSaving = false;
@@ -82,7 +83,9 @@ class _NewNoteScreenState extends State<NewNoteScreen> with MediaUploadMixin<New
     showBibleReferencePicker(context, (reference) {
       if (reference != null) {
         final index = _controller.selection.baseOffset;
-        final length = _controller.selection.extentOffset - _controller.selection.baseOffset;
+        final length =
+            _controller.selection.extentOffset -
+            _controller.selection.baseOffset;
         _controller.replaceText(index, length, '[Verse:$reference] ', null);
       }
     });
@@ -174,7 +177,9 @@ class _NewNoteScreenState extends State<NewNoteScreen> with MediaUploadMixin<New
                         hintStyle: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.26),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.26),
                         ),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,

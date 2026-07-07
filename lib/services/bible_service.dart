@@ -8,20 +8,72 @@ class BibleService {
 
   // Book names for mapping Book integer to name
   static const List<String> bookNames = [
-    "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",
-    "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel",
-    "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra",
-    "Nehemiah", "Esther", "Job", "Psalms", "Proverbs",
-    "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations",
-    "Ezekiel", "Daniel", "Hosea", "Joel", "Amos",
-    "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk",
-    "Zephaniah", "Haggai", "Zechariah", "Malachi",
-    "Matthew", "Mark", "Luke", "John", "Acts",
-    "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians",
-    "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy",
-    "2 Timothy", "Titus", "Philemon", "Hebrews", "James",
-    "1 Peter", "2 Peter", "1 John", "2 John", "3 John",
-    "Jude", "Revelation"
+    "Genesis",
+    "Exodus",
+    "Leviticus",
+    "Numbers",
+    "Deuteronomy",
+    "Joshua",
+    "Judges",
+    "Ruth",
+    "1 Samuel",
+    "2 Samuel",
+    "1 Kings",
+    "2 Kings",
+    "1 Chronicles",
+    "2 Chronicles",
+    "Ezra",
+    "Nehemiah",
+    "Esther",
+    "Job",
+    "Psalms",
+    "Proverbs",
+    "Ecclesiastes",
+    "Song of Solomon",
+    "Isaiah",
+    "Jeremiah",
+    "Lamentations",
+    "Ezekiel",
+    "Daniel",
+    "Hosea",
+    "Joel",
+    "Amos",
+    "Obadiah",
+    "Jonah",
+    "Micah",
+    "Nahum",
+    "Habakkuk",
+    "Zephaniah",
+    "Haggai",
+    "Zechariah",
+    "Malachi",
+    "Matthew",
+    "Mark",
+    "Luke",
+    "John",
+    "Acts",
+    "Romans",
+    "1 Corinthians",
+    "2 Corinthians",
+    "Galatians",
+    "Ephesians",
+    "Philippians",
+    "Colossians",
+    "1 Thessalonians",
+    "2 Thessalonians",
+    "1 Timothy",
+    "2 Timothy",
+    "Titus",
+    "Philemon",
+    "Hebrews",
+    "James",
+    "1 Peter",
+    "2 Peter",
+    "1 John",
+    "2 John",
+    "3 John",
+    "Jude",
+    "Revelation",
   ];
 
   static Future<Database> get database async {
@@ -45,15 +97,18 @@ class BibleService {
       try {
         await Directory(dirname(path)).create(recursive: true);
       } catch (_) {}
-        
+
       // Copy from asset
-      ByteData data = await rootBundle.load(join("assets", "bible", "holybible.db"));
-      List<int> bytes =
-      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-      
+      ByteData data = await rootBundle.load(
+        join("assets", "bible", "holybible.db"),
+      );
+      List<int> bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+
       // Write and flush the bytes written
       await File(path).writeAsBytes(bytes, flush: true);
-
     } else {
       // print("Opening existing database");
     }
@@ -72,15 +127,19 @@ class BibleService {
   static Future<int> getChaptersCount(int bookIndex) async {
     final db = await database;
     var result = await db.rawQuery(
-        'SELECT MAX(Chapter) as maxChapter FROM bible WHERE Book = ?',
-        [bookIndex]);
+      'SELECT MAX(Chapter) as maxChapter FROM bible WHERE Book = ?',
+      [bookIndex],
+    );
     if (result.isNotEmpty && result.first['maxChapter'] != null) {
       return result.first['maxChapter'] as int;
     }
     return 0;
   }
 
-  static Future<List<Map<String, dynamic>>> getVerses(int bookIndex, int chapterNumber) async {
+  static Future<List<Map<String, dynamic>>> getVerses(
+    int bookIndex,
+    int chapterNumber,
+  ) async {
     final db = await database;
     return await db.query(
       'bible',
@@ -115,27 +174,30 @@ class BibleService {
       if (parts.length >= 2) {
         String bookPart = parts.sublist(0, parts.length - 1).join(' ');
         String cvPart = parts.last;
-        
+
         var cvParts = cvPart.split(':');
         if (cvParts.length == 2) {
           int chapter = int.parse(cvParts[0]);
           // Handle ranges like "16-18"
           var verseParts = cvParts[1].split('-');
           int verse = int.parse(verseParts[0]);
-          int endVerse = verseParts.length > 1 ? int.parse(verseParts[1]) : verse;
-          
-          int bookIndex = bookNames.indexWhere((name) => name.toLowerCase() == bookPart.toLowerCase());
+          int endVerse =
+              verseParts.length > 1 ? int.parse(verseParts[1]) : verse;
+
+          int bookIndex = bookNames.indexWhere(
+            (name) => name.toLowerCase() == bookPart.toLowerCase(),
+          );
           if (bookIndex != -1) {
             return {
               'book': bookIndex,
               'chapter': chapter,
               'verse': verse,
-              'endVerse': endVerse
+              'endVerse': endVerse,
             };
           }
         }
       }
-    } catch(e) {
+    } catch (e) {
       // print("Error parsing reference: $e");
     }
     return null;
@@ -148,12 +210,20 @@ class BibleService {
       var result = await db.query(
         'bible',
         columns: ['Versecount', 'verse'],
-        where: 'Book = ? AND Chapter = ? AND Versecount >= ? AND Versecount <= ?',
-        whereArgs: [parsed['book'], parsed['chapter'], parsed['verse'], parsed['endVerse']],
+        where:
+            'Book = ? AND Chapter = ? AND Versecount >= ? AND Versecount <= ?',
+        whereArgs: [
+          parsed['book'],
+          parsed['chapter'],
+          parsed['verse'],
+          parsed['endVerse'],
+        ],
         orderBy: 'Versecount ASC',
       );
       if (result.isNotEmpty) {
-        return result.map((r) => '[${r['Versecount']}] ${r['verse']}').join(' ');
+        return result
+            .map((r) => '[${r['Versecount']}] ${r['verse']}')
+            .join(' ');
       }
     }
     return null;

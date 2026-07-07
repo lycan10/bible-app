@@ -18,97 +18,128 @@ class SmartImageEmbedBuilder extends EmbedBuilder {
 
     // A path is "remote" if it starts with http/https, or is a relative /api path
     // (legacy records before we switched to absolute URLs).
-    final isRemote = path.startsWith('http://') ||
+    final isRemote =
+        path.startsWith('http://') ||
         path.startsWith('https://') ||
         path.startsWith('/api');
 
     final imageWidget = ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: isRemote
-          ? Image.network(
-              // Resolve relative /api paths to a full URL
-              path.startsWith('/api')
-                  ? ApiService.getFullImageUrl(path)
-                  : path,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return Container(
-                  height: 200,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Center(child: CircularProgressIndicator()),
-                );
-              },
-              errorBuilder: (context, error, stack) => _errorWidget(context),
-            )
-          : Image.file(
-              File(path),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) => _errorWidget(context),
-            ),
+      child:
+          isRemote
+              ? Image.network(
+                // Resolve relative /api paths to a full URL
+                path.startsWith('/api')
+                    ? ApiService.getFullImageUrl(path)
+                    : path,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    height: 200,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder: (context, error, stack) => _errorWidget(context),
+              )
+              : Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) => _errorWidget(context),
+              ),
     );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: embedContext.readOnly
-          ? imageWidget
-          : Stack(
-              children: [
-                imageWidget,
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.white, size: 20),
-                      onPressed: () => _confirmDelete(context, embedContext, path, isRemote),
+      child:
+          embedContext.readOnly
+              ? imageWidget
+              : Stack(
+                children: [
+                  imageWidget,
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        onPressed:
+                            () => _confirmDelete(
+                              context,
+                              embedContext,
+                              path,
+                              isRemote,
+                            ),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
     );
   }
 
-  void _confirmDelete(BuildContext context, EmbedContext embedContext, String path, bool isRemote) {
+  void _confirmDelete(
+    BuildContext context,
+    EmbedContext embedContext,
+    String path,
+    bool isRemote,
+  ) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Image'),
-        content: const Text('Are you sure you want to permanently delete this image?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              
-              if (isRemote) {
-                final token = Provider.of<AuthProvider>(context, listen: false).token;
-                if (token != null) {
-                  try {
-                    await ApiService.deleteMedia(token, path);
-                  } catch (e) {
-                    debugPrint('Failed to delete remote image: $e');
-                  }
-                }
-              }
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete Image'),
+            content: const Text(
+              'Are you sure you want to permanently delete this image?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
 
-              // Remove from Quill Editor
-              final nodeOffset = embedContext.node.documentOffset;
-              final nodeLength = embedContext.node.length;
-              embedContext.controller.replaceText(nodeOffset, nodeLength, '', TextSelection.collapsed(offset: nodeOffset));
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                  if (isRemote) {
+                    final token =
+                        Provider.of<AuthProvider>(context, listen: false).token;
+                    if (token != null) {
+                      try {
+                        await ApiService.deleteMedia(token, path);
+                      } catch (e) {
+                        debugPrint('Failed to delete remote image: $e');
+                      }
+                    }
+                  }
+
+                  // Remove from Quill Editor
+                  final nodeOffset = embedContext.node.documentOffset;
+                  final nodeLength = embedContext.node.length;
+                  embedContext.controller.replaceText(
+                    nodeOffset,
+                    nodeLength,
+                    '',
+                    TextSelection.collapsed(offset: nodeOffset),
+                  );
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -123,7 +154,7 @@ class SmartImageEmbedBuilder extends EmbedBuilder {
         child: Icon(
           Icons.broken_image_outlined,
           size: 40,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
     );

@@ -20,7 +20,8 @@ class InlineVerseText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = style ?? const TextStyle(color: Colors.black, fontSize: 14);
+    final defaultStyle =
+        style ?? const TextStyle(color: Colors.black, fontSize: 14);
     final linkStyle = defaultStyle.copyWith(
       color: AppTheme.textColor2,
       decoration: TextDecoration.underline,
@@ -55,7 +56,8 @@ class InlineVerseText extends StatelessWidget {
         TextSpan(
           text: verseRef,
           style: linkStyle,
-          recognizer: TapGestureRecognizer()..onTap = () => onVerseTap(verseRef),
+          recognizer:
+              TapGestureRecognizer()..onTap = () => onVerseTap(verseRef),
         ),
       );
 
@@ -70,7 +72,9 @@ class InlineVerseText extends StatelessWidget {
     return RichText(
       text: TextSpan(style: defaultStyle, children: spans),
       maxLines: maxLines,
-      overflow: overflow ?? (maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip),
+      overflow:
+          overflow ??
+          (maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip),
     );
   }
 }

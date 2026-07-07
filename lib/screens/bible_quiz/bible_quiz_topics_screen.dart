@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/theme.dart';
 import 'bible_quiz_screen.dart';
 
 class BibleQuizDifficultyScreen extends StatelessWidget {
@@ -8,7 +7,7 @@ class BibleQuizDifficultyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -102,9 +101,7 @@ class _DifficultyCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => BibleQuizScreen(difficulty: difficulty),
-          ),
+          MaterialPageRoute(builder: (_) => const BibleQuizScreen(level: 1)),
         );
       },
       child: Container(

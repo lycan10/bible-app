@@ -287,13 +287,15 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
               shape: BoxShape.circle,
               border: Border.all(
                 color:
-                    isActive ? Colors.redAccent : Colors.white.withOpacity(0.3),
+                    isActive
+                        ? Colors.redAccent
+                        : Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
               color:
                   isActive
-                      ? Colors.redAccent.withOpacity(0.2)
-                      : Colors.white.withOpacity(0.1),
+                      ? Colors.redAccent.withValues(alpha: 0.2)
+                      : Colors.white.withValues(alpha: 0.1),
             ),
             child: Icon(
               icon,
@@ -334,11 +336,11 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
           filter: ImageFilter.blur(sigmaX: sigmaX, sigmaY: sigmaY),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(tintAlpha),
+              color: Colors.white.withValues(alpha: tintAlpha),
               border:
                   borderRadius != null
                       ? Border.all(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         width: 1,
                       )
                       : null,
@@ -381,7 +383,7 @@ class FullScreenVerseScreen extends StatelessWidget {
           // Darken overlay for the background instead of blur
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.1), // Darken effect
+              color: Colors.black.withValues(alpha: 0.1), // Darken effect
             ),
           ),
 
@@ -399,9 +401,9 @@ class FullScreenVerseScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: const Icon(
@@ -470,7 +472,7 @@ class FullScreenVerseScreen extends StatelessWidget {
                           vertical: 0,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Row(
@@ -621,11 +623,13 @@ class FullScreenVerseScreen extends StatelessWidget {
               shape: BoxShape.circle,
               color:
                   isActive
-                      ? Colors.redAccent.withOpacity(0.2)
-                      : Colors.black.withOpacity(0.3),
+                      ? Colors.redAccent.withValues(alpha: 0.2)
+                      : Colors.black.withValues(alpha: 0.3),
               border: Border.all(
                 color:
-                    isActive ? Colors.redAccent : Colors.white.withOpacity(0.3),
+                    isActive
+                        ? Colors.redAccent
+                        : Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),

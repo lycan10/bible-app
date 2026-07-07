@@ -36,9 +36,11 @@ class VideoCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               /// 🔹 Background Image
-              backgroundImage.startsWith('http')
-                  ? Image.network(backgroundImage, fit: BoxFit.cover)
-                  : Image.asset(backgroundImage, fit: BoxFit.cover),
+              (backgroundImage.isNotEmpty)
+                  ? (backgroundImage.startsWith('http')
+                      ? Image.network(backgroundImage, fit: BoxFit.cover)
+                      : Image.asset(backgroundImage, fit: BoxFit.cover))
+                  : Container(color: Colors.grey.shade800),
 
               /// 🔹 Dark overlay for readability
               Container(color: Colors.black.withValues(alpha: 0.5)),

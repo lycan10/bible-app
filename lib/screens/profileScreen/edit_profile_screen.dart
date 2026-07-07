@@ -7,7 +7,6 @@ import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/titles/title_two.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
-import 'package:quest/theme/theme.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -317,8 +316,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   ),
                                 ],
                                 onChanged: (val) {
-                                  if (val != null)
+                                  if (val != null) {
                                     setState(() => _gender = val);
+                                  }
                                 },
                               ),
                             ],

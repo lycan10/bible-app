@@ -22,28 +22,36 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final newPassword = _passwordController.text.trim();
 
     if (code.isEmpty || newPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please fill all fields.')));
       return;
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     if (authProvider.contact == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session expired. Please request OTP again.')),
+        const SnackBar(
+          content: Text('Session expired. Please request OTP again.'),
+        ),
       );
       Navigator.pop(context);
       return;
     }
 
-    final success = await authProvider.resetPassword(authProvider.contact!, code, newPassword);
+    final success = await authProvider.resetPassword(
+      authProvider.contact!,
+      code,
+      newPassword,
+    );
 
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset successfully. Please log in.')),
+          const SnackBar(
+            content: Text('Password reset successfully. Please log in.'),
+          ),
         );
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -51,7 +59,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.errorMessage ?? 'Failed to reset password.')),
+          SnackBar(
+            content: Text(
+              authProvider.errorMessage ?? 'Failed to reset password.',
+            ),
+          ),
         );
       }
     }
@@ -79,7 +91,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             children: [
               GestureDetector(
                 onTap: () => Navigator.pop(context),
-                child: const Icon(Icons.arrow_back, size: 24, color: Colors.black),
+                child: const Icon(
+                  Icons.arrow_back,
+                  size: 24,
+                  color: Colors.black,
+                ),
               ),
               const SizedBox(height: 30),
 
@@ -175,7 +191,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                 border: InputBorder.none,
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                     color: Colors.grey,
                                   ),
                                   onPressed: () {

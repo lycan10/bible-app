@@ -7,6 +7,7 @@ import 'package:quest/providers/notification_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/utils/date_formatter.dart';
 import 'package:quest/main.dart';
+import 'package:quest/services/notification_service.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -55,8 +56,10 @@ class _NotificationScreenState extends State<NotificationScreen>
   dynamic _getIconForType(String type) {
     switch (type) {
       case 'MESSAGE':
+      case 'CHAT_MESSAGE':
         return HugeIcons.strokeRoundedMessage02;
       case 'FRIEND_REQUEST':
+      case 'FRIEND_ACCEPTED':
       case 'FRIEND':
         return HugeIcons.strokeRoundedUserAdd01;
       case 'SYSTEM':
@@ -172,10 +175,15 @@ class _NotificationScreenState extends State<NotificationScreen>
                                       id: n['id'],
                                       isRead: provider.isRead(n),
                                       onTap: () {
-                                        final token = Provider.of<AuthProvider>(context, listen: false).token;
+                                        final token =
+                                            Provider.of<AuthProvider>(
+                                              context,
+                                              listen: false,
+                                            ).token;
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
+                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
                                       },
                                     );
                                   }).toList(),
@@ -199,10 +207,15 @@ class _NotificationScreenState extends State<NotificationScreen>
                                       id: n['id'],
                                       isRead: provider.isRead(n),
                                       onTap: () {
-                                        final token = Provider.of<AuthProvider>(context, listen: false).token;
+                                        final token =
+                                            Provider.of<AuthProvider>(
+                                              context,
+                                              listen: false,
+                                            ).token;
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
+                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
                                       },
                                     );
                                   }).toList(),
@@ -224,10 +237,15 @@ class _NotificationScreenState extends State<NotificationScreen>
                                       id: n['id'],
                                       isRead: provider.isRead(n),
                                       onTap: () {
-                                        final token = Provider.of<AuthProvider>(context, listen: false).token;
+                                        final token =
+                                            Provider.of<AuthProvider>(
+                                              context,
+                                              listen: false,
+                                            ).token;
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
+                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
                                       },
                                     );
                                   }).toList(),
@@ -249,10 +267,15 @@ class _NotificationScreenState extends State<NotificationScreen>
                                       id: n['id'],
                                       isRead: provider.isRead(n),
                                       onTap: () {
-                                        final token = Provider.of<AuthProvider>(context, listen: false).token;
+                                        final token =
+                                            Provider.of<AuthProvider>(
+                                              context,
+                                              listen: false,
+                                            ).token;
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
+                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
                                       },
                                     );
                                   }).toList(),
@@ -274,10 +297,15 @@ class _NotificationScreenState extends State<NotificationScreen>
                                       id: n['id'],
                                       isRead: provider.isRead(n),
                                       onTap: () {
-                                        final token = Provider.of<AuthProvider>(context, listen: false).token;
+                                        final token =
+                                            Provider.of<AuthProvider>(
+                                              context,
+                                              listen: false,
+                                            ).token;
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
+                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
                                       },
                                     );
                                   }).toList(),
@@ -438,12 +466,12 @@ class NotificationItem extends StatelessWidget {
                           fontWeight:
                               isRead ? FontWeight.w400 : FontWeight.w600,
                           color:
-                              isRead
-                                  ? Colors.grey.shade500
-                                  : (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.grey.shade300
-                                      : Colors.black87),
+                                  isRead
+                                      ? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5)
+                                      : (Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey.shade300
+                                          : Colors.black87),
                           fontSize: 12,
                         ),
                       ),
@@ -461,7 +489,7 @@ class NotificationItem extends StatelessWidget {
               time,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
-                color: isRead ? Colors.black38 : Theme.of(context).primaryColor,
+                color: isRead ? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5) : Theme.of(context).primaryColor,
                 fontSize: 11,
               ),
             ),

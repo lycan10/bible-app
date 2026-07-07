@@ -3,9 +3,18 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:quest/theme/theme.dart';
-
+import 'package:intl/intl.dart';
 class EventDetailsCard extends StatelessWidget {
-  const EventDetailsCard({super.key});
+  final Map<String, dynamic> event;
+  final bool isAttending;
+  final VoidCallback onToggleAttend;
+
+  const EventDetailsCard({
+    super.key,
+    required this.event,
+    required this.isAttending,
+    required this.onToggleAttend,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +22,7 @@ class EventDetailsCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       child: SafeArea(
@@ -47,21 +56,40 @@ class EventDetailsCard extends StatelessWidget {
             SizedBox(width: 10),
             SizedBox(height: 20),
             Text(
-              "Tech conference 2026",
+              event['title'] ?? "Community Event",
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: 20,
-                color: Colors.black,
+                color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: 10),
             Text(
-              "Connect with fellow young Christians in Lekki! Share your faith, grow spiritually, and build lasting friendships in a supportive community. Join us for events, discussions, and opportunities to make a difference together.",
+              event['description'] ?? "No description available.",
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: 13,
                 color: AppTheme.textColor2,
               ),
+            ),
+            SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedLocation01,
+                  size: 16,
+                  color: Color(0xff8e8e93),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  event['location'] ?? 'No location specified',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: AppTheme.textColor2,
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 15),
             Row(
@@ -75,22 +103,22 @@ class EventDetailsCard extends StatelessWidget {
                     children: const [
                       Positioned(
                         left: 0,
-                        child: Avatar(image: 'assets/images/boy.png'),
+                        child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
                       ),
                       Positioned(
                         left: 15,
-                        child: Avatar(image: 'assets/images/boy.png'),
+                        child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
                       ),
                       Positioned(
                         left: 30,
-                        child: Avatar(image: 'assets/images/boy.png'),
+                        child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  "23 others are attending",
+                  "${(event['attendees'] as List?)?.length ?? 0} attending",
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 11,
                     color: AppTheme.textColor2,
@@ -118,19 +146,21 @@ class EventDetailsCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    '24',
+                    '${DateTime.tryParse(event['date'] ?? '')?.day ?? ''}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(width: 3),
                   Text(
-                    'June 20',
+                    event['date'] != null
+                        ? DateFormat('MMM yyyy').format(DateTime.parse(event['date']))
+                        : '',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -149,10 +179,10 @@ class EventDetailsCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    '12pm - 3pm',
+                    event['time'] ?? '',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -160,10 +190,10 @@ class EventDetailsCard extends StatelessWidget {
             ),
             SizedBox(height: 25),
             ActionPillButton(
-              backgroundColor: Colors.black,
-              textColor: Colors.white,
-              label: "Attend Event ",
-              onTap: () {},
+              backgroundColor: isAttending ? theme.colorScheme.onSurface.withValues(alpha: 0.1) : theme.colorScheme.onSurface,
+              textColor: isAttending ? theme.colorScheme.onSurface : theme.colorScheme.surface,
+              label: isAttending ? "Unattend Event" : "Attend Event",
+              onTap: onToggleAttend,
             ),
           ],
         ),
@@ -171,4 +201,3 @@ class EventDetailsCard extends StatelessWidget {
     );
   }
 }
-

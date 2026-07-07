@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/components/avatar.dart';
 
 class FriendCardSnippet extends StatelessWidget {
   final String userName;
@@ -44,7 +45,7 @@ class FriendCardSnippet extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    _Avatar(image: userImage),
+                    CustomAvatar(imageUrl: userImage, radius: 26.0, hasBorder: true),
                     const SizedBox(width: 10),
                     RichText(
                       text: TextSpan(
@@ -79,33 +80,6 @@ class FriendCardSnippet extends StatelessWidget {
         ),
         const SizedBox(height: 10),
       ],
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final String image;
-
-  const _Avatar({required this.image});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 52,
-      height: 52,
-      padding: const EdgeInsets.all(5),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xff00d4ff), Color(0xff4a3aff)],
-        ),
-        shape: BoxShape.circle,
-      ),
-      child: CircleAvatar(
-        radius: 10,
-        backgroundImage: image.startsWith('http')
-            ? NetworkImage(image)
-            : AssetImage(image) as ImageProvider,
-      ),
     );
   }
 }

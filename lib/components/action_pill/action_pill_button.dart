@@ -44,6 +44,7 @@ class ActionPillButton extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
+                color: textColor ?? theme.textTheme.bodySmall?.color,
               ),
             ),
           ],

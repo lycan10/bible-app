@@ -159,4 +159,3 @@ class CommunityProfileCard extends StatelessWidget {
     );
   }
 }
-

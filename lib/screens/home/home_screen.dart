@@ -1,43 +1,43 @@
-import 'dart:ui';
 import 'dart:convert';
 import 'package:quest/main.dart';
+import 'package:quest/providers/chat_provider.dart';
+import 'package:quest/screens/media/audio_list_screen.dart';
+import 'package:quest/screens/media/audio_reel_screen.dart';
+import 'package:quest/screens/media/video_list_screen.dart';
+import 'package:quest/screens/media/video_reel_screen.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/utils/date_formatter.dart';
 import 'package:quest/utils/text_parser.dart';
 import 'package:quest/screens/notes/view_note_screen.dart';
 import 'package:animations/animations.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/devotion/ongoing_devotion_card.dart';
 import 'package:quest/components/media/audio/audio_reel_card.dart';
-import 'package:quest/components/posts/post_card_long.dart';
 import 'package:quest/components/feature_guard.dart';
-import 'package:quest/components/titles/title_one.dart';
-import 'package:quest/screens/post/post_screen.dart';
-import 'package:quest/screens/profileScreen/profile_settings.dart';
-import 'package:quest/screens/profileScreen/edit_profile_screen.dart';
 import 'package:quest/components/media/video/video_card.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/today_verse_glass.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/feed_provider.dart';
+import 'package:quest/providers/devotion_provider.dart';
 import 'package:quest/screens/devotion/devotion_article_card.dart';
-import 'package:quest/screens/bible_quiz/bible_quiz_topics_screen.dart';
-import 'package:quest/screens/word_cross/word_cross_screen.dart';
+import 'package:quest/screens/devotion/devotion_list_screen.dart';
+import 'package:quest/screens/devotion/devotion_screen.dart';
+import 'package:quest/screens/bible_quiz/play_mode_sheet.dart';
 import 'package:quest/screens/word_cross/word_cross_difficulty_screen.dart';
-import 'package:quest/screens/word_match/word_match_topic_screen.dart';
-import 'package:quest/screens/messages/message_list.dart';
+import 'package:quest/screens/messages/message_list_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/providers/notification_provider.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/feeling_selector.dart';
+import 'package:quest/components/daily_feeling_popup.dart';
 import 'package:quest/screens/more/more_screen.dart';
-import 'package:quest/screens/more/details_screen.dart';
 import 'package:quest/screens/profileScreen/profile_screen.dart';
 import 'package:quest/screens/games/games_screen.dart' as quest_games;
 import 'package:quest/screens/donate/donate_screen.dart';
+import 'package:quest/screens/community/community_list_screen.dart';
+import 'package:quest/screens/community/community_individual_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -75,8 +75,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void _fetchData() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    final devotionProvider = Provider.of<DevotionProvider>(context, listen: false);
+
     if (authProvider.token != null && authProvider.user?['id'] != null) {
       feedProvider.loadHomeData(authProvider.token!, authProvider.user!['id']);
+      notifProvider.fetchNotifications(authProvider.token!);
+      chatProvider.loadChats(authProvider.token!);
+      devotionProvider.loadPlans(authProvider.token!);
     }
   }
 
@@ -102,7 +109,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => MessageList(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => MessageListScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -138,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final feedProvider = Provider.of<FeedProvider>(context);
+    final devotionProvider = Provider.of<DevotionProvider>(context);
 
     final devotions =
         feedProvider.feed?['recommendedDevotions'] as List<dynamic>? ?? [];
@@ -145,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         feedProvider.feed?['recommendedMedia'] as List<dynamic>? ?? [];
     final videos = recommendedMedia.where((m) => m['type'] == 'VIDEO').toList();
     final audios = recommendedMedia.where((m) => m['type'] == 'AUDIO').toList();
-    final posts = feedProvider.feed?['posts'] as List<dynamic>? ?? [];
+    final communities = feedProvider.feed?['communities'] as List<dynamic>? ?? [];
 
     final latestJournal =
         feedProvider.feed?['latestJournal'] as Map<String, dynamic>?;
@@ -225,11 +234,42 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             children: [
                               GestureDetector(
                                 onTap: () => _navigateToMessage(context),
-                                child: HugeIcon(
-                                  icon: HugeIcons.strokeRoundedMessage02,
-                                  size: 20.0,
-                                  color: Theme.of(context).iconTheme.color,
-                                  strokeWidth: 1.5,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    HugeIcon(
+                                      icon: HugeIcons.strokeRoundedMessage02,
+                                      size: 20.0,
+                                      color: Theme.of(context).iconTheme.color,
+                                      strokeWidth: 1.5,
+                                    ),
+                                    Consumer<ChatProvider>(
+                                      builder: (context, chatProvider, child) {
+                                        if (chatProvider.totalUnreadCount > 0) {
+                                          return Positioned(
+                                            right: -2,
+                                            top: -2,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                '${chatProvider.totalUnreadCount}',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        return const SizedBox.shrink();
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: 20),
@@ -338,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               ),
                             ),
                             TextSpan(
-                              text: "'God loves me, and I know it'",
+                              text: "'${feedProvider.affirmation}'",
                               style: Theme.of(
                                 context,
                               ).textTheme.bodyMedium?.copyWith(
@@ -396,17 +436,29 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         },
                       ),
                       if (latestJournal == null)
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            "Write your first journal today!",
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: AppTheme.textColor2),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        const MoreScreen(initialTab: "Journal"),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Text(
+                              "Write your first journal today!",
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppTheme.textColor2),
+                            ),
                           ),
                         )
                       else
@@ -567,21 +619,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {
-                    FeelingSelector.show(
-                      context,
-                      onSelected: (feeling, emoji) async {
-                        final authProvider = Provider.of<AuthProvider>(
-                          context,
-                          listen: false,
-                        );
-                        if (authProvider.token != null) {
-                          await Provider.of<FeedProvider>(
-                            context,
-                            listen: false,
-                          ).changeFeeling(authProvider.token!, feeling, emoji);
-                        }
-                      },
-                    );
+                    DailyFeelingPopup.show(context);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(15),
@@ -664,29 +702,51 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   featureKey: 'devotion',
                   child: Column(
                     children: [
-                      if (devotions.isNotEmpty) ...[
+                      if (devotionProvider.myPlans.isNotEmpty) ...[
                         SectionHeader(
                           title: "Ongoing devotion",
                           showSeeAll: false,
                         ),
-                        OngoingDevotionCard(
-                          title: devotions[0]['title'] ?? "",
-                          author: devotions[0]['authorName'] ?? "",
-                          imagePath:
-                              devotions[0]['image'] ??
-                              "assets/images/user_test.jpg",
-                          likes: "${devotions[0]['durationDays']} Days Plan",
-                          planText: devotions[0]['tag'] ?? "",
-                          day: 1,
-                          onContinue: () {
-                            print("Continue tapped");
-                          },
+                        Builder(
+                          builder: (context) {
+                            final plan = devotionProvider.myPlans[0]['plan'];
+                            final currentDay = devotionProvider.myPlans[0]['currentDay'];
+                            return OngoingDevotionCard(
+                              title: plan['title'] ?? "",
+                              author: plan['authorName'] ?? "",
+                              imagePath:
+                                  plan['image'] ?? "assets/images/user_test.jpg",
+                              likes: "${plan['durationDays']} Days Plan",
+                              planText: plan['tag'] ?? "",
+                              day: currentDay ?? 1,
+                              onContinue: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DevotionScreen(
+                                      planId: plan['id'],
+                                      dayNum: currentDay ?? 1,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }
                         ),
                       ],
                       if (devotions.length > 1) ...[
                         SectionHeader(
                           title: "Devotion for you",
                           seeAllText: "See more",
+                          onSeeAllTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const DevotionListScreen(),
+                              ),
+                            );
+                          },
                         ),
                         DevotionArticleCard(
                           title: devotions[1]['title'] ?? "",
@@ -698,7 +758,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           likes: "${devotions[1]['durationDays']} Days",
                           tag: devotions[1]['tag'] ?? "",
                           onTap: () {
-                            print("Read tapped");
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const DevotionListScreen(),
+                              ),
+                            );
                           },
                         ),
                       ],
@@ -709,7 +775,18 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   featureKey: 'videos',
                   child: Column(
                     children: [
-                      SectionHeader(title: "Video", seeAllText: "See more"),
+                      SectionHeader(
+                        title: "Video",
+                        seeAllText: "See more",
+                        onSeeAllTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const VideoListScreen(),
+                            ),
+                          );
+                        },
+                      ),
                       SizedBox(
                         height: 275,
                         child:
@@ -740,7 +817,40 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                       backgroundImage:
                                           m['imageUrl'] ??
                                           'assets/images/boy.png',
-                                      onTap: () {},
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          PageRouteBuilder(
+                                            transitionDuration: const Duration(
+                                              milliseconds: 600,
+                                            ),
+                                            pageBuilder:
+                                                (
+                                                  context,
+                                                  animation,
+                                                  secondaryAnimation,
+                                                ) => VideoReelScreen(
+                                                  videos: videos,
+                                                  initialIndex: index,
+                                                ),
+                                            transitionsBuilder: (
+                                              context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child,
+                                            ) {
+                                              return SharedAxisTransition(
+                                                animation: animation,
+                                                secondaryAnimation:
+                                                    secondaryAnimation,
+                                                transitionType:
+                                                    SharedAxisTransitionType
+                                                        .scaled,
+                                                child: child,
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),
@@ -755,6 +865,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       SectionHeader(
                         title: "Audio Messages",
                         seeAllText: "See more",
+                        onSeeAllTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AudioListScreen(),
+                            ),
+                          );
+                        },
                       ),
                       SizedBox(
                         height: 165,
@@ -786,7 +904,18 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                       backgroundImage:
                                           m['imageUrl'] ??
                                           'assets/images/boy.png',
-                                      onTap: () {},
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => AudioReelScreen(
+                                                  audios: audios,
+                                                  initialIndex: index,
+                                                ),
+                                          ),
+                                        );
+                                      },
                                       width: 147,
                                       height: 150,
                                       duration: m['duration'] ?? "2:30",
@@ -804,14 +933,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       SectionHeader(
                         title: "Community For You",
                         seeAllText: "See more",
+                        onSeeAllTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CommunityListScreen(),
+                            ),
+                          );
+                        },
                       ),
                       SizedBox(
                         height: 230,
                         child:
-                            posts.isEmpty
+                            communities.isEmpty
                                 ? Center(
                                   child: Text(
-                                    "No community posts yet",
+                                    "No communities yet",
                                     style: TextStyle(
                                       color: Theme.of(context)
                                           .textTheme
@@ -823,27 +960,60 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                 )
                                 : ListView.separated(
                                   scrollDirection: Axis.horizontal,
-                                  itemCount: posts.length,
+                                  itemCount: communities.length,
                                   separatorBuilder:
                                       (_, __) => const SizedBox(width: 15),
                                   itemBuilder: (context, index) {
-                                    final post = posts[index];
-                                    final userName =
-                                        post['user']?['firstName'] ??
-                                        post['user']?['username'] ??
-                                        "Anonymous";
+                                    final community = communities[index];
                                     return CommunityReelCard(
-                                      title: post['content'] ?? '',
-                                      author: userName,
+                                      title: community['name'] ?? '',
+                                      author: community['description'] ?? '',
                                       followers:
-                                          '${post['reactions']?.length ?? 0} likes',
+                                          '${community['_count']?['members'] ?? 0} members',
                                       backgroundImage:
-                                          post['user']?['avatarUrl'] != null
+                                          community['image'] != null
                                               ? ApiService.getFullImageUrl(
-                                                post['user']!['avatarUrl'],
+                                                community['image'],
                                               )
                                               : 'assets/images/boy.png',
-                                      onTap: () {},
+                                      onTap: () {
+                                          Navigator.of(context).push(
+                                            PageRouteBuilder(
+                                              transitionDuration:
+                                                  const Duration(
+                                                    milliseconds: 600,
+                                                  ),
+                                              pageBuilder:
+                                                  (
+                                                    context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                  ) =>
+                                                      CommunityIndividualScreen(
+                                                        communityId:
+                                                            community['id'],
+                                                        initialData:
+                                                            community,
+                                                      ),
+                                              transitionsBuilder: (
+                                                context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child,
+                                              ) {
+                                                return SharedAxisTransition(
+                                                  animation: animation,
+                                                  secondaryAnimation:
+                                                      secondaryAnimation,
+                                                  transitionType:
+                                                      SharedAxisTransitionType
+                                                          .scaled,
+                                                  child: child,
+                                                );
+                                              },
+                                            ),
+                                          );
+                                      },
                                       width: 209,
                                       height: 180,
                                     );
@@ -883,12 +1053,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             description: "Play to test your knowledge!",
                             gameIcon: 'assets/images/bible_game.png',
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => BibleQuizDifficultyScreen(),
-                                ),
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => const PlayModeSheet(),
                               );
                             },
                           ),
@@ -1191,19 +1360,25 @@ class CommunityReelCard extends StatelessWidget {
                           color: Colors.white,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          followers,
-
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: Colors.white,
+                        Expanded(
+                          child: Text(
+                            followers,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          ' - Today 2:49pm',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontSize: 12, color: Colors.white),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            ' - Today 2:49pm',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontSize: 12, color: Colors.white),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -1216,23 +1391,6 @@ class CommunityReelCard extends StatelessWidget {
       ),
     );
   }
-}
-
-Widget _buildAvatar(String image) {
-  return Container(
-    padding: const EdgeInsets.all(2),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xff00d4ff), Color(0xff4a3aff)],
-      ),
-      shape: BoxShape.circle,
-    ),
-    child: ClipOval(
-      child: Image.asset(image, width: 18, height: 18, fit: BoxFit.cover),
-    ),
-  );
 }
 
 class OtherCategoryProgressTile extends StatelessWidget {
@@ -1413,67 +1571,6 @@ class CategoryProgressTile extends StatelessWidget {
         ),
         const SizedBox(height: 12),
       ],
-    );
-  }
-}
-
-class _CategoryCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _CategoryCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: theme.colorScheme.surface,
-          // color: AppTheme.goldAccent2,
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withAlpha((0.08 * 255).round()),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 42, color: theme.colorScheme.primary),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

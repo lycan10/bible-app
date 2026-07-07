@@ -40,7 +40,7 @@ class WordMatchFinishScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -80,7 +80,7 @@ class WordMatchFinishScreen extends StatelessWidget {
                     '$score',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onBackground,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   Text(
@@ -105,7 +105,8 @@ class WordMatchFinishScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (_) => WordMatchGameScreen(difficulty: difficulty),
+                        builder:
+                            (_) => WordMatchGameScreen(difficulty: difficulty),
                       ),
                     );
                   },

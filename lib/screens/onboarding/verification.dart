@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:animations/animations.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/onboarding/create_account.dart';
-import 'package:quest/screens/navigation_screen.dart';
 import 'package:pinput/pinput.dart';
 
 class Verification extends StatefulWidget {
@@ -20,7 +19,8 @@ class _VerificationState extends State<Verification> {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => const CreateAccount(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => const CreateAccount(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -35,7 +35,7 @@ class _VerificationState extends State<Verification> {
 
   void _handleOtpSubmit(String pin) {
     if (pin.length < 4) return;
-    
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     authProvider.stashPasswordAndCode(code: pin, password: '');
     _navigateToCreateAccountScreen(context);
@@ -45,19 +45,23 @@ class _VerificationState extends State<Verification> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.contact == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Contact info missing. Go back and request OTP again.')),
+        const SnackBar(
+          content: Text('Contact info missing. Go back and request OTP again.'),
+        ),
       );
       return;
     }
     final success = await authProvider.sendOtp(authProvider.contact!);
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP sent successfully.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('OTP sent successfully.')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.errorMessage ?? 'Failed to resend OTP.')),
+          SnackBar(
+            content: Text(authProvider.errorMessage ?? 'Failed to resend OTP.'),
+          ),
         );
       }
     }
@@ -233,9 +237,12 @@ class _VerificationState extends State<Verification> {
                                       text: TextSpan(
                                         children: [
                                           const WidgetSpan(
-                                            alignment: PlaceholderAlignment.middle,
+                                            alignment:
+                                                PlaceholderAlignment.middle,
                                             child: Padding(
-                                              padding: EdgeInsets.only(right: 6),
+                                              padding: EdgeInsets.only(
+                                                right: 6,
+                                              ),
                                               child: Icon(
                                                 Icons.refresh,
                                                 size: 16,
@@ -245,11 +252,12 @@ class _VerificationState extends State<Verification> {
                                           ),
                                           TextSpan(
                                             text: 'Resend',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              fontWeight: FontWeight.w400,
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w400,
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                ),
                                           ),
                                         ],
                                       ),

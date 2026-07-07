@@ -7,65 +7,38 @@ import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/screens/media/video_reel_screen.dart';
-import 'package:quest/theme/theme.dart';
+import 'package:provider/provider.dart';
+import 'package:quest/providers/media_provider.dart';
+import 'package:quest/providers/auth_provider.dart';
 
-final List<Map<String, String>> posts = [
-  {
-    "userName": "Lenny Olabisi",
-    "userImage": "assets/images/boy.png",
-    "postText":
-        "Christian fellowship is a beautiful expression of faith and unity.",
-    "groupName": "Lekki Christian Youths",
-    "postImage": "assets/images/test.jpg",
-    "likes": "370k",
-    "comments": "29",
-    "time": "Today 3:25pm",
-  },
-  {
-    "userName": "Sarah Johnson",
-    "userImage": "assets/images/boy.png",
-    "postText": "Sunday service was powerful today. Feeling blessed!",
-    "groupName": "Faith Builders",
-    "postImage": "assets/images/test.jpg",
-    "likes": "120k",
-    "comments": "15",
-    "time": "Today 1:10pm",
-  },
-  {
-    "userName": "Michael Ade",
-    "userImage": "assets/images/boy.png",
-    "postText": "Prayer changes everything. Never stop believing.",
-    "groupName": "Prayer Warriors",
-    "postImage": "assets/images/test.jpg",
-    "likes": "92k",
-    "comments": "8",
-    "time": "Today 12:05pm",
-  },
-  {
-    "userName": "David Smith",
-    "userImage": "assets/images/boy.png",
-    "postText": "Grateful for another day to serve God.",
-    "groupName": "Global Fellowship",
-    "postImage": "assets/images/test.jpg",
-    "likes": "54k",
-    "comments": "4",
-    "time": "Today 10:40am",
-  },
-];
-
-class VideoListScreen extends StatelessWidget {
+class VideoListScreen extends StatefulWidget {
   const VideoListScreen({super.key});
 
-  void _navigateToVideo(BuildContext context) {
+  @override
+  State<VideoListScreen> createState() => _VideoListScreenState();
+}
+
+class _VideoListScreenState extends State<VideoListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      if (auth.token != null) {
+        context.read<MediaProvider>().loadVideoData(auth.token!);
+      }
+    });
+  }
+
+  void _navigateToVideo(BuildContext context, int index) {
+    final mediaProvider = context.read<MediaProvider>();
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
         pageBuilder:
             (context, animation, secondaryAnimation) => VideoReelScreen(
-              title: "Battle of the Mind",
-              author: "Joyce Meyer",
-              likes: "300k",
-              backgroundImage: "assets/images/boy.png",
+              videos: mediaProvider.videos,
+              initialIndex: index,
             ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
@@ -95,192 +68,186 @@ class VideoListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mediaProvider = Provider.of<MediaProvider>(context);
+    final videos = mediaProvider.videos;
+    final isLoading = mediaProvider.isLoading;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          children: [
-            /// TITLE BAR
-            TitleOne(
-              leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-              title: 'Videos',
-              trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-              leadingIconTap: () => Navigator.pop(context),
-              trailingIconTap: () => _openMenu(context),
-            ),
-
-            const SizedBox(height: 25),
-
-            // SearchBar(
-            //   hintText: "Search communities",
-            //   onTap: () {
-            //     showModalBottomSheet(
-            //       context: context,
-            //       isScrollControlled: true,
-            //       backgroundColor: Colors.transparent,
-            //       builder: (context) {
-            //         return DiscoverMore();
-            //       },
-            //     );
-            //   },
-            //   onChanged: (value) {
-            //     print("Searching: $value");
-            //   },
-            // ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                /// Menu / List Icon Button
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return DiscoverMore();
-                      },
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedLeftToRightListBullet,
-                      size: 22,
-                      color: Colors.black,
-                      strokeWidth: 1,
-                    ),
+        child:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
                   ),
-                ),
-
-                const SizedBox(width: 10),
-
-                /// Search Bar
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                  children: [
+                    /// TITLE BAR
+                    TitleOne(
+                      leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                      title: 'Videos',
+                      trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                      leadingIconTap: () => Navigator.pop(context),
+                      trailingIconTap: () => _openMenu(context),
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
+
+                    const SizedBox(height: 25),
+
+                    // SearchBar(
+                    //   hintText: "Search communities",
+                    //   onTap: () {
+                    //     showModalBottomSheet(
+                    //       context: context,
+                    //       isScrollControlled: true,
+                    //       backgroundColor: Colors.transparent,
+                    //       builder: (context) {
+                    //         return DiscoverMore();
+                    //       },
+                    //     );
+                    //   },
+                    //   onChanged: (value) {
+                    //     print("Searching: $value");
+                    //   },
+                    // ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedSearch01,
-                          size: 18,
-                          color: AppTheme.textColor2,
+                        /// Menu / List Icon Button
+                        GestureDetector(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) {
+                                return DiscoverMore();
+                              },
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: HugeIcon(
+                              icon:
+                                  HugeIcons.strokeRoundedLeftToRightListBullet,
+                              size: 22,
+                              color: theme.colorScheme.onSurface,
+                              strokeWidth: 1,
+                            ),
+                          ),
                         ),
 
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
 
-                        /// Search Input
+                        /// Search Bar
                         Expanded(
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: "Search videos",
-                              border: InputBorder.none,
-                              isDense: true,
-                              hintStyle: TextStyle(fontSize: 12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedSearch01,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+
+                                const SizedBox(width: 8),
+
+                                /// Search Input
+                                Expanded(
+                                  child: TextField(
+                                    decoration: const InputDecoration(
+                                      hintText: "Search videos",
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      hintStyle: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
+
+                    SizedBox(height: 25),
+
+                    /// HEADER
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        /// Title
+                        Text(
+                          "Continue watching",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+
+                        /// Right Action
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    if (videos.isNotEmpty)
+                      MediaCard(
+                        imagePath: videos.first['imageUrl'] ?? '',
+                        title: videos.first['title'] ?? 'The good stuff',
+                        author: videos.first['author'] ?? 'Good kids',
+                        likes: '${videos.first['likes'] ?? 0}',
+                        onTap: () {
+                          _navigateToVideo(context, 0);
+                        },
+                      ),
+
+                    const SizedBox(height: 15),
+
+                    SectionHeader(title: "All Videos", seeAllText: "See more"),
+                    SizedBox(
+                      height: 200,
+                      child:
+                          videos.isEmpty
+                              ? const Center(child: Text("No videos found"))
+                              : ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                shrinkWrap: true,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: videos.length,
+                                separatorBuilder:
+                                    (_, __) => const SizedBox(width: 15),
+                                itemBuilder: (context, index) {
+                                  final video = videos[index];
+                                  final image = video['imageUrl'] ?? '';
+                                  return VideoCard(
+                                    title: video['title'] ?? 'Video',
+                                    author: video['author'] ?? 'Shalom',
+                                    likes: '${video['likes'] ?? 0}',
+                                    height: 150,
+                                    width: 150,
+                                    backgroundImage: image,
+                                    onTap: () {
+                                      _navigateToVideo(context, index);
+                                    },
+                                  );
+                                },
+                              ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-
-            SizedBox(height: 25),
-
-            /// HEADER
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                /// Title
-                Text(
-                  "Continue watching",
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                ),
-
-                /// Right Action
-              ],
-            ),
-            const SizedBox(height: 15),
-            MediaCard(
-              imagePath: 'assets/images/boy.png',
-              title: "The good stuff",
-              author: "Good kids",
-              likes: "200",
-              onTap: () {
-                _navigateToVideo(context);
-              },
-            ),
-
-            const SizedBox(height: 15),
-
-            SectionHeader(title: "Gospel messages", seeAllText: "See more"),
-            SizedBox(
-              height: 200,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-
-                itemCount: 5,
-                separatorBuilder: (_, __) => const SizedBox(width: 15),
-                itemBuilder: (context, index) {
-                  return VideoCard(
-                    title: 'Battle of the Mind',
-                    author: 'Joyce Meyer',
-                    likes: '300k',
-                    height: 150,
-                    width: 150,
-                    backgroundImage: 'assets/images/boy.png',
-                    onTap: () {
-                      _navigateToVideo(context);
-                    },
-                  );
-                },
-              ),
-            ),
-            SectionHeader(title: "Bible teachings", seeAllText: "See more"),
-            SizedBox(
-              height: 200,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-
-                itemCount: 5,
-                separatorBuilder: (_, __) => const SizedBox(width: 15),
-                itemBuilder: (context, index) {
-                  return VideoCard(
-                    title: 'Battle of the Mind',
-                    author: 'Joyce Meyer',
-                    likes: '300k',
-                    height: 150,
-                    width: 150,
-                    backgroundImage: 'assets/images/boy.png',
-                    onTap: () {},
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -291,8 +258,9 @@ class _PostListMenuDialogBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -355,8 +323,18 @@ class MediaCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              /// 🔹 Background Image
-              Image.asset(imagePath, fit: BoxFit.cover),
+              /// 🔹 Background Image (supports network + asset)
+              if (imagePath.startsWith('http'))
+                Image.network(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, __, ___) => Container(color: Colors.grey[800]),
+                )
+              else if (imagePath.isNotEmpty)
+                Image.asset(imagePath, fit: BoxFit.cover)
+              else
+                Container(color: Colors.grey[800]),
 
               /// 🔹 Gradient Overlay (better UI)
               Container(
@@ -364,7 +342,10 @@ class MediaCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7),
+                    ],
                   ),
                 ),
               ),

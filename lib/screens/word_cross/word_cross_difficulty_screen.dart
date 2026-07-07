@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:quest/screens/word_cross/word_cross_screen.dart';
-import '../../theme/theme.dart';
 
 class WordCrossDifficultyScreen extends StatelessWidget {
   const WordCrossDifficultyScreen({super.key});
@@ -8,7 +7,7 @@ class WordCrossDifficultyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),

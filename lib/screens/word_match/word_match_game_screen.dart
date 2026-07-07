@@ -206,7 +206,9 @@ class _WordMatchGameScreenState extends State<WordMatchGameScreen>
     if (!mounted) return;
 
     // Play end-of-game sound: win if all pairs matched, otherwise time ran out
-    _gameSettings?.playGameEndSound(won: matchedLeft.length == matchData.length);
+    _gameSettings?.playGameEndSound(
+      won: matchedLeft.length == matchData.length,
+    );
 
     // Submit score
     try {

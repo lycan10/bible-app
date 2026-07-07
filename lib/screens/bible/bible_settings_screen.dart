@@ -50,7 +50,10 @@ class BibleSettingsScreen extends StatelessWidget {
                       },
                     ),
                   ),
-                  const Text("A", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "A",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const SizedBox(height: 40),

@@ -30,7 +30,7 @@ class DevotionArticleCard extends StatelessWidget {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         border: Border.all(width: 0.5, color: AppTheme.buttonColor2),
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -39,19 +39,36 @@ class DevotionArticleCard extends StatelessWidget {
           /// IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: imagePath.startsWith('http')
-                ? Image.network(
-                    imagePath,
-                    width: 62,
-                    height: 62,
-                    fit: BoxFit.cover,
-                  )
-                : Image.asset(
-                    imagePath,
-                    width: 62,
-                    height: 62,
-                    fit: BoxFit.cover,
-                  ),
+            child:
+                    imagePath.startsWith('http')
+                        ? Image.network(
+                          imagePath,
+                          width: 62,
+                          height: 62,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 62,
+                              height: 62,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
+                            );
+                          },
+                        )
+                        : Image.asset(
+                          imagePath,
+                          width: 62,
+                          height: 62,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 62,
+                              height: 62,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
+                            );
+                          },
+                        ),
           ),
 
           const SizedBox(width: 10),
@@ -67,7 +84,7 @@ class DevotionArticleCard extends StatelessWidget {
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: Colors.black,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
 
@@ -102,7 +119,7 @@ class DevotionArticleCard extends StatelessWidget {
                         text: author,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 12,
-                          color: Colors.black,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -114,34 +131,41 @@ class DevotionArticleCard extends StatelessWidget {
                 /// BOTTOM ROW
                 Row(
                   children: [
-                    const HugeIcon(
-                      icon: HugeIcons.strokeRoundedThumbsUp,
-                      size: 16,
-                      color: Color(0xff8e8e93),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    Text(
-                      likes,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: AppTheme.textColor2,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          if (likes.isNotEmpty) ...[
+                            const HugeIcon(
+                              icon: HugeIcons.strokeRoundedThumbsUp,
+                              size: 16,
+                              color: Color(0xff8e8e93),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                likes,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 11,
+                                  color: AppTheme.textColor2,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Flexible(
+                            child: Text(
+                              ' - $tag',
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-
-                    const SizedBox(width: 6),
-
-                    Text(
-                      ' - $tag',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 12,
-                        color: Colors.black,
-                      ),
-                    ),
-
-                    const Spacer(),
-
                     /// READ BUTTON
                     GestureDetector(
                       onTap: onTap,
@@ -151,15 +175,18 @@ class DevotionArticleCard extends StatelessWidget {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(width: 1, color: Colors.black),
+                          color: theme.colorScheme.surface,
+                          border: Border.all(
+                            width: 1,
+                            color: theme.colorScheme.onSurface,
+                          ),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
                           'Read',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: theme.colorScheme.onSurface,
                             fontSize: 13,
                           ),
                         ),

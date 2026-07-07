@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
 import 'package:quest/components/devotion/ongoing_devotion_card.dart';
 import 'package:quest/components/menu/discover_more.dart';
 import 'package:quest/components/tile/settings_switch_row.dart';
@@ -9,28 +10,62 @@ import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/components/titles/title_two.dart';
 import 'package:quest/screens/devotion/devotion_article_card.dart';
 import 'package:quest/screens/devotion/devotion_screen.dart';
-
 import 'package:quest/theme/theme.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/devotion_provider.dart';
 
-class DevotionListScreen extends StatelessWidget {
+class DevotionListScreen extends StatefulWidget {
   const DevotionListScreen({super.key});
 
-  void _navigateToDevotionScreen(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder:
-            (context, animation, secondaryAnimation) => DevotionScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.scaled,
-            child: child,
-          );
-        },
-      ),
-    );
+  @override
+  State<DevotionListScreen> createState() => _DevotionListScreenState();
+}
+
+class _DevotionListScreenState extends State<DevotionListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      if (auth.token != null) {
+        context.read<DevotionProvider>().loadPlans(auth.token!);
+      }
+    });
+  }
+
+  void _navigateToDevotionScreen(
+    BuildContext context,
+    String planId,
+    int dayNum,
+  ) {
+    Navigator.of(context)
+        .push(
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 600),
+            pageBuilder:
+                (context, animation, secondaryAnimation) =>
+                    DevotionScreen(planId: planId, dayNum: dayNum),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              return SharedAxisTransition(
+                animation: animation,
+                secondaryAnimation: secondaryAnimation,
+                transitionType: SharedAxisTransitionType.scaled,
+                child: child,
+              );
+            },
+          ),
+        )
+        .then((_) {
+          final auth = context.read<AuthProvider>();
+          if (auth.token != null) {
+            context.read<DevotionProvider>().loadPlans(auth.token!);
+          }
+        });
   }
 
   void _openMenu(BuildContext context) {
@@ -49,243 +84,209 @@ class DevotionListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final devotionProvider = context.watch<DevotionProvider>();
+    final isLoading = devotionProvider.isLoading;
+    final myPlans = devotionProvider.myPlans;
+    final allPlans = devotionProvider.allPlans;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          children: [
-            /// TITLE BAR
-            TitleOne(
-              leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-              title: 'Devotions',
-              trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-              leadingIconTap: () => Navigator.pop(context),
-              trailingIconTap: () => _openMenu(context),
-            ),
-
-            const SizedBox(height: 25),
-
-            // SearchBar(
-            //   hintText: "Search communities",
-            //   onTap: () {
-            //     showModalBottomSheet(
-            //       context: context,
-            //       isScrollControlled: true,
-            //       backgroundColor: Colors.transparent,
-            //       builder: (context) {
-            //         return DiscoverMore();
-            //       },
-            //     );
-            //   },
-            //   onChanged: (value) {
-            //     print("Searching: $value");
-            //   },
-            // ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                /// Menu / List Icon Button
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return DiscoverMore();
-                      },
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedLeftToRightListBullet,
-                      size: 22,
-                      color: Colors.black,
-                      strokeWidth: 1,
-                    ),
+        child:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
                   ),
-                ),
-
-                const SizedBox(width: 10),
-
-                /// Search Bar
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                  children: [
+                    /// TITLE BAR
+                    TitleOne(
+                      leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                      title: 'Devotions',
+                      trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                      leadingIconTap: () => Navigator.pop(context),
+                      trailingIconTap: () => _openMenu(context),
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
+
+                    const SizedBox(height: 25),
+
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedSearch01,
-                          size: 18,
-                          color: AppTheme.textColor2,
+                        /// Menu / List Icon Button
+                        GestureDetector(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) {
+                                return DiscoverMore();
+                              },
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: HugeIcon(
+                              icon:
+                                  HugeIcons.strokeRoundedLeftToRightListBullet,
+                              size: 22,
+                              color: theme.colorScheme.onSurface,
+                              strokeWidth: 1,
+                            ),
+                          ),
                         ),
 
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
 
-                        /// Search Input
+                        /// Search Bar
                         Expanded(
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: "Search for books",
-                              border: InputBorder.none,
-                              isDense: true,
-                              hintStyle: TextStyle(fontSize: 12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedSearch01,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+
+                                const SizedBox(width: 8),
+
+                                /// Search Input
+                                Expanded(
+                                  child: TextField(
+                                    decoration: const InputDecoration(
+                                      hintText: "Search for books",
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      hintStyle: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-              ],
-            ),
 
-            /// HEADER
-            SizedBox(height: 25),
-            OngoingDevotionCard(
-              title: "Build Your Faith in 2026",
-              author: "Shalom",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              planText: "- 365 Days Plan",
-              day: 4,
-              onContinue: () => _navigateToDevotionScreen(context),
-            ),
-            SectionHeader(title: "Trending now", seeAllText: "See more"),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                showStartPlanModal(
-                  context: context,
-                  planTitle: "Understanding Grace and Forgiveness",
-                  planImagePath: "assets/images/alucard.png",
-                  authorName: "Lola Able",
-                  authorHandle: "@lola.a",
-                  reminderText: "Set daily reminder",
-                  reminderTime: "9:41 AM",
-                  onStart: () => _navigateToDevotionScreen(context),
-                );
-              },
-            ),
-            SizedBox(height: 10),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                showStartPlanModal(
-                  context: context,
-                  planTitle: "Understanding Grace and Forgiveness",
-                  planImagePath: "assets/images/alucard.png",
-                  authorName: "Lola Able",
-                  authorHandle: "@lola.a",
-                  reminderText: "Set daily reminder",
-                  reminderTime: "9:41 AM",
-                  onStart: () => _navigateToDevotionScreen(context),
-                );
-              },
-            ),
-            SectionHeader(title: "Suggested for you", seeAllText: "See more"),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                print("Read tapped");
-              },
-            ),
-            SizedBox(height: 10),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                print("Read tapped");
-              },
-            ),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                print("Read tapped");
-              },
-            ),
-            SizedBox(height: 10),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                print("Read tapped");
-              },
-            ),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                print("Read tapped");
-              },
-            ),
-            SizedBox(height: 10),
-            DevotionArticleCard(
-              title: "Understanding Grace and Forgiveness",
-              description:
-                  "A weekly email with our favorite articles about design, front-end development, technology, and start",
-              author: "Believer's Journal",
-              imagePath: "assets/images/user_test.jpg",
-              likes: "385",
-              tag: "365 Days Plan",
-              onTap: () {
-                print("Read tapped");
-              },
-            ),
-          ],
-        ),
+                    /// HEADER
+                    const SizedBox(height: 25),
+
+                    if (myPlans.isNotEmpty) ...[
+                      Builder(builder: (context) {
+                        int myTotalLikes = 0;
+                        if (myPlans.first['plan']['days'] != null) {
+                          for (var day in myPlans.first['plan']['days']) {
+                            myTotalLikes += (day['likesCount'] as int? ?? 0);
+                          }
+                        }
+                        return OngoingDevotionCard(
+                          title: myPlans.first['plan']['title'] ?? '',
+                          author: myPlans.first['plan']['authorName'] ?? '',
+                          imagePath:
+                              myPlans.first['plan']['image'] ??
+                              'assets/images/user_test.jpg',
+                          likes: myTotalLikes > 0 ? myTotalLikes.toString() : "",
+                          planText:
+                            "- ${myPlans.first['plan']['durationDays']} Days Plan",
+                        day: myPlans.first['currentDay'] ?? 1,
+                        onContinue:
+                            () => _navigateToDevotionScreen(
+                              context,
+                              myPlans.first['plan']['id'],
+                              myPlans.first['currentDay'] ?? 1,
+                            ),
+                        );
+                      }),
+                    ],
+
+                    SectionHeader(
+                      title: "Trending now",
+                      seeAllText: "See more",
+                    ),
+                    if (allPlans.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Center(child: Text("No plans available")),
+                      )
+                    else
+                      ...allPlans.map((plan) {
+                        final image =
+                            plan['image'] ?? 'assets/images/user_test.jpg';
+                        int totalLikes = 0;
+                        if (plan['days'] != null) {
+                          for (var day in plan['days']) {
+                            totalLikes += (day['likesCount'] as int? ?? 0);
+                          }
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: DevotionArticleCard(
+                            title: plan['title'] ?? '',
+                            description: plan['description'] ?? '',
+                            author: plan['authorName'] ?? 'Shalom',
+                            imagePath: image,
+                            likes: totalLikes > 0 ? totalLikes.toString() : "",
+                            tag: '${plan['durationDays'] ?? 0} Days Plan',
+                            onTap: () {
+                              showStartPlanModal(
+                                context: context,
+                                planTitle: plan['title'] ?? '',
+                                planImagePath: image,
+                                authorName: plan['authorName'] ?? 'Shalom',
+                                authorHandle: plan['authorHandle'] ?? '',
+                                reminderText: "Set daily reminder",
+                                reminderTime: "08:00 AM",
+                                onStart: () async {
+                                  final authProvider =
+                                      Provider.of<AuthProvider>(
+                                        context,
+                                        listen: false,
+                                      );
+                                  final devProvider =
+                                      Provider.of<DevotionProvider>(
+                                        context,
+                                        listen: false,
+                                      );
+                                  if (authProvider.token != null) {
+                                    try {
+                                      await devProvider.subscribeToPlan(
+                                        authProvider.token!,
+                                        plan['id'],
+                                      );
+                                    } catch (e) {
+                                      // Handle err
+                                    }
+                                  }
+                                  Navigator.pop(context); // Close modal
+                                  _navigateToDevotionScreen(
+                                    context,
+                                    plan['id'],
+                                    1,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                  ],
+                ),
       ),
     );
   }
@@ -296,8 +297,9 @@ class _PostListMenuDialogBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -360,21 +362,19 @@ class MediaCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              /// 🔹 Background Image
               Image.asset(imagePath, fit: BoxFit.cover),
-
-              /// 🔹 Gradient Overlay (better UI)
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7),
+                    ],
                   ),
                 ),
               ),
-
-              /// 🔹 Bottom Content
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -384,7 +384,6 @@ class MediaCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      /// LEFT CONTENT
                       Expanded(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -400,9 +399,7 @@ class MediaCard extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-
                             const SizedBox(height: 4),
-
                             RichText(
                               text: TextSpan(
                                 children: [
@@ -424,9 +421,7 @@ class MediaCard extends StatelessWidget {
                                 ],
                               ),
                             ),
-
                             const SizedBox(height: 6),
-
                             Row(
                               children: [
                                 Container(
@@ -454,14 +449,12 @@ class MediaCard extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                      /// PLAY BUTTON
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           border: Border.all(
                             width: 0.5,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                           shape: BoxShape.circle,
                         ),
@@ -483,7 +476,6 @@ class MediaCard extends StatelessWidget {
   }
 }
 
-/// Reusable function to show the Start Plan modal
 void showStartPlanModal({
   required BuildContext context,
   required String planTitle,
@@ -500,25 +492,22 @@ void showStartPlanModal({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withOpacity(0.4),
+    barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (context) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
             TitleTwo(
               leadingIcon: HugeIcons.strokeRoundedCancel01,
               title: 'Start Plan',
             ),
             const SizedBox(height: 20),
-
-            // Plan Image
             ClipRRect(
               borderRadius: BorderRadius.circular(15),
               child: Image.asset(
@@ -529,8 +518,6 @@ void showStartPlanModal({
               ),
             ),
             const SizedBox(height: 5),
-
-            // Plan Title
             SizedBox(
               width: 300,
               child: Text(
@@ -538,14 +525,12 @@ void showStartPlanModal({
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: theme.colorScheme.onSurface,
                   fontSize: 19,
                 ),
               ),
             ),
             const SizedBox(height: 3),
-
-            // Duration
             Text(
               '365 days',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -555,15 +540,13 @@ void showStartPlanModal({
               ),
             ),
             const SizedBox(height: 12),
-
-            // Author Row
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(50),
                   child: Image.asset(
-                    'assets/images/user_test.jpg', // optional: make dynamic
+                    'assets/images/user_test.jpg',
                     width: 42,
                     height: 42,
                     fit: BoxFit.cover,
@@ -578,7 +561,7 @@ void showStartPlanModal({
                       authorName,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: theme.colorScheme.onSurface,
                         fontSize: 14,
                       ),
                     ),
@@ -595,11 +578,8 @@ void showStartPlanModal({
               ],
             ),
             const SizedBox(height: 20),
-
-            // Reminder Row
             Row(
               children: [
-                // Reminder (expanded)
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -607,7 +587,7 @@ void showStartPlanModal({
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xff673aff).withOpacity(0.1),
+                      color: const Color(0xff673aff).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Text(
@@ -620,8 +600,6 @@ void showStartPlanModal({
                   ),
                 ),
                 const SizedBox(width: 10),
-
-                // Reminder time
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 15,
@@ -635,15 +613,13 @@ void showStartPlanModal({
                     reminderTime,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 15),
-
-            // Start button
             GestureDetector(
               onTap: onStart,
               child: SizedBox(
@@ -654,7 +630,7 @@ void showStartPlanModal({
                     vertical: 15,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black,
+                    color: theme.colorScheme.onSurface,
                     borderRadius: BorderRadius.circular(25),
                   ),
                   child: Center(
@@ -662,7 +638,7 @@ void showStartPlanModal({
                       "Start",
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.colorScheme.surface,
                       ),
                     ),
                   ),

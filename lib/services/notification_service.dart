@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -55,6 +54,13 @@ class NotificationService {
 
   bool _initialized = false;
 
+  // Stream for foreground messages to allow providers to react
+  final StreamController<RemoteMessage> _foregroundMessageController =
+      StreamController<RemoteMessage>.broadcast();
+
+  Stream<RemoteMessage> get onForegroundMessage =>
+      _foregroundMessageController.stream;
+
   // -------------------------------------------------------------------------
   // initialize() — call once from main() in the main isolate.
   // -------------------------------------------------------------------------
@@ -76,8 +82,10 @@ class NotificationService {
 
     // -- 2. Android: create notification channels BEFORE showing any notification.
     final androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(_pushChannel);
       await androidPlugin.createNotificationChannel(_reminderChannel);
@@ -86,22 +94,23 @@ class NotificationService {
     }
 
     // -- 3. Initialise local notifications plugin ----------------------------
-    const androidSettings =
-        AndroidInitializationSettings('@drawable/ic_notification');
+    const androidSettings = AndroidInitializationSettings(
+      '@drawable/ic_notification',
+    );
 
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
-      // Called when app receives a notification while in foreground on iOS.
-      onDidReceiveLocalNotification: _onDidReceiveLocalNotificationIOS,
     );
 
-    const initSettings =
-        InitializationSettings(android: androidSettings, iOS: iosSettings);
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
 
     await _plugin.initialize(
-      initSettings,
+      settings: initSettings,
       // Foreground tap handler (app is open).
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
       // Background tap handler (app is in background / terminated).
@@ -114,6 +123,7 @@ class NotificationService {
     // the foreground. We intercept and show a local notification instead.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint('[FCM] Foreground message: ${message.messageId}');
+      _foregroundMessageController.add(message);
       showLocalNotification(message);
     });
 
@@ -165,7 +175,8 @@ class NotificationService {
 
     // Use a stable, unique ID derived from the message so duplicate suppression works.
     final int notifId =
-        (message.messageId ?? message.hashCode.toString()).hashCode.abs() % 100000;
+        (message.messageId ?? message.hashCode.toString()).hashCode.abs() %
+        100000;
 
     final androidDetails = AndroidNotificationDetails(
       _pushChannel.id,
@@ -174,12 +185,14 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
       icon: '@drawable/ic_notification',
-      largeIcon: imageUrl != null
-          ? DrawableResourceAndroidBitmap('@mipmap/ic_launcher')
-          : null,
-      styleInformation: body != null && body.length > 40
-          ? BigTextStyleInformation(body)
-          : null,
+      largeIcon:
+          imageUrl != null
+              ? DrawableResourceAndroidBitmap('@mipmap/ic_launcher')
+              : null,
+      styleInformation:
+          body != null && body.length > 40
+              ? BigTextStyleInformation(body)
+              : null,
       ticker: title,
     );
 
@@ -190,10 +203,13 @@ class NotificationService {
     );
 
     await _plugin.show(
-      notifId,
-      title,
-      body,
-      NotificationDetails(android: androidDetails, iOS: iosDetails),
+      id: notifId,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      ),
       payload: message.data.isNotEmpty ? message.data.toString() : null,
     );
   }
@@ -221,11 +237,11 @@ class NotificationService {
     }
 
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           _reminderChannel.id,
           _reminderChannel.name,
@@ -241,20 +257,15 @@ class NotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
-  Future<void> cancelReminder(int id) async =>
-      _plugin.cancel(id);
+  Future<void> cancelReminder(int id) async => _plugin.cancel(id: id);
 
-  Future<void> cancelAllReminders() async =>
-      _plugin.cancelAll();
+  Future<void> cancelAllReminders() async => _plugin.cancelAll();
 
-  Future<String?> getFCMToken() async =>
-      _firebaseMessaging.getToken();
+  Future<String?> getFCMToken() async => _firebaseMessaging.getToken();
 
   // -------------------------------------------------------------------------
   // Private helpers
@@ -262,14 +273,17 @@ class NotificationService {
 
   /// Minimal initialisation for the background isolate — no FCM listeners.
   Future<void> _initForBackgroundIsolate() async {
-    const androidSettings =
-        AndroidInitializationSettings('@drawable/ic_notification');
+    const androidSettings = AndroidInitializationSettings(
+      '@drawable/ic_notification',
+    );
     const iosSettings = DarwinInitializationSettings();
-    const initSettings =
-        InitializationSettings(android: androidSettings, iOS: iosSettings);
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
 
     await _plugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
       onDidReceiveBackgroundNotificationResponse:
           _onDidReceiveBackgroundNotificationResponse,
@@ -281,7 +295,7 @@ class NotificationService {
   /// Handle navigation when a notification is tapped.
   void _handleMessageNavigation(RemoteMessage message) {
     debugPrint('[FCM] Navigate for data: ${message.data}');
-    _navigateToNotificationScreen();
+    navigateFromNotificationPayload(message.data);
   }
 }
 
@@ -291,24 +305,35 @@ class NotificationService {
 // ---------------------------------------------------------------------------
 void _onDidReceiveNotificationResponse(NotificationResponse details) {
   debugPrint('[NotificationService] Foreground tap: ${details.payload}');
-  _navigateToNotificationScreen();
+  if (details.payload != null && details.payload!.isNotEmpty) {
+    // Basic parsing of payload if it's sent as a string representation of a map
+    // In a real scenario, consider using jsonDecode if the payload is JSON
+    navigateFromNotificationPayload({});
+  } else {
+    _navigateToNotificationScreen();
+  }
 }
 
 void _navigateToNotificationScreen() {
   final context = navigatorKey.currentContext;
   if (context != null) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const NotificationScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const NotificationScreen()));
   }
 }
 
-// iOS-only: called when a local notification arrives while the app is in foreground.
-void _onDidReceiveLocalNotificationIOS(
-  int id,
-  String? title,
-  String? body,
-  String? payload,
-) {
-  debugPrint('[NotificationService] iOS foreground local: $title');
+void navigateFromNotificationPayload(Map<String, dynamic> data) {
+  final context = navigatorKey.currentContext;
+  if (context == null) return;
+
+  final type = data['type'] ?? '';
+  // You can extend this to route to specific screens based on type
+  // e.g., if (type == 'CHAT_MESSAGE') Navigator.push(...)
+  
+  // Default fallback
+  _navigateToNotificationScreen();
 }
+
+// iOS-only: called when a local notification arrives while the app is in foreground.
+// Empty replacement because method is not used anymore

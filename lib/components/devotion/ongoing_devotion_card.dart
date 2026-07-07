@@ -30,7 +30,7 @@ class OngoingDevotionCard extends StatelessWidget {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         border: Border.all(width: 0.5, color: AppTheme.buttonColor2),
-        color: Colors.black,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
@@ -48,7 +48,7 @@ class OngoingDevotionCard extends StatelessWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
 
@@ -69,7 +69,7 @@ class OngoingDevotionCard extends StatelessWidget {
                             text: author,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 12,
-                              color: Colors.white,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -78,31 +78,32 @@ class OngoingDevotionCard extends StatelessWidget {
 
                     const SizedBox(height: 5),
 
-                    Row(
-                      children: [
-                        const HugeIcon(
-                          icon: HugeIcons.strokeRoundedThumbsUp,
-                          size: 16,
-                          color: Color(0xff8e8e93),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          likes,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: Colors.white,
+                    if (likes.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedThumbsUp,
+                            size: 16,
+                            color: Color(0xff8e8e93),
                           ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 5),
+                          const SizedBox(width: 8),
+                          Text(
+                            likes,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                    ],
 
                     Text(
                       planText,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 12,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -114,19 +115,36 @@ class OngoingDevotionCard extends StatelessWidget {
               /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(25),
-                child: imagePath.startsWith('http')
-                    ? Image.network(
-                        imagePath,
-                        width: 95,
-                        height: 95,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.asset(
-                        imagePath,
-                        width: 95,
-                        height: 95,
-                        fit: BoxFit.cover,
-                      ),
+                child:
+                    imagePath.startsWith('http')
+                        ? Image.network(
+                          imagePath,
+                          width: 95,
+                          height: 95,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 95,
+                              height: 95,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.broken_image, color: Colors.grey),
+                            );
+                          },
+                        )
+                        : Image.asset(
+                          imagePath,
+                          width: 95,
+                          height: 95,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 95,
+                              height: 95,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.broken_image, color: Colors.grey),
+                            );
+                          },
+                        ),
               ),
             ],
           ),
@@ -144,7 +162,7 @@ class OngoingDevotionCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Row(
@@ -154,7 +172,7 @@ class OngoingDevotionCard extends StatelessWidget {
                       'Day',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                         fontSize: 13,
                       ),
                     ),
@@ -163,8 +181,8 @@ class OngoingDevotionCard extends StatelessWidget {
                       child: Container(
                         width: 4,
                         height: 4,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSurface,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -173,7 +191,7 @@ class OngoingDevotionCard extends StatelessWidget {
                       '$day',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                         fontSize: 13,
                       ),
                     ),

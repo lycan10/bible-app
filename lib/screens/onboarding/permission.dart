@@ -29,7 +29,11 @@ class _PermissionState extends State<Permission> {
         _navigateToNavigationScreen(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.errorMessage ?? 'Failed to update permissions.')),
+          SnackBar(
+            content: Text(
+              authProvider.errorMessage ?? 'Failed to update permissions.',
+            ),
+          ),
         );
       }
     }
@@ -100,14 +104,16 @@ class _PermissionState extends State<Permission> {
                             iconColor: Color(0xFF0088FF),
                             icon: HugeIcons.strokeRoundedCamera01,
                             title: "Camera/Photos",
-                            description: "to let you upload or update your profile picture.",
+                            description:
+                                "to let you upload or update your profile picture.",
                           ),
                           const SizedBox(height: 20),
                           const PermissionItem(
                             iconColor: Color(0xFF4A3AFF),
                             icon: HugeIcons.strokeRoundedLocation01,
                             title: "Location",
-                            description: "to provide location-based services and recommendations.",
+                            description:
+                                "to provide location-based services and recommendations.",
                           ),
                           const SizedBox(height: 20),
                           const PermissionItem(

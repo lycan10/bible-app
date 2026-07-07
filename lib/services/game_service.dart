@@ -26,9 +26,13 @@ class GameService {
     return null;
   }
 
-  static Future<Map<String, dynamic>> fetchWordMatchQuestions(String difficulty) async {
+  static Future<Map<String, dynamic>> fetchWordMatchQuestions(
+    String difficulty,
+  ) async {
     final response = await http.get(
-      Uri.parse('${ApiService.baseUrl}/games/play/word-match?difficulty=$difficulty'),
+      Uri.parse(
+        '${ApiService.baseUrl}/games/play/word-match?difficulty=$difficulty',
+      ),
       headers: await _getAuthHeaders(),
     );
 
@@ -39,9 +43,13 @@ class GameService {
     }
   }
 
-  static Future<Map<String, dynamic>> fetchWordCrossQuestions(String difficulty) async {
+  static Future<Map<String, dynamic>> fetchWordCrossQuestions(
+    String difficulty,
+  ) async {
     final response = await http.get(
-      Uri.parse('${ApiService.baseUrl}/games/play/word-cross?difficulty=$difficulty'),
+      Uri.parse(
+        '${ApiService.baseUrl}/games/play/word-cross?difficulty=$difficulty',
+      ),
       headers: await _getAuthHeaders(),
     );
 
@@ -52,9 +60,9 @@ class GameService {
     }
   }
 
-  static Future<Map<String, dynamic>> fetchBibleQuizQuestions(String difficulty) async {
+  static Future<Map<String, dynamic>> fetchBibleQuizQuestions(int level) async {
     final response = await http.get(
-      Uri.parse('${ApiService.baseUrl}/games/play/bible-quiz?difficulty=$difficulty'),
+      Uri.parse('${ApiService.baseUrl}/games/play/bible-quiz?level=$level'),
       headers: await _getAuthHeaders(),
     );
 
@@ -65,7 +73,25 @@ class GameService {
     }
   }
 
-  static Future<void> submitScore(String gameType, String difficulty, int score) async {
+  static Future<int> fetchBibleQuizMaxLevel() async {
+    final response = await http.get(
+      Uri.parse('${ApiService.baseUrl}/games/play/bible-quiz/max-level'),
+      headers: await _getAuthHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['maxLevel'] as int? ?? 302;
+    } else {
+      return 302;
+    }
+  }
+
+  static Future<void> submitScore(
+    String gameType,
+    String difficulty,
+    int score,
+  ) async {
     final userId = await _getUserId();
     if (userId == null) return;
 

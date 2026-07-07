@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/action_pill/action_pill_button_2.dart';
@@ -6,14 +5,11 @@ import 'package:quest/components/feature_guard.dart';
 import 'package:quest/components/more/journal_card.dart';
 import 'package:quest/components/more/notes_card.dart';
 import 'package:quest/components/more/saved_books_card.dart';
-import 'package:quest/components/feeling_selector.dart';
+import 'package:quest/components/daily_feeling_popup.dart';
 import 'package:quest/components/more/saved_card.dart';
 import 'package:quest/components/more/saved_messages_card.dart';
-import 'package:quest/components/more/tag_text_editing_controller.dart';
-import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/section_header.dart';
-import 'package:quest/screens/post/post_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/bible_provider.dart';
@@ -25,7 +21,6 @@ import 'package:quest/services/bible_service.dart';
 import 'package:quest/screens/bible/bible_home_screen.dart';
 import 'package:quest/utils/date_formatter.dart';
 import 'package:quest/screens/bible/saved_verses_screen.dart' as quest_saved;
-import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/main.dart';
 
 class MoreScreen extends StatefulWidget {
@@ -191,7 +186,7 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
   }
 
   void _showFeelingSelector() {
-    FeelingSelector.show(
+    DailyFeelingPopup.show(
       context,
       onSelected: (feeling, emoji) {
         // Navigate to NewJournalScreen with the selected feeling if needed.

@@ -11,7 +11,11 @@ class BibleSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
     return [
       if (query.isNotEmpty)
         IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: Colors.black, size: 24),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            color: Colors.black,
+            size: 24,
+          ),
           onPressed: () {
             query = '';
           },
@@ -56,11 +60,22 @@ class BibleSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
             int chapter = result['Chapter'];
             int verse = result['Versecount'];
             String text = result['verse'];
-            String reference = BibleService.formatReference(bookIndex, chapter, verse);
+            String reference = BibleService.formatReference(
+              bookIndex,
+              chapter,
+              verse,
+            );
 
             return ListTile(
-              title: Text(reference, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(text, maxLines: 3, overflow: TextOverflow.ellipsis),
+              title: Text(
+                reference,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                text,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
               onTap: () {
                 close(context, result);
               },
@@ -73,7 +88,7 @@ class BibleSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    // You can implement recent searches here if desired, 
+    // You can implement recent searches here if desired,
     // for now we just show a prompt.
     return const Center(
       child: Text("Search for keywords in the Bible (e.g. 'Jesus wept')"),

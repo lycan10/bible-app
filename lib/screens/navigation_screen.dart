@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/screens/bible/bible_home_screen.dart';
 import 'package:quest/screens/explore/explore_screen.dart';
+import 'package:quest/screens/games/games_screen.dart';
 import 'package:quest/screens/home/home_screen.dart';
 import 'package:quest/screens/more/more_screen.dart';
-import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quest/components/daily_feeling_popup.dart';
@@ -22,7 +22,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     ExploreScreen(),
-    NotificationScreen(),
+    GamesScreen(),
     MoreScreen(),
     BibleHomeScreen(),
   ];

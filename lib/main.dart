@@ -4,15 +4,20 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/feed_provider.dart';
+import 'package:quest/providers/chat_provider.dart';
 import 'package:quest/providers/quiz_provider.dart';
 import 'package:quest/providers/bible_provider.dart';
 import 'package:quest/providers/notification_provider.dart';
 import 'package:quest/providers/feature_provider.dart';
 import 'package:quest/providers/game_settings_provider.dart';
+import 'package:quest/providers/community_provider.dart';
+import 'package:quest/providers/devotion_provider.dart';
+import 'package:quest/providers/media_provider.dart';
 import 'package:quest/screens/navigation_screen.dart';
 import 'package:quest/screens/onboarding/flash_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/services/api_service.dart';
+import 'package:quest/services/deeplink_service.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -38,17 +43,23 @@ void main() async {
 
   // Full notification setup (channels, listeners, permission requests).
   await NotificationService().initialize();
-  
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..loadSession()),
         ChangeNotifierProvider(create: (_) => FeedProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => QuizProvider()),
         ChangeNotifierProvider(create: (_) => BibleProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
-        ChangeNotifierProvider(create: (_) => FeatureProvider()..loadFeatures()),
+        ChangeNotifierProvider(
+          create: (_) => FeatureProvider()..loadFeatures(),
+        ),
         ChangeNotifierProvider(create: (_) => GameSettingsProvider()),
+        ChangeNotifierProvider(create: (_) => CommunityProvider()),
+        ChangeNotifierProvider(create: (_) => DevotionProvider()),
+        ChangeNotifierProvider(create: (_) => MediaProvider()),
       ],
       child: const MyApp(),
     ),
@@ -66,6 +77,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    DeepLinkService.init();
     // Wire up global 401 → auto-logout. We defer by one frame so the provider
     // tree is guaranteed to be mounted when the callback fires.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -104,13 +116,12 @@ class _MyAppState extends State<MyApp> {
         GlobalCupertinoLocalizations.delegate,
         FlutterQuillLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('en', 'US')],
       navigatorObservers: [routeObserver],
-      home: authProvider.isAuthenticated && authProvider.isOnboardingComplete
-          ? const NavigationScreen()
-          : const FlashScreen(),
+      home:
+          authProvider.isAuthenticated && authProvider.isOnboardingComplete
+              ? const NavigationScreen()
+              : const FlashScreen(),
     );
   }
 }

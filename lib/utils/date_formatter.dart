@@ -4,7 +4,7 @@ class DateFormatter {
     try {
       final dateTime = DateTime.parse(dateTimeStr).toLocal();
       final now = DateTime.now();
-      
+
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
       final itemDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
@@ -27,8 +27,18 @@ class DateFormatter {
           return '${difference.inDays} days ago';
         } else {
           final months = [
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
           ];
           return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
         }

@@ -14,7 +14,7 @@ import 'bible_search_delegate.dart';
 
 class BibleHomeScreen extends StatefulWidget {
   final int? initialScrollIndex;
-  
+
   const BibleHomeScreen({super.key, this.initialScrollIndex});
 
   @override
@@ -421,32 +421,45 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
           PopupMenuButton<String>(
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedMenu01,
-              color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black,
+              color:
+                  Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black,
               size: 24,
             ),
             onSelected: (value) {
               if (value == 'bookmarks') {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedVersesScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SavedVersesScreen()),
+                );
               } else if (value == 'highlights') {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const HighlightsScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HighlightsScreen()),
+                );
               } else if (value == 'settings') {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const BibleSettingsScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const BibleSettingsScreen(),
+                  ),
+                );
               }
             },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'bookmarks',
-                child: Text('Bookmarks'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'highlights',
-                child: Text('Highlights'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'settings',
-                child: Text('Settings'),
-              ),
-            ],
+            itemBuilder:
+                (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'bookmarks',
+                    child: Text('Bookmarks'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'highlights',
+                    child: Text('Highlights'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'settings',
+                    child: Text('Settings'),
+                  ),
+                ],
           ),
         ],
       ),

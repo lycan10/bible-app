@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/components/avatar.dart';
 
 class ConnectCard extends StatelessWidget {
   final String name;
@@ -29,7 +30,7 @@ class ConnectCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(25),
           ),
           child: Row(
@@ -38,7 +39,10 @@ class ConnectCard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    _Avatar(image: imagePath, ontap: () {}),
+                    GestureDetector(
+                      onTap: () {},
+                      child: CustomAvatar(imageUrl: imagePath, radius: 20.5, hasBorder: true),
+                    ),
                     const SizedBox(width: 10),
 
                     /// TEXT AREA
@@ -54,7 +58,7 @@ class ConnectCard extends StatelessWidget {
                                 name,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: theme.colorScheme.onSurface,
                                   fontSize: 14,
                                 ),
                               ),
@@ -93,7 +97,7 @@ class ConnectCard extends StatelessWidget {
                         "Connect",
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: theme.colorScheme.onSurface,
                           fontSize: 14,
                         ),
                       ),
@@ -104,32 +108,6 @@ class ConnectCard extends StatelessWidget {
         ),
         SizedBox(height: 10),
       ],
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final String image;
-  final VoidCallback ontap;
-
-  const _Avatar({required this.image, required this.ontap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: ontap,
-      child: Container(
-        width: 41,
-        height: 41,
-        padding: const EdgeInsets.all(0),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xff00d4ff), Color(0xff4a3aff)],
-          ),
-          shape: BoxShape.circle,
-        ),
-        child: CircleAvatar(radius: 10, backgroundImage: AssetImage(image)),
-      ),
     );
   }
 }

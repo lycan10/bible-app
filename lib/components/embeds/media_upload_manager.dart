@@ -46,7 +46,9 @@ mixin MediaUploadMixin<T extends StatefulWidget> on State<T> {
 
   // ── Image ─────────────────────────────────────────────────────────────────
 
-  Future<void> pickAndInsertImage({ImageSource source = ImageSource.gallery}) async {
+  Future<void> pickAndInsertImage({
+    ImageSource source = ImageSource.gallery,
+  }) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: source);
     if (picked == null || !mounted) return;
@@ -74,9 +76,9 @@ mixin MediaUploadMixin<T extends StatefulWidget> on State<T> {
         // Remove the broken placeholder embed
         final offset = _findEmbedOffset('image', localPath);
         if (offset >= 0) quillController.replaceText(offset, 1, '', null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Image upload failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Image upload failed: $e')));
       }
     }
   }
@@ -108,9 +110,9 @@ mixin MediaUploadMixin<T extends StatefulWidget> on State<T> {
       if (mounted) {
         final offset = _findEmbedOffset('voiceNote', localPath);
         if (offset >= 0) quillController.replaceText(offset, 1, '', null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Voice note upload failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Voice note upload failed: $e')));
       }
     }
   }

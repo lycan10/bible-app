@@ -25,7 +25,7 @@ class VoiceRecorderModal extends StatefulWidget {
 class _VoiceRecorderModalState extends State<VoiceRecorderModal> {
   late RecorderController _recorderController;
   late PlayerController _playerController;
-  
+
   bool _isRecording = false;
   bool _isRecordingCompleted = false;
   bool _isPlaying = false;
@@ -39,12 +39,14 @@ class _VoiceRecorderModalState extends State<VoiceRecorderModal> {
 
   void _initialiseControllers() {
     _recorderController = RecorderController();
-      
-    _playerController = PlayerController()
-      ..setFinishMode(finishMode: FinishMode.pause)
-      ..onPlayerStateChanged.listen((state) {
-        if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
-      });
+
+    _playerController =
+        PlayerController()
+          ..setFinishMode(finishMode: FinishMode.pause)
+          ..onPlayerStateChanged.listen((state) {
+            if (mounted)
+              setState(() => _isPlaying = state == PlayerState.playing);
+          });
   }
 
   @override
@@ -74,10 +76,11 @@ class _VoiceRecorderModalState extends State<VoiceRecorderModal> {
       } else {
         final hasPermission = await _recorderController.checkPermission();
         if (!hasPermission) return;
-        
+
         final tempDir = await getTemporaryDirectory();
-        _path = '${tempDir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        
+        _path =
+            '${tempDir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
         await _recorderController.record(path: _path);
         setState(() {
           _isRecording = true;
@@ -106,8 +109,14 @@ class _VoiceRecorderModalState extends State<VoiceRecorderModal> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _isRecordingCompleted ? 'Preview Voice Note' : 'Record Voice Note',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+              _isRecordingCompleted
+                  ? 'Preview Voice Note'
+                  : 'Record Voice Note',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 24),
             if (!_isRecordingCompleted)
@@ -127,7 +136,9 @@ class _VoiceRecorderModalState extends State<VoiceRecorderModal> {
                 enableSeekGesture: true,
                 waveformType: WaveformType.fitWidth,
                 playerWaveStyle: PlayerWaveStyle(
-                  fixedWaveColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.26),
+                  fixedWaveColor: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.26),
                   liveWaveColor: const Color(0xFF4C4DFF),
                   spacing: 6,
                 ),
@@ -148,15 +159,25 @@ class _VoiceRecorderModalState extends State<VoiceRecorderModal> {
                   )
                 else
                   IconButton(
-                    icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54), size: 32),
+                    icon: Icon(
+                      Icons.close,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.54),
+                      size: 32,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
-                
+
                 GestureDetector(
-                  onTap: _isRecordingCompleted ? _playOrPause : _startOrStopRecording,
+                  onTap:
+                      _isRecordingCompleted
+                          ? _playOrPause
+                          : _startOrStopRecording,
                   child: CircleAvatar(
                     radius: 32,
-                    backgroundColor: _isRecording ? Colors.red : const Color(0xFF4C4DFF),
+                    backgroundColor:
+                        _isRecording ? Colors.red : const Color(0xFF4C4DFF),
                     child: Icon(
                       _isRecordingCompleted
                           ? (_isPlaying ? Icons.pause : Icons.play_arrow)
@@ -166,10 +187,14 @@ class _VoiceRecorderModalState extends State<VoiceRecorderModal> {
                     ),
                   ),
                 ),
-                
+
                 if (_isRecordingCompleted)
                   IconButton(
-                    icon: const Icon(Icons.check_circle, color: Colors.green, size: 32),
+                    icon: const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 32,
+                    ),
                     onPressed: () {
                       Navigator.pop(context, _path);
                     },

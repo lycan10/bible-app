@@ -11,6 +11,7 @@ class CircleStuff extends StatelessWidget {
   final double? descriptionFont;
   final double? height;
   final String? avatarUrl;
+  final String? image;
   final VoidCallback onTap;
 
   const CircleStuff({
@@ -23,6 +24,7 @@ class CircleStuff extends StatelessWidget {
     this.descriptionFont,
     this.titleWidth,
     this.avatarUrl,
+    this.image,
     required this.onTap,
   });
 
@@ -39,20 +41,44 @@ class CircleStuff extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(50),
-              image: avatarUrl != null && avatarUrl!.isNotEmpty
-                  ? DecorationImage(
-                      image: ApiService.getFullImageUrl(avatarUrl!).startsWith('http')
-                          ? NetworkImage(ApiService.getFullImageUrl(avatarUrl!))
-                          : AssetImage(ApiService.getFullImageUrl(avatarUrl!)) as ImageProvider,
-                      fit: BoxFit.cover,
-                    )
-                  : const DecorationImage(
-                      image: AssetImage('assets/images/boy.png'),
-                      fit: BoxFit.cover,
-                    ),
+              image:
+                  (avatarUrl != null && avatarUrl!.isNotEmpty)
+                      ? DecorationImage(
+                        image:
+                            ApiService.getFullImageUrl(
+                                  avatarUrl!,
+                                ).startsWith('http')
+                                ? NetworkImage(
+                                  ApiService.getFullImageUrl(avatarUrl!),
+                                )
+                                : AssetImage(
+                                      ApiService.getFullImageUrl(avatarUrl!),
+                                    )
+                                    as ImageProvider,
+                        fit: BoxFit.cover,
+                      )
+                      : (image != null && image!.isNotEmpty)
+                      ? DecorationImage(
+                        image:
+                            ApiService.getFullImageUrl(
+                                  image!,
+                                ).startsWith('http')
+                                ? NetworkImage(
+                                  ApiService.getFullImageUrl(image!),
+                                )
+                                : AssetImage(ApiService.getFullImageUrl(image!))
+                                    as ImageProvider,
+                        fit: BoxFit.cover,
+                      )
+                      : null,
             ),
+            child:
+                (avatarUrl == null || avatarUrl!.isEmpty) &&
+                        (image == null || image!.isEmpty)
+                    ? Icon(Icons.person, color: Colors.grey.shade400, size: 40)
+                    : null,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           SizedBox(
             width: titleWidth ?? 100,
             child: Text(
@@ -62,18 +88,23 @@ class CircleStuff extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: titleFont ?? 14,
-                color: Colors.black,
+                color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: descriptionFont ?? 14,
-              color: AppTheme.textColor2,
+          const SizedBox(height: 3),
+          SizedBox(
+            width: titleWidth ?? 100,
+            child: Text(
+              description,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: descriptionFont ?? 12,
+                color: AppTheme.textColor2,
+              ),
             ),
           ),
         ],

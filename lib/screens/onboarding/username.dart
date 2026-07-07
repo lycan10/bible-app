@@ -20,7 +20,8 @@ class _UsernameState extends State<Username> {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => const Permission(),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => const Permission(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
             animation: animation,
@@ -61,7 +62,11 @@ class _UsernameState extends State<Username> {
         _navigateToPermissionScreen(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.errorMessage ?? 'Failed to register username.')),
+          SnackBar(
+            content: Text(
+              authProvider.errorMessage ?? 'Failed to register username.',
+            ),
+          ),
         );
       }
     }
@@ -166,17 +171,18 @@ class _UsernameState extends State<Username> {
                             Wrap(
                               spacing: 10,
                               runSpacing: 10,
-                              children: suggestions
-                                  .map(
-                                    (s) => SuggestionBox(
-                                      text: s,
-                                      onTap: () {
-                                        usernameController.text = s;
-                                        fetchSuggestions(s);
-                                      },
-                                    ),
-                                  )
-                                  .toList(),
+                              children:
+                                  suggestions
+                                      .map(
+                                        (s) => SuggestionBox(
+                                          text: s,
+                                          onTap: () {
+                                            usernameController.text = s;
+                                            fetchSuggestions(s);
+                                          },
+                                        ),
+                                      )
+                                      .toList(),
                             ),
                           ],
                         ),

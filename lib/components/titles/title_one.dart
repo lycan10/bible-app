@@ -6,15 +6,15 @@ class TitleOne extends StatelessWidget {
   final String title;
   final dynamic trailingIcon;
   final GestureTapCallback leadingIconTap;
-  final GestureTapCallback trailingIconTap;
+  final GestureTapCallback? trailingIconTap;
 
   const TitleOne({
     super.key,
     required this.leadingIcon,
     required this.title,
-    required this.trailingIcon,
     required this.leadingIconTap,
-    required this.trailingIconTap,
+    this.trailingIcon,
+    this.trailingIconTap,
   });
 
   @override
@@ -40,14 +40,19 @@ class TitleOne extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        GestureDetector(
-          onTap: trailingIconTap,
-          child: Container(
-            padding: EdgeInsets.all(7),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(100)),
-            child: HugeIcon(icon: trailingIcon, size: 22, strokeWidth: 2),
-          ),
-        ),
+        if (trailingIcon != null)
+          GestureDetector(
+            onTap: trailingIconTap,
+            child: Container(
+              padding: EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: HugeIcon(icon: trailingIcon, size: 22, strokeWidth: 2),
+            ),
+          )
+        else
+          const SizedBox(width: 36), // maintain spacing symmetry
       ],
     );
   }

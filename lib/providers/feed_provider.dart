@@ -7,23 +7,29 @@ class FeedProvider with ChangeNotifier {
   Map<String, dynamic>? _feed;
   Map<String, dynamic>? _explore;
   List<dynamic> _friends = [];
+  List<dynamic> _friendSuggestions = [];
+  List<dynamic> _pendingRequests = [];
   List<dynamic> _badgesProgress = [];
   List<dynamic> _feelingsMetadata = [];
   Map<String, dynamic>? _currentFeeling;
 
   bool _isLoading = false;
   String? _errorMessage;
+  String _affirmation = "God loves me, and I know it";
 
   Map<String, dynamic>? get dailyVerse => _dailyVerse;
   Map<String, dynamic>? get feed => _feed;
   Map<String, dynamic>? get explore => _explore;
   List<dynamic> get friends => _friends;
+  List<dynamic> get friendSuggestions => _friendSuggestions;
+  List<dynamic> get pendingRequests => _pendingRequests;
   List<dynamic> get badgesProgress => _badgesProgress;
   List<dynamic> get feelingsMetadata => _feelingsMetadata;
   Map<String, dynamic>? get currentFeeling => _currentFeeling;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String get affirmation => _affirmation;
 
   // Load Home dashboard data
   Future<void> loadHomeData(String token, String userId) async {
@@ -41,6 +47,7 @@ class FeedProvider with ChangeNotifier {
       _dailyVerse = results[0];
       _feed = results[1];
       _currentFeeling = results[2];
+      _affirmation = _feed?['affirmation'] ?? "God loves me, and I know it";
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -51,11 +58,12 @@ class FeedProvider with ChangeNotifier {
 
   Future<void> toggleDailyVerseLike(String token) async {
     if (_dailyVerse == null) return;
-    
+
     // Optimistic update
     final wasLiked = _dailyVerse!['hasLiked'] == true;
     _dailyVerse!['hasLiked'] = !wasLiked;
-    _dailyVerse!['likesCount'] = (_dailyVerse!['likesCount'] ?? 0) + (wasLiked ? -1 : 1);
+    _dailyVerse!['likesCount'] =
+        (_dailyVerse!['likesCount'] ?? 0) + (wasLiked ? -1 : 1);
     notifyListeners();
 
     try {
@@ -63,13 +71,15 @@ class FeedProvider with ChangeNotifier {
       // Sync with server if needed
       if (result['liked'] != _dailyVerse!['hasLiked']) {
         _dailyVerse!['hasLiked'] = result['liked'];
-        _dailyVerse!['likesCount'] = (_dailyVerse!['likesCount'] ?? 0) + (result['liked'] ? 1 : -1);
+        _dailyVerse!['likesCount'] =
+            (_dailyVerse!['likesCount'] ?? 0) + (result['liked'] ? 1 : -1);
         notifyListeners();
       }
     } catch (e) {
       // Revert optimistic update on error
       _dailyVerse!['hasLiked'] = wasLiked;
-      _dailyVerse!['likesCount'] = (_dailyVerse!['likesCount'] ?? 0) + (wasLiked ? 1 : -1);
+      _dailyVerse!['likesCount'] =
+          (_dailyVerse!['likesCount'] ?? 0) + (wasLiked ? 1 : -1);
       notifyListeners();
       debugPrint("Error toggling like: $e");
     }
@@ -77,10 +87,18 @@ class FeedProvider with ChangeNotifier {
 
   Future<void> shareDailyVerse(String token) async {
     if (_dailyVerse == null) return;
-    
+
     final verseText = _dailyVerse!['text'] ?? '';
     final reference = _dailyVerse!['reference'] ?? '';
-    final shareContent = '"$verseText" - $reference\n\nRead more on Shalom App!';
+    final devotionId = _dailyVerse!['id'];
+
+    String shareContent =
+        '"$verseText" - $reference\n\nRead more on Shalom App!';
+    if (devotionId != null) {
+      final link = 'https://quest.vidarave.com/devotion/$devotionId';
+      shareContent =
+          '"$verseText" - $reference\n\nRead more on Shalom App! $link';
+    }
 
     try {
       await Share.share(shareContent);
@@ -144,6 +162,9 @@ class FeedProvider with ChangeNotifier {
         return false;
       }
       _currentFeeling = res;
+      if (res['affirmation'] != null) {
+        _affirmation = res['affirmation'];
+      }
       return true;
     } catch (e) {
       _errorMessage = e.toString();
@@ -164,14 +185,65 @@ class FeedProvider with ChangeNotifier {
       final results = await Future.wait([
         ApiService.fetchFriends(token),
         ApiService.fetchBadgesProgress(token),
+        ApiService.fetchFriendSuggestions(token),
+        ApiService.fetchPendingFriendRequests(token),
       ]);
       _friends = results[0];
       _badgesProgress = results[1];
+      _friendSuggestions = results[2];
+      _pendingRequests = results[3];
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Send friend request
+  Future<bool> sendFriendRequest(String token, String targetUserId) async {
+    try {
+      await ApiService.sendFriendRequest(token, targetUserId);
+      // Remove from suggestions
+      _friendSuggestions.removeWhere((user) => user['id'] == targetUserId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint("Error sending friend request: $e");
+      return false;
+    }
+  }
+
+  // Accept friend request
+  Future<bool> acceptFriendRequest(String token, String targetUserId) async {
+    try {
+      await ApiService.acceptFriendRequest(token, targetUserId);
+      final acceptedUser = _pendingRequests.firstWhere(
+        (user) => user['id'] == targetUserId,
+        orElse: () => null,
+      );
+      if (acceptedUser != null) {
+        _friends.add(acceptedUser);
+        _pendingRequests.removeWhere((user) => user['id'] == targetUserId);
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint("Error accepting friend request: $e");
+      return false;
+    }
+  }
+
+  // Reject friend request
+  Future<bool> rejectFriendRequest(String token, String targetUserId) async {
+    try {
+      await ApiService.rejectFriendRequest(token, targetUserId);
+      _pendingRequests.removeWhere((user) => user['id'] == targetUserId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint("Error rejecting friend request: $e");
+      return false;
     }
   }
 }

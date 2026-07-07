@@ -11,6 +11,7 @@ class PostCard extends StatelessWidget {
   final String comments;
   final String shares;
   final double? width;
+  final VoidCallback? onAuthorTap;
 
   const PostCard({
     super.key,
@@ -22,6 +23,7 @@ class PostCard extends StatelessWidget {
     this.comments = "29",
     this.shares = "5k",
     this.width, // ✅ important for horizontal list
+    this.onAuthorTap,
   });
 
   @override
@@ -68,25 +70,28 @@ class PostCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 /// AUTHOR
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'by: ',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 12,
-                          color: AppTheme.textColor2,
-                          fontStyle: FontStyle.italic,
+                GestureDetector(
+                  onTap: onAuthorTap,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'by: ',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 12,
+                            color: AppTheme.textColor2,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
-                      ),
-                      TextSpan(
-                        text: author,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 12,
-                          color: Colors.black,
+                        TextSpan(
+                          text: author,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 12,
+                            color: Colors.black,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 

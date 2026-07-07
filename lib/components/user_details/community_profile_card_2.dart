@@ -5,7 +5,16 @@ import 'package:quest/screens/profileScreen/profile_screen.dart';
 import 'package:quest/theme/theme.dart';
 
 class CommunityProfileCard2 extends StatelessWidget {
-  const CommunityProfileCard2({super.key});
+  final Map<String, dynamic> community;
+  final bool isMember;
+  final VoidCallback onToggleMembership;
+
+  const CommunityProfileCard2({
+    super.key,
+    required this.community,
+    required this.isMember,
+    required this.onToggleMembership,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +49,20 @@ class CommunityProfileCard2 extends StatelessWidget {
                   borderRadius: BorderRadius.circular(
                     50,
                   ), // half of image width/height
-                  child: Image.asset(
-                    "assets/images/user_test.jpg",
-                    width: 75,
-                    height: 75,
-                    fit: BoxFit.cover,
-                  ),
+                  child:
+                      community['image'] != null
+                          ? Image.network(
+                            community['image'],
+                            width: 75,
+                            height: 75,
+                            fit: BoxFit.cover,
+                          )
+                          : Image.asset(
+                            "assets/images/user_test.jpg",
+                            width: 75,
+                            height: 75,
+                            fit: BoxFit.cover,
+                          ),
                 ),
                 SizedBox(width: 10),
                 Expanded(
@@ -62,15 +79,8 @@ class CommunityProfileCard2 extends StatelessWidget {
                             height: 2.5,
                           ),
                           children: [
-                            TextSpan(text: 'Lekki Christian Youth\n'),
-
                             TextSpan(
-                              text: '@lenny123',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textColor2,
-                                fontSize: 12,
-                              ),
+                              text: "\${community['name'] ?? 'Community'}\\n",
                             ),
                           ],
                         ),
@@ -78,8 +88,14 @@ class CommunityProfileCard2 extends StatelessWidget {
                       SizedBox(height: 10),
                       Row(
                         children: [
-                          StatText(value: "23k", label: "Members"),
-                          StatText(value: "2", label: "Events"),
+                          StatText(
+                            value: "\${community['_count']?['members'] ?? 0}",
+                            label: "Members",
+                          ),
+                          StatText(
+                            value: "\${community['_count']?['events'] ?? 0}",
+                            label: "Events",
+                          ),
                         ],
                       ),
                     ],
@@ -92,6 +108,19 @@ class CommunityProfileCard2 extends StatelessWidget {
               children: [
                 Expanded(
                   child: ActionPillButton(
+                    icon:
+                        isMember
+                            ? HugeIcons.strokeRoundedCheckmarkBadge01
+                            : HugeIcons.strokeRoundedUserAdd01,
+                    label: isMember ? "Leave community" : "Join community",
+                    backgroundColor: isMember ? Colors.white : Colors.black,
+                    textColor: isMember ? Colors.black : Colors.white,
+                    onTap: onToggleMembership,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ActionPillButton(
                     icon: HugeIcons.strokeRoundedShare08,
                     label: "Share community",
                     onTap: () {},
@@ -101,7 +130,7 @@ class CommunityProfileCard2 extends StatelessWidget {
             ),
             SizedBox(height: 25),
             Text(
-              "Connect with fellow young Christians in Lekki! Share your faith, grow spiritually, and build lasting friendships in a supportive community. Join us for events, discussions, and opportunities to make a difference together.",
+              community['description'] ?? 'No description available.',
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: 13,
                 color: AppTheme.textColor2,

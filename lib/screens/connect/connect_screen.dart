@@ -1,113 +1,44 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:quest/components/connect/connect_card.dart';
-import 'package:quest/components/media/audio/audio_reel_card.dart';
-import 'package:quest/components/media/video/video_card.dart';
 import 'package:quest/components/menu/discover_more.dart';
-import 'package:quest/components/posts/post_card.dart';
-import 'package:quest/components/posts/post_card_short.dart';
-import 'package:quest/components/sponsored/sponsored_post.dart';
-import 'package:quest/components/sponsored/sponsored_post_card.dart';
-import 'package:quest/components/sponsored/sponsored_video.dart';
 import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
-import 'package:quest/screens/media/audio_reel_screen.dart';
-import 'package:quest/screens/media/video_reel_screen.dart';
 
-import 'package:quest/screens/post/post_list.dart';
-import 'package:quest/screens/post/post_screen.dart';
+import 'package:quest/screens/messages/message_chat_screen.dart';
+import 'package:quest/providers/chat_provider.dart';
 
-import 'package:quest/theme/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
+import 'package:quest/providers/feed_provider.dart';
+import 'package:quest/providers/auth_provider.dart';
 
-final List<Widget> connectCards = [
-  ConnectCard(
-    name: "Ike",
-    username: "@alice_smith",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Emma",
-    username: "@emma_jones",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Liam",
-    username: "@liam_brown",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Olivia",
-    username: "@olivia_clark",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Noah",
-    username: "@noah_davis",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Ava",
-    username: "@ava_miller",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Elijah",
-    username: "@elijah_wilson",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Sophia",
-    username: "@sophia_moore",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Mason",
-    username: "@mason_taylor",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Isabella",
-    username: "@isabella_anderson",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Logan",
-    username: "@logan_thomas",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Mia",
-    username: "@mia_jackson",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Lucas",
-    username: "@lucas_white",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Charlotte",
-    username: "@charlotte_harris",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-  ConnectCard(
-    name: "Ethan",
-    username: "@ethan_martin",
-    imagePath: "assets/images/user_test.jpg",
-  ),
-];
-
-class ConnectScreen extends StatelessWidget {
+class ConnectScreen extends StatefulWidget {
   const ConnectScreen({super.key});
+
+  @override
+  State<ConnectScreen> createState() => _ConnectScreenState();
+}
+
+class _ConnectScreenState extends State<ConnectScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+      if (authProvider.token != null) {
+        feedProvider.loadProfileDetails(authProvider.token!);
+      }
+    });
+  }
 
   void _openMenu(BuildContext context) {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
       barrierLabel: "Filter",
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, animation, secondaryAnimation) {
         return const Center(child: _PostListMenuDialogBox());
@@ -118,9 +49,13 @@ class ConnectScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final feedProvider = Provider.of<FeedProvider>(context);
+    final suggestions = feedProvider.friendSuggestions;
+    final friends = feedProvider.friends;
+    final pendingRequests = feedProvider.pendingRequests;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(top: 15, left: 16, right: 16),
@@ -156,13 +91,13 @@ class ConnectScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: HugeIcon(
                             icon: HugeIcons.strokeRoundedLeftToRightListBullet,
                             size: 22,
-                            color: Colors.black,
+                            color: theme.colorScheme.onSurface,
                             strokeWidth: 1,
                           ),
                         ),
@@ -178,7 +113,7 @@ class ConnectScreen extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(
@@ -186,7 +121,7 @@ class ConnectScreen extends StatelessWidget {
                               HugeIcon(
                                 icon: HugeIcons.strokeRoundedSearch01,
                                 size: 18,
-                                color: AppTheme.textColor2,
+                                color: theme.colorScheme.onSurface,
                               ),
 
                               const SizedBox(width: 8),
@@ -209,10 +144,168 @@ class ConnectScreen extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 20),
-                  Column(
-                    children:
-                        connectCards, // this adds all 15 cards in a column
-                  ),
+                  if (suggestions.isEmpty &&
+                      friends.isEmpty &&
+                      pendingRequests.isEmpty &&
+                      feedProvider.isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else ...[
+                    if (pendingRequests.isNotEmpty) ...[
+                      SectionHeader(title: "Friend Requests", seeAllText: ""),
+                      ...pendingRequests.map((user) {
+                        return ConnectCard(
+                          name:
+                              '${user['firstName']} ${user['lastName'] ?? ''}'
+                                  .trim(),
+                          username: '@${user['username']}',
+                          imagePath:
+                              user['avatarUrl'] ??
+                              'assets/images/user_test.jpg',
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                ),
+                                onPressed: () async {
+                                  final authProvider =
+                                      Provider.of<AuthProvider>(
+                                        context,
+                                        listen: false,
+                                      );
+                                  if (authProvider.token != null) {
+                                    bool ok = await feedProvider
+                                        .acceptFriendRequest(
+                                          authProvider.token!,
+                                          user['id'],
+                                        );
+                                    if (ok && context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Request accepted!'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.cancel,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () async {
+                                  final authProvider =
+                                      Provider.of<AuthProvider>(
+                                        context,
+                                        listen: false,
+                                      );
+                                  if (authProvider.token != null) {
+                                    bool ok = await feedProvider
+                                        .rejectFriendRequest(
+                                          authProvider.token!,
+                                          user['id'],
+                                        );
+                                    if (ok && context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Request rejected'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      SizedBox(height: 20),
+                    ],
+                    if (friends.isNotEmpty) ...[
+                      SectionHeader(title: "Your Friends", seeAllText: ""),
+                      ...friends.map((user) {
+                        return ConnectCard(
+                          name:
+                              '${user['firstName']} ${user['lastName'] ?? ''}'
+                                  .trim(),
+                          username: '@${user['username']}',
+                          imagePath:
+                              user['avatarUrl'] ??
+                              'assets/images/user_test.jpg',
+                          trailing: IconButton(
+                            icon: const Icon(Icons.message, color: Colors.blue),
+                            onPressed: () async {
+                              final authProvider = Provider.of<AuthProvider>(
+                                context,
+                                listen: false,
+                              );
+                              if (authProvider.token != null) {
+                                final chat = await context
+                                    .read<ChatProvider>()
+                                    .startChat(authProvider.token!, user['id']);
+                                if (chat != null && context.mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => MessageChatScreen(
+                                            chatId: chat['id'],
+                                            friend: user,
+                                          ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        );
+                      }),
+                      SizedBox(height: 20),
+                    ],
+                    if (suggestions.isNotEmpty) ...[
+                      SectionHeader(
+                        title: "Suggested Connections",
+                        seeAllText: "",
+                      ),
+                      ...suggestions.map((user) {
+                        return ConnectCard(
+                          name:
+                              '${user['firstName']} ${user['lastName'] ?? ''}'
+                                  .trim(),
+                          username: '@${user['username']}',
+                          imagePath:
+                              user['avatarUrl'] ??
+                              'assets/images/user_test.jpg',
+                          connectTap: () async {
+                            final authProvider = Provider.of<AuthProvider>(
+                              context,
+                              listen: false,
+                            );
+                            if (authProvider.token != null) {
+                              bool ok = await feedProvider.sendFriendRequest(
+                                authProvider.token!,
+                                user['id'],
+                              );
+                              if (ok && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Friend request sent!'),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        );
+                      }),
+                    ],
+                  ],
                 ],
               ),
             ],
@@ -228,8 +321,9 @@ class _PostListMenuDialogBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),

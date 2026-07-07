@@ -560,13 +560,18 @@ class _GetStartedState extends State<GetStarted> {
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
                         );
                       },
                       child: RichText(
                         text: TextSpan(
                           text: 'Already have an account? ',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
                           children: const [
                             TextSpan(
                               text: 'Login',
@@ -593,10 +598,16 @@ class _GetStartedState extends State<GetStarted> {
                       label: 'Continue with Google',
                       iconAsset: 'assets/images/google_o.png',
                       onPressed: () async {
-                        final success = await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle();
+                        final success =
+                            await Provider.of<AuthProvider>(
+                              context,
+                              listen: false,
+                            ).signInWithGoogle();
                         if (mounted && success) {
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (_) => const NavigationScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const NavigationScreen(),
+                            ),
                             (route) => false,
                           );
                         }
@@ -607,10 +618,16 @@ class _GetStartedState extends State<GetStarted> {
                       label: 'Continue with Apple',
                       iconAsset: 'assets/images/apple_o.png',
                       onPressed: () async {
-                        final success = await Provider.of<AuthProvider>(context, listen: false).signInWithApple();
+                        final success =
+                            await Provider.of<AuthProvider>(
+                              context,
+                              listen: false,
+                            ).signInWithApple();
                         if (mounted && success) {
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (_) => const NavigationScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const NavigationScreen(),
+                            ),
                             (route) => false,
                           );
                         }
