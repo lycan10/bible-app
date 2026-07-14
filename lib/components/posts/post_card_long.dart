@@ -3,6 +3,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/stats/stats.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/components/avatar.dart';
+import 'package:quest/components/formatted_text.dart';
 
 class PostCardLong extends StatelessWidget {
   final String userName;
@@ -15,6 +16,7 @@ class PostCardLong extends StatelessWidget {
   final String time;
   final VoidCallback onTap;
   final VoidCallback? onAvatarTap;
+  final VoidCallback? onMoreTap;
 
   const PostCardLong({
     super.key,
@@ -28,6 +30,7 @@ class PostCardLong extends StatelessWidget {
     required this.time,
     required this.onTap,
     this.onAvatarTap,
+    this.onMoreTap,
   });
 
   @override
@@ -70,12 +73,23 @@ class PostCardLong extends StatelessWidget {
                         ],
                       ),
                     ),
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedMoreVertical,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                      strokeWidth: 3,
-                    ),
+                    if (onMoreTap != null)
+                      GestureDetector(
+                        onTap: onMoreTap,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedMoreVertical,
+                          size: 18,
+                          color: theme.colorScheme.onSurface,
+                          strokeWidth: 3,
+                        ),
+                      )
+                    else
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedMoreVertical,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                        strokeWidth: 3,
+                      ),
                   ],
                 ),
 
@@ -90,13 +104,15 @@ class PostCardLong extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            postText,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 14,
-                              color: theme.colorScheme.onSurface,
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 65),
+                            child: FormattedText(
+                              postText,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 14,
+                                color: theme.colorScheme.onSurface,
+                                height: 1.4,
+                              ),
                             ),
                           ),
 

@@ -19,7 +19,9 @@ import 'package:quest/screens/media/video_reel_screen.dart';
 import 'package:quest/screens/media/audio_list_screen.dart';
 import 'package:quest/screens/connect/connect_screen.dart';
 import 'package:quest/screens/devotion/devotion_list_screen.dart';
+import 'package:quest/screens/games/games_screen.dart';
 import 'package:quest/screens/messages/message_list_screen.dart';
+import 'package:quest/screens/messages/admin_message_list_screen.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/screens/post/post_list.dart';
 import 'package:quest/screens/post/post_screen.dart';
@@ -413,7 +415,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MessageListScreen(),
+                                    builder: (context) => AdminMessageListScreen(),
                                   ),
                                 ),
                           ),
@@ -422,7 +424,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           featureKey: 'games',
                           child: TagChip(
                             label: "Games",
-                            onTap: () => _showComingSoon(context, 'Games'),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const GamesScreen(),
+                              ),
+                            ),
                           ),
                         ),
                         FeatureGuard(
@@ -449,6 +456,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         SectionHeader(
                           title: "Most Read Plans",
                           seeAllText: "See more",
+                          onSeeAllTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DevotionListScreen(),
+                            ),
+                          ),
                         ),
                         SizedBox(
                           height: 200,
@@ -680,6 +693,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         SectionHeader(
                           title: "Discover communities",
                           seeAllText: 'see more',
+                          onSeeAllTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CommunityListScreen(),
+                            ),
+                          ),
                         ),
                         SizedBox(
                           height: 175,
@@ -1154,9 +1173,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 event: eventMap,
                                 isAttending: isAttending,
                                 onToggleAttend: () async {
-                                  // Explore screen might not have full toggle logic wired up easily if communityProvider is not available here,
-                                  // but we can wire it up if communityId is present.
-                                  // For now let's just close the sheet or do a placeholder.
+                                  // We trigger the API call via communityProvider, then reload explore data
+                                  // in the feedProvider to reflect the updated attendees list.
                                   final provider = context.read<CommunityProvider>();
                                   if (auth.token != null && eventMap['id'] != null) {
                                       if (isAttending) {
@@ -1164,7 +1182,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                       } else {
                                           await provider.attendEvent(auth.token!, eventMap['id']);
                                       }
-                                      if (context.mounted) Navigator.pop(context);
+                                      if (context.mounted) {
+                                        context.read<FeedProvider>().loadExploreData(auth.token!);
+                                        Navigator.pop(context);
+                                      }
                                   }
                                 },
                               );

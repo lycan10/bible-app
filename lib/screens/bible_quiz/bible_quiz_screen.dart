@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:quest/components/avatar.dart';
 import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/game_settings_provider.dart';
+import 'package:quest/screens/bible_quiz/quiz_finish_screen.dart';
 import 'package:quest/providers/game_settings_provider.dart';
 import 'package:quest/services/game_service.dart';
 
@@ -292,12 +293,21 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
+    int earnedCoins = 0;
     try {
-      await GameService.submitScore(
+      final res = await GameService.submitScore(
         'BIBLE_QUIZ',
         widget.level.toString(),
         _score,
       );
+      earnedCoins = res['pointsEarned'] ?? 0;
+      
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.updateUserLocally({
+        'points': (authProvider.user?['points'] ?? 0) + earnedCoins,
+        if (authProvider.user?['bibleQuizLevel'] <= widget.level)
+          'bibleQuizLevel': widget.level + 1,
+      });
     } catch (e) {
       debugPrint('Failed to submit score: $e');
     }
@@ -305,7 +315,18 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    _showBadgeUnlockedDialog();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => QuizFinishScreen(
+              score: _score,
+              totalQuestions: _questions.length,
+              level: widget.level,
+              coinsEarned: earnedCoins,
+            ),
+      ),
+    );
   }
 
   @override
@@ -434,10 +455,6 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
                     ),
                     child: Row(
                       children: [
-                        const CustomAvatar(
-                          radius: 12,
-                          imageUrl: 'assets/images/boy.png',
-                        ),
                         const SizedBox(width: 8),
                         Text(
                           firstName,
@@ -488,7 +505,20 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
                         ],
                       ),
                       const SizedBox(width: 12),
-                      Image.asset('assets/images/gold.png', width: 28),
+                      Row(
+                        children: [
+                          Text(
+                            '${user?['points'] ?? 0}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Image.asset('assets/images/gold.png', width: 28),
+                        ],
+                      ),
                     ],
                   ),
                 ],

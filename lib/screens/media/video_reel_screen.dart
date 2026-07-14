@@ -9,7 +9,6 @@ import 'package:quest/providers/auth_provider.dart';
 
 import 'package:quest/components/share/in_app_share_sheet.dart';
 
-/// Opens a TikTok/Reels-style endless vertical video feed.
 ///
 /// [videos]        – the full list of video items the user will scroll through.
 /// [initialIndex]  – the index of the video the user tapped on.
@@ -178,14 +177,14 @@ class _VideoReelScreenState extends State<VideoReelScreen>
     }
   }
 
-  void _trackPlayback(dynamic videoData, int index) {
+  void _trackPlayback(dynamic videoData, int index, bool completed) {
     final auth = context.read<AuthProvider>();
     if (auth.token != null) {
       context.read<MediaProvider>().trackVideoPlayback(
         auth.token!,
         videoData['id'],
         _controllers[index]?.value.position.inSeconds ?? 0,
-        true,
+        completed,
       );
     }
   }
@@ -205,6 +204,7 @@ class _VideoReelScreenState extends State<VideoReelScreen>
     WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     for (final c in _controllers.values) {
+      c.pause();
       c.dispose();
     }
     super.dispose();
@@ -236,7 +236,9 @@ class _VideoReelScreenState extends State<VideoReelScreen>
                   onTogglePlay: () => _togglePlayPause(index),
                   onToggleMute: _toggleMute,
                   onLike: () => _likeVideo(_videos[index]),
-                  onTrackPlayback: () => _trackPlayback(_videos[index], index),
+                  onTrackPlayback:
+                      (completed) =>
+                          _trackPlayback(_videos[index], index, completed),
                   onNext:
                       () => _pageController.nextPage(
                         duration: const Duration(milliseconds: 300),
@@ -310,7 +312,7 @@ class _VideoPage extends StatefulWidget {
   final VoidCallback onTogglePlay;
   final VoidCallback onToggleMute;
   final VoidCallback onLike;
-  final VoidCallback onTrackPlayback;
+  final Function(bool completed) onTrackPlayback;
   final VoidCallback onNext;
   final VoidCallback onPrevious;
 
@@ -380,13 +382,21 @@ class _VideoPageState extends State<_VideoPage> {
 
     if (!_completed && _progress >= 0.95) {
       _completed = true;
-      widget.onTrackPlayback();
+      widget.onTrackPlayback(true);
+      final auth = context.read<AuthProvider>();
+      final autoScroll = auth.user?['autoScroll'] ?? false;
+      if (autoScroll) {
+        widget.onNext();
+      }
     }
   }
 
   @override
   void dispose() {
     widget.controller?.removeListener(_onControllerUpdate);
+    if (!_completed) {
+      widget.onTrackPlayback(false);
+    }
     super.dispose();
   }
 

@@ -3,17 +3,19 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/action_pill/action_pill_button_2.dart';
 import 'package:quest/components/event/event_details_card.dart';
 import 'package:quest/components/event/event_dotted_card.dart';
-import 'package:quest/components/posts/post_card.dart';
 import 'package:quest/components/posts/post_card_long.dart';
-import 'package:quest/components/posts/post_card_short.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/components/today_verse_glass.dart';
 import 'package:quest/screens/post/new_post_screen.dart';
+import 'package:quest/screens/messages/new_message_screen.dart';
+import 'package:quest/components/messages/admin_message_card.dart';
+import 'package:quest/components/messages/community_message_card.dart';
 import 'package:quest/screens/post/post_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/services/api_service.dart';
@@ -26,6 +28,8 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
 import 'package:quest/screens/community/create_event_screen.dart';
+import 'package:quest/screens/community/edit_event_screen.dart';
+import 'package:quest/components/formatted_text.dart';
 
 class CommunityIndividualScreen extends StatefulWidget {
   final String communityId;
@@ -78,6 +82,10 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       if (authProvider.token != null) {
         context.read<CommunityProvider>().loadCommunityDetails(
+          authProvider.token!,
+          widget.communityId,
+        );
+        context.read<CommunityProvider>().loadCommunityVerse(
           authProvider.token!,
           widget.communityId,
         );
@@ -378,26 +386,29 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: _forumController,
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          decoration: InputDecoration(
-                            hintText: 'Type a message',
-                            hintStyle: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.5),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 120),
+                          child: TextField(
+                            controller: _forumController,
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            decoration: InputDecoration(
+                              hintText: 'Type a message',
+                              hintStyle: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              isDense: true,
                             ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            isDense: true,
+                            onChanged: (_) => setState(() {}),
                           ),
-                          onChanged: (_) => setState(() {}),
                         ),
                       ),
                       Padding(
@@ -467,6 +478,50 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
     final messages = communityProvider.currentMessages;
     final authId = context.read<AuthProvider>().user?['id'];
 
+    final memberInfo = community['member'] as Map<String, dynamic>?;
+    final isAdmin = memberInfo?['role'] == 'ADMIN';
+    final isSuspended = memberInfo?['isSuspended'] == true;
+    final canPostForum =
+        memberInfo?['canPostForum'] != false &&
+        community['isForumDisabledGlobally'] != true;
+    final canCreatePost = isAdmin || canPostForum;
+
+    bool shouldShowAddButton = false;
+    if (selectedTab == "Space" && canCreatePost) shouldShowAddButton = true;
+    if (selectedTab == "Messages" && isAdmin) shouldShowAddButton = true;
+    if (selectedTab == "Event" && isAdmin) shouldShowAddButton = true;
+
+    if (isSuspended) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.block, size: 48, color: theme.colorScheme.error),
+                const SizedBox(height: 16),
+                const Text(
+                  'You have been suspended from this community.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Apply event filter
     List<dynamic> events = allEvents;
     if (_selectedEventFilter == 'Attending') {
@@ -513,6 +568,211 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
         return '${(count / 1000).toStringAsFixed(0)}k';
       }
       return '$count';
+    }
+
+    if (!isMember) {
+      final bool isPrivate = community['isPrivate'] ?? false;
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TitleOne(
+                  leadingIcon: HugeIcons.strokeRoundedCancel01,
+                  title: "Communities Details",
+                  leadingIconTap: () => Navigator.pop(context),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child:
+                          community['image'] != null
+                              ? Image.network(
+                                community['image'],
+                                width: 75,
+                                height: 75,
+                                fit: BoxFit.cover,
+                              )
+                              : Image.asset(
+                                "assets/images/user_test.jpg",
+                                width: 75,
+                                height: 75,
+                                fit: BoxFit.cover,
+                              ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            community['name'] ?? 'Community',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.black,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            community['creator']?['username'] != null
+                                ? '@${community['creator']['username']}'
+                                : '@community',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textColor2,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            children: [
+                              Text(
+                                formatCount(
+                                  community['_count']?['members'] ?? 0,
+                                ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "Members",
+                                style: TextStyle(
+                                  color: AppTheme.textColor2,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isPrivate
+                                          ? Colors.red.withValues(alpha: 0.1)
+                                          : Colors.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  isPrivate ? "Private" : "Public",
+                                  style: TextStyle(
+                                    color:
+                                        isPrivate ? Colors.red : Colors.green,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ActionPillButton(
+                        backgroundColor: Colors.black,
+                        textColor: Colors.white,
+                        label: "Join Community",
+                        onTap: () async {
+                          final auth = context.read<AuthProvider>();
+                          await communityProvider.joinCommunity(
+                            auth.token!,
+                            community['id'],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ActionPillButton(
+                        icon: HugeIcons.strokeRoundedShare08,
+                        label: "Share",
+                        onTap: () {
+                          final name = community['name'] ?? 'this community';
+                          final communityId = community['id'];
+                          final link =
+                              communityId != null
+                                  ? 'https://quest.vidarave.com/community/$communityId'
+                                  : null;
+                          showInAppShareSheet(
+                            context,
+                            shareMessage:
+                                link != null
+                                    ? 'Join $name on Quest! $link'
+                                    : 'Join $name on Quest!',
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Text(
+                  community['description'] ?? 'No description available.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 14,
+                    color: AppTheme.textColor2,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => const GuidelinesBottomSheet(),
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.textColor2.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedSecurity,
+                          size: 20,
+                          color: AppTheme.textColor2,
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Text(
+                        "Community Guidelines",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     // Forum tab gets its own full-screen layout with fixed bottom input
@@ -613,232 +873,302 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
               Expanded(
                 child:
                     messages.isNotEmpty
-                        ? ListView.builder(
-                          reverse: true,
-                          controller: _forumScrollController,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          itemCount:
-                              messages.length +
-                              (communityProvider.hasMoreMessages ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == messages.length) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                final auth = context.read<AuthProvider>();
-                                communityProvider.loadMoreCommunityMessages(
-                                  auth.token!,
-                                  community['id'],
-                                );
-                              });
-                              return const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.black,
-                                  ),
-                                ),
+                        ? RefreshIndicator(
+                          onRefresh: () async {
+                            final auth = context.read<AuthProvider>();
+                            if (auth.token != null) {
+                              await communityProvider.loadCommunityDetails(
+                                auth.token!,
+                                community['id'],
                               );
                             }
-                            final msg = messages[index];
-                            final user = msg['sender'] ?? msg['user'] ?? {};
-                            final isMe =
-                                user['id'] ==
-                                context.read<AuthProvider>().user?['id'];
-
-                            final firstName =
-                                (user['firstName'] ?? '').toString().trim();
-                            final lastName =
-                                (user['lastName'] ?? '').toString().trim();
-                            final fullName = '$firstName $lastName'.trim();
-                            final displayName =
-                                fullName.isNotEmpty
-                                    ? fullName
-                                    : (user['username'] ?? 'User').toString();
-                            final avatarUrl = user['avatarUrl']?.toString();
-
-                            String formattedTime = '';
-                            if (msg['createdAt'] != null) {
-                              final dt =
-                                  DateTime.parse(msg['createdAt']).toLocal();
-                              final now = DateTime.now();
-                              final hm = DateFormat('h:mm a').format(dt);
-                              if (dt.year == now.year &&
-                                  dt.month == now.month &&
-                                  dt.day == now.day) {
-                                formattedTime = hm;
-                              } else {
-                                formattedTime =
-                                    '${DateFormat('MMM d').format(dt)} $hm';
-                              }
-                            }
-
-                            final hasImageAttachment = msg['imageUrl'] != null;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Row(
-                                mainAxisAlignment:
-                                    isMe
-                                        ? MainAxisAlignment.end
-                                        : MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  // Avatar for other users
-                                  if (!isMe) ...[
-                                    GestureDetector(
-                                      onTap: () {
-                                        final comm =
-                                            context
-                                                .read<CommunityProvider>()
-                                                .currentCommunity ??
-                                            {};
-                                        showModalBottomSheet(
-                                          context: context,
-                                          isScrollControlled: true,
-                                          backgroundColor: Colors.transparent,
-                                          builder:
-                                              (context) =>
-                                                  UserProfileCard(user: user),
-                                        );
-                                      },
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(20),
-                                        child:
-                                            avatarUrl != null &&
-                                                    avatarUrl.isNotEmpty
-                                                ? Image.network(
-                                                  ApiService.getFullImageUrl(
-                                                    avatarUrl,
-                                                  ),
-                                                  width: 36,
-                                                  height: 36,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder:
-                                                      (_, __, ___) =>
-                                                          _defaultAvatar(),
-                                                )
-                                                : _defaultAvatar(),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                  ],
-                                  // Bubble
-                                  Flexible(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          isMe
-                                              ? CrossAxisAlignment.end
-                                              : CrossAxisAlignment.start,
-                                      children: [
-                                        // Sender name (others only)
-                                        if (!isMe)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 4,
-                                              left: 4,
-                                            ),
-                                            child: Text(
-                                              displayName,
-                                              style: TextStyle(
-                                                color: Colors.grey.shade600,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        // Image attachment preview
-                                        if (hasImageAttachment)
-                                          Container(
-                                            margin: const EdgeInsets.only(
-                                              bottom: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              child: Image.network(
-                                                ApiService.getFullImageUrl(
-                                                  msg['imageUrl'],
-                                                ),
-                                                width: 200,
-                                                fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (_, __, ___) =>
-                                                        const SizedBox(),
-                                              ),
-                                            ),
-                                          ),
-                                        // Text bubble (only if text present)
-                                        if ((msg['text'] ?? '')
-                                            .toString()
-                                            .trim()
-                                            .isNotEmpty)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                              vertical: 10,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  isMe
-                                                      ? Colors.black
-                                                      : Colors.grey.shade200,
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: const Radius.circular(
-                                                  20,
-                                                ),
-                                                topRight: const Radius.circular(
-                                                  20,
-                                                ),
-                                                bottomLeft: Radius.circular(
-                                                  isMe ? 20 : 4,
-                                                ),
-                                                bottomRight: Radius.circular(
-                                                  isMe ? 4 : 20,
-                                                ),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              msg['text'] ?? '',
-                                              style: TextStyle(
-                                                color:
-                                                    isMe
-                                                        ? Colors.white
-                                                        : Colors.black,
-                                                fontSize: 15,
-                                              ),
-                                            ),
-                                          ),
-                                        // Timestamp
-                                        if (formattedTime.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 4,
-                                              left: 4,
-                                              right: 4,
-                                            ),
-                                            child: Text(
-                                              formattedTime,
-                                              style: TextStyle(
-                                                color: Colors.grey.shade400,
-                                                fontSize: 10,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
+                          },
+                          child: ListView.builder(
+                            reverse: true,
+                            controller: _forumScrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            itemCount:
+                                messages.length +
+                                (communityProvider.hasMoreMessages ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index == messages.length) {
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  final auth = context.read<AuthProvider>();
+                                  communityProvider.loadMoreCommunityMessages(
+                                    auth.token!,
+                                    community['id'],
+                                  );
+                                });
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.black,
                                     ),
                                   ),
-                                  // Spacer so my bubble doesn't touch the edge
-                                  if (isMe) const SizedBox(width: 8),
-                                ],
-                              ),
-                            );
-                          },
+                                );
+                              }
+                              final msg = messages[index];
+                              final user = msg['sender'] ?? msg['user'] ?? {};
+                              final isMe =
+                                  user['id'] ==
+                                  context.read<AuthProvider>().user?['id'];
+
+                              final firstName =
+                                  (user['firstName'] ?? '').toString().trim();
+                              final lastName =
+                                  (user['lastName'] ?? '').toString().trim();
+                              final fullName = '$firstName $lastName'.trim();
+                              final displayName =
+                                  fullName.isNotEmpty
+                                      ? fullName
+                                      : (user['username'] ?? 'User').toString();
+                              final avatarUrl = user['avatarUrl']?.toString();
+
+                              String formattedTime = '';
+                              if (msg['createdAt'] != null) {
+                                final dt =
+                                    DateTime.parse(msg['createdAt']).toLocal();
+                                final now = DateTime.now();
+                                final hm = DateFormat('h:mm a').format(dt);
+                                if (dt.year == now.year &&
+                                    dt.month == now.month &&
+                                    dt.day == now.day) {
+                                  formattedTime = hm;
+                                } else {
+                                  formattedTime =
+                                      '${DateFormat('MMM d').format(dt)} $hm';
+                                }
+                              }
+
+                              final hasImageAttachment =
+                                  msg['imageUrl'] != null;
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      isMe
+                                          ? MainAxisAlignment.end
+                                          : MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    // Avatar for other users
+                                    if (!isMe) ...[
+                                      GestureDetector(
+                                        onTap: () {
+                                          context
+                                                  .read<CommunityProvider>()
+                                                  .currentCommunity ??
+                                              {};
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            builder:
+                                                (context) =>
+                                                    UserProfileCard(user: user),
+                                          );
+                                        },
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          child:
+                                              avatarUrl != null &&
+                                                      avatarUrl.isNotEmpty
+                                                  ? Image.network(
+                                                    ApiService.getFullImageUrl(
+                                                      avatarUrl,
+                                                    ),
+                                                    width: 36,
+                                                    height: 36,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder:
+                                                        (_, __, ___) =>
+                                                            _defaultAvatar(),
+                                                  )
+                                                  : _defaultAvatar(),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    // Bubble
+                                    Flexible(
+                                      child: GestureDetector(
+                                        onLongPress: () {
+                                          if (isAdmin || isMe) {
+                                            showModalBottomSheet(
+                                              context: context,
+                                              builder: (context) {
+                                                return SafeArea(
+                                                  child: Wrap(
+                                                    children: [
+                                                      ListTile(
+                                                        leading: const Icon(
+                                                          Icons.delete,
+                                                          color: Colors.red,
+                                                        ),
+                                                        title: const Text(
+                                                          'Delete Message',
+                                                          style: TextStyle(
+                                                            color: Colors.red,
+                                                          ),
+                                                        ),
+                                                        onTap: () async {
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                          if (authId != null) {
+                                                            await context
+                                                                .read<
+                                                                  CommunityProvider
+                                                                >()
+                                                                .deleteForumMessage(
+                                                                  context
+                                                                      .read<
+                                                                        AuthProvider
+                                                                      >()
+                                                                      .token!,
+                                                                  msg['id'],
+                                                                );
+                                                          }
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          }
+                                        },
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              isMe
+                                                  ? CrossAxisAlignment.end
+                                                  : CrossAxisAlignment.start,
+                                          children: [
+                                            // Sender name (others only)
+                                            if (!isMe)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 4,
+                                                  left: 4,
+                                                ),
+                                                child: Text(
+                                                  displayName,
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade600,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            // Image attachment preview
+                                            if (hasImageAttachment)
+                                              Container(
+                                                margin: const EdgeInsets.only(
+                                                  bottom: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  child: Image.network(
+                                                    ApiService.getFullImageUrl(
+                                                      msg['imageUrl'],
+                                                    ),
+                                                    width: 200,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder:
+                                                        (_, __, ___) =>
+                                                            const SizedBox(),
+                                                  ),
+                                                ),
+                                              ),
+                                            // Text bubble (only if text present)
+                                            if ((msg['text'] ?? '')
+                                                .toString()
+                                                .trim()
+                                                .isNotEmpty)
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 14,
+                                                      vertical: 10,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      isMe
+                                                          ? Colors.black
+                                                          : Colors
+                                                              .grey
+                                                              .shade200,
+                                                  borderRadius: BorderRadius.only(
+                                                    topLeft:
+                                                        const Radius.circular(
+                                                          20,
+                                                        ),
+                                                    topRight:
+                                                        const Radius.circular(
+                                                          20,
+                                                        ),
+                                                    bottomLeft: Radius.circular(
+                                                      isMe ? 20 : 4,
+                                                    ),
+                                                    bottomRight:
+                                                        Radius.circular(
+                                                          isMe ? 4 : 20,
+                                                        ),
+                                                  ),
+                                                ),
+                                                child: FormattedText(
+                                                  msg['text'] ?? '',
+                                                  style: TextStyle(
+                                                    color:
+                                                        isMe
+                                                            ? Colors.white
+                                                            : Colors.black,
+                                                    fontSize: 15,
+                                                  ),
+                                                ),
+                                              ),
+                                            // Timestamp
+                                            if (formattedTime.isNotEmpty)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 4,
+                                                  left: 4,
+                                                  right: 4,
+                                                ),
+                                                child: Text(
+                                                  formattedTime,
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade400,
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    // Spacer so my bubble doesn't touch the edge
+                                    if (isMe) const SizedBox(width: 8),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                         )
                         : Center(
                           child: Column(
@@ -863,7 +1193,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                         ),
               ),
               // Fixed bottom input bar
-              _buildForumInputBar(context, communityProvider),
+              if (isAdmin) _buildForumInputBar(context, communityProvider),
             ],
           ),
         ),
@@ -875,173 +1205,185 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          child: SingleChildScrollView(
-            controller: _mainScrollController,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// TITLE BAR
-                TitleOne(
-                  leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-                  title:
-                      isMember
-                          ? (community['name'] ?? 'Community')
-                          : 'Communities Details',
-                  trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-                  leadingIconTap: () => Navigator.pop(context),
-                  trailingIconTap: () => _openMenu(context),
-                ),
-                const SizedBox(height: 25),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              final auth = context.read<AuthProvider>();
+              if (auth.token != null) {
+                await context.read<CommunityProvider>().loadCommunityDetails(
+                  auth.token!,
+                  community['id'],
+                );
+              }
+            },
+            child: SingleChildScrollView(
+              controller: _mainScrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// TITLE BAR
+                  TitleOne(
+                    leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                    title:
+                        isMember
+                            ? (community['name'] ?? 'Community')
+                            : 'Communities Details',
+                    trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                    leadingIconTap: () => Navigator.pop(context),
+                    trailingIconTap: () => _openMenu(context),
+                  ),
+                  const SizedBox(height: 25),
 
-                if (isMember) ...[
+                  if (isMember) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        /// Search Bar
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedSearch01,
+                                  size: 18,
+                                  color: AppTheme.textColor2,
+                                ),
+                                const SizedBox(width: 8),
+
+                                /// Search Input
+                                Expanded(
+                                  child: TextField(
+                                    decoration: const InputDecoration(
+                                      hintText: "Search communities",
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      hintStyle: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (shouldShowAddButton) ...[
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () {
+                              if (selectedTab == "Event") {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder:
+                                      (ctx) => CreateEventScreen(
+                                        communityId: widget.communityId,
+                                      ),
+                                );
+                              } else if (selectedTab == "Messages") {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) {
+                                    return NewMessageScreen(
+                                      communityId: widget.communityId,
+                                    );
+                                  },
+                                );
+                              } else {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) {
+                                    return NewPostScreen(
+                                      communityId: widget.communityId,
+                                    );
+                                  },
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedAdd01,
+                                size: 22,
+                                color: theme.colorScheme.onSurface,
+                                strokeWidth: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 25),
+                  ],
+
+                  /// Community Info
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      /// Search Bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(50),
+                        child:
+                            community['image'] != null
+                                ? Image.network(
+                                  community['image']!,
+                                  width: 75,
+                                  height: 75,
+                                  fit: BoxFit.cover,
+                                )
+                                : Image.asset(
+                                  "assets/images/user_test.jpg",
+                                  width: 75,
+                                  height: 75,
+                                  fit: BoxFit.cover,
+                                ),
+                      ),
+                      const SizedBox(width: 15),
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Row(
-                            children: [
-                              HugeIcon(
-                                icon: HugeIcons.strokeRoundedSearch01,
-                                size: 18,
-                                color: AppTheme.textColor2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              community['name'] ?? 'Community',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(width: 8),
-
-                              /// Search Input
-                              Expanded(
-                                child: TextField(
-                                  decoration: const InputDecoration(
-                                    hintText: "Search communities",
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    hintStyle: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return NewPostScreen(
-                                communityId: widget.communityId,
-                              );
-                            },
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.1,
                             ),
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedAdd01,
-                            size: 22,
-                            color: theme.colorScheme.onSurface,
-                            strokeWidth: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-                ],
-
-                /// Community Info
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(50),
-                      child:
-                          community['image'] != null
-                              ? Image.network(
-                                community['image']!,
-                                width: 75,
-                                height: 75,
-                                fit: BoxFit.cover,
-                              )
-                              : Image.asset(
-                                "assets/images/user_test.jpg",
-                                width: 75,
-                                height: 75,
-                                fit: BoxFit.cover,
+                            const SizedBox(height: 4),
+                            Text(
+                              '@admin',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.grey.shade500,
+                                fontSize: 13,
                               ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            community['name'] ?? 'Community',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '@admin',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade500,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text.rich(
-                                TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text:
-                                          '${formatCount(community['_count']?['members'] ?? 0)} ',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: theme.colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: 'Members',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade500,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (isMember) ...[
-                                const SizedBox(width: 15),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
                                 Text.rich(
                                   TextSpan(
                                     children: [
                                       TextSpan(
                                         text:
-                                            '${community['_count']?['events'] ?? 0} ',
+                                            '${formatCount(community['_count']?['members'] ?? 0)} ',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
@@ -1049,7 +1391,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                                         ),
                                       ),
                                       TextSpan(
-                                        text: 'Events',
+                                        text: 'Members',
                                         style: TextStyle(
                                           color: Colors.grey.shade500,
                                           fontSize: 14,
@@ -1058,128 +1400,38 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                                     ],
                                   ),
                                 ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                if (!isMember) ...[
-                  const SizedBox(height: 25),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 6,
-                        child: GestureDetector(
-                          onTap: () async {
-                            final auth = context.read<AuthProvider>();
-                            await communityProvider.joinCommunity(
-                              auth.token!,
-                              community['id'],
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            decoration: BoxDecoration(
-                              color: AppTheme.purpleColor,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              'Join Community',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 5,
-                        child: GestureDetector(
-                          onTap: () {},
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.05,
-                              ),
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            alignment: Alignment.center,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                HugeIcon(
-                                  icon: HugeIcons.strokeRoundedShare01,
-                                  size: 18,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Share',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
+                                if (isMember) ...[
+                                  const SizedBox(width: 15),
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: '${allEvents.length} ',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: 'Events',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade500,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 25),
-                  Text(
-                    community['description'] ?? 'Welcome to our community!',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textColor2,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 15,
-                      horizontal: 20,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.05,
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedSecurity,
-                          size: 20,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Community Guidelines',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ] else ...[
+
                   const SizedBox(height: 25),
                   GestureDetector(
                     onTap: () {
@@ -1238,357 +1490,430 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                     ),
                   ),
                   const SizedBox(height: 25),
-                ],
 
-                if (isMember) ...[
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        ActionPillButton2(
-                          icon: HugeIcons.strokeRoundedGlobe02,
-                          iconColor:
-                              selectedTab == "Space"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface,
-                          label: "Space",
-                          backgroundColor:
-                              selectedTab == "Space"
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.transparent,
-                          textColor:
-                              selectedTab == "Space"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
-                                  ),
-                          onTap: () => setState(() => selectedTab = "Space"),
-                        ),
-                        const SizedBox(width: 10),
-                        ActionPillButton2(
-                          icon: HugeIcons.strokeRoundedUserGroup,
-                          iconColor:
-                              selectedTab == "Forum"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface,
-                          label: "Forum",
-                          backgroundColor:
-                              selectedTab == "Forum"
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.transparent,
-                          textColor:
-                              selectedTab == "Forum"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
-                                  ),
-                          onTap: () => setState(() => selectedTab = "Forum"),
-                        ),
-                        const SizedBox(width: 10),
-                        ActionPillButton2(
-                          icon: HugeIcons.strokeRoundedMessage02,
-                          iconColor:
-                              selectedTab == "Messages"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface,
-                          label: "Messages",
-                          backgroundColor:
-                              selectedTab == "Messages"
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.transparent,
-                          textColor:
-                              selectedTab == "Messages"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
-                                  ),
-                          onTap: () => setState(() => selectedTab = "Messages"),
-                        ),
-                        const SizedBox(width: 10),
-                        ActionPillButton2(
-                          icon: HugeIcons.strokeRoundedCalendar02,
-                          iconColor:
-                              selectedTab == "Event"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface,
-                          label: "Event",
-                          backgroundColor:
-                              selectedTab == "Event"
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.transparent,
-                          textColor:
-                              selectedTab == "Event"
-                                  ? theme.colorScheme.surface
-                                  : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
-                                  ),
-                          onTap: () => setState(() => selectedTab = "Event"),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                if (selectedTab == "Space")
-                  Column(
-                    children: [
-                      const SizedBox(height: 25),
-                      TodayVerseGlass(),
-
-                      const SectionHeader(
-                        title: "Today's Messages",
-                        showSeeAll: false,
-                      ),
-                      PostCard(),
-                      const SectionHeader(title: "Posts", showSeeAll: false),
-
-                      /// POSTS LIST
-                      Builder(
-                        builder: (context) {
-                          final communityPosts = posts;
-                          if (communityPosts.isNotEmpty) {
-                            return ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: communityPosts.length,
-                              itemBuilder: (context, index) {
-                                final post = communityPosts[index];
-                                final user = post['user'] ?? {};
-                                final userName =
-                                    "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
-                                        .trim();
-                                return PostCardLong(
-                                  userName:
-                                      userName.isEmpty
-                                          ? (user['username'] ?? 'User')
-                                          : userName,
-                                  userImage:
-                                      user['avatarUrl'] ??
-                                      "assets/images/boy.png",
-                                  postText: post["text"] ?? '',
-                                  groupName: community['name'] ?? '',
-                                  postImage:
-                                      post["image"] ?? "assets/images/test.jpg",
-                                  likes: "${post['reactions']?.length ?? 0}",
-                                  comments:
-                                      "${post['_count']?['comments'] ?? 0}",
-                                  time:
-                                      post['createdAt'] != null
-                                          ? timeago.format(
-                                            DateTime.parse(post['createdAt']),
-                                          )
-                                          : "Recently",
-                                  onTap:
-                                      () =>
-                                          _navigateToPostScreen(context, post),
-                                  onAvatarTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder:
-                                          (context) =>
-                                              UserProfileCard(user: user),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          } else {
-                            return const Padding(
-                              padding: EdgeInsets.all(20),
-                              child: Text("No posts yet."),
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-
-                // Forum tab is rendered in a separate full-screen Scaffold above.
-                // This placeholder is never reached when selectedTab == 'Forum'.
-                if (selectedTab == "Messages")
-                  Column(
-                    children: [
-                      SizedBox(height: 25),
-                      Builder(
-                        builder: (context) {
-                          final communityPosts =
-                              community['posts'] as List<dynamic>? ?? [];
-                          if (communityPosts.isNotEmpty) {
-                            return ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: communityPosts.length,
-                              itemBuilder: (context, index) {
-                                final post = communityPosts[index];
-                                final user = post['user'] ?? {};
-                                final userName =
-                                    "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
-                                        .trim();
-                                return PostCardShort(
-                                  postText: post["text"] ?? '',
-                                  author:
-                                      userName.isEmpty
-                                          ? (user['username'] ?? 'User')
-                                          : userName,
-                                  postImage:
-                                      post["image"] ?? "assets/images/test.jpg",
-                                  likes: "${post['reactions']?.length ?? 0}",
-                                  comments:
-                                      "${post['_count']?['comments'] ?? 0}",
-                                  time:
-                                      post['createdAt'] != null
-                                          ? timeago.format(
-                                            DateTime.parse(post['createdAt']),
-                                          )
-                                          : "Recently",
-                                  onTap:
-                                      () =>
-                                          _navigateToPostScreen(context, post),
-                                  onAuthorTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder:
-                                          (context) =>
-                                              UserProfileCard(user: user),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          } else {
-                            return const Padding(
-                              padding: EdgeInsets.all(20),
-                              child: Text("No messages yet."),
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-
-                if (selectedTab == "Event")
-                  Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                  if (isMember) ...[
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
                         children: [
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder:
-                                    (ctx) => CreateEventScreen(
-                                      communityId: widget.communityId,
+                          ActionPillButton2(
+                            icon: HugeIcons.strokeRoundedGlobe02,
+                            iconColor:
+                                selectedTab == "Space"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface,
+                            label: "Space",
+                            backgroundColor:
+                                selectedTab == "Space"
+                                    ? theme.colorScheme.onSurface
+                                    : Colors.transparent,
+                            textColor:
+                                selectedTab == "Space"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
                                     ),
-                              );
-                            },
-                            icon: Icon(
-                              Icons.add,
-                              size: 18,
-                              color: theme.colorScheme.surface,
-                            ),
-                            label: Text(
-                              'Create Event',
-                              style: TextStyle(
-                                color: theme.colorScheme.surface,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.onSurface,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                            ),
+                            onTap: () => setState(() => selectedTab = "Space"),
+                          ),
+                          const SizedBox(width: 10),
+                          ActionPillButton2(
+                            icon: HugeIcons.strokeRoundedUserGroup,
+                            iconColor:
+                                selectedTab == "Forum"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface,
+                            label: "Forum",
+                            backgroundColor:
+                                selectedTab == "Forum"
+                                    ? theme.colorScheme.onSurface
+                                    : Colors.transparent,
+                            textColor:
+                                selectedTab == "Forum"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    ),
+                            onTap: () => setState(() => selectedTab = "Forum"),
+                          ),
+                          const SizedBox(width: 10),
+                          ActionPillButton2(
+                            icon: HugeIcons.strokeRoundedMessage02,
+                            iconColor:
+                                selectedTab == "Messages"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface,
+                            label: "Messages",
+                            backgroundColor:
+                                selectedTab == "Messages"
+                                    ? theme.colorScheme.onSurface
+                                    : Colors.transparent,
+                            textColor:
+                                selectedTab == "Messages"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    ),
+                            onTap:
+                                () => setState(() => selectedTab = "Messages"),
+                          ),
+                          const SizedBox(width: 10),
+                          ActionPillButton2(
+                            icon: HugeIcons.strokeRoundedCalendar02,
+                            iconColor:
+                                selectedTab == "Event"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface,
+                            label: "Event",
+                            backgroundColor:
+                                selectedTab == "Event"
+                                    ? theme.colorScheme.onSurface
+                                    : Colors.transparent,
+                            textColor:
+                                selectedTab == "Event"
+                                    ? theme.colorScheme.surface
+                                    : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    ),
+                            onTap: () => setState(() => selectedTab = "Event"),
                           ),
                         ],
                       ),
-                      SectionHeader(
-                        title: "All event",
-                        seeAllText: "Filter",
-                        onSeeAllTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return _EventFilterOption(
-                                currentFilter: _selectedEventFilter,
-                                onFilterSelected: (val) {
-                                  setState(() => _selectedEventFilter = val);
+                    ),
+                  ],
+
+                  if (selectedTab == "Space")
+                    Column(
+                      children: [
+                        const SizedBox(height: 25),
+                        Consumer<CommunityProvider>(
+                          builder:
+                              (context, cp, _) => TodayVerseGlass(
+                                isCommunityVerse: true,
+                                communityId: widget.communityId,
+                                verseData: cp.currentVerse,
+                              ),
+                        ),
+
+                        Builder(
+                          builder: (context) {
+                            final now = DateTime.now();
+                            final todayMessages =
+                                communityProvider.adminMessages.where((msg) {
+                                  if (msg['createdAt'] == null) return false;
+                                  try {
+                                    final date =
+                                        DateTime.parse(
+                                          msg['createdAt'],
+                                        ).toLocal();
+                                    return date.year == now.year &&
+                                        date.month == now.month &&
+                                        date.day == now.day;
+                                  } catch (e) {
+                                    return false;
+                                  }
+                                }).toList();
+
+                            if (todayMessages.isNotEmpty) {
+                              final latestMessage = todayMessages.first;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SectionHeader(
+                                    title: "Today's Messages",
+                                    showSeeAll: false,
+                                  ),
+                                  AdminMessageCard(message: latestMessage),
+                                ],
+                              );
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          },
+                        ),
+                        const SectionHeader(title: "Posts", showSeeAll: false),
+
+                        /// POSTS LIST
+                        Builder(
+                          builder: (context) {
+                            final communityPosts = posts;
+                            if (communityPosts.isNotEmpty) {
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: communityPosts.length,
+                                itemBuilder: (context, index) {
+                                  final post = communityPosts[index];
+                                  final user = post['user'] ?? {};
+                                  final userName =
+                                      "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
+                                          .trim();
+                                  final isMe = user['id'] == authId;
+                                  final canDeletePost = isAdmin || isMe;
+                                  return PostCardLong(
+                                    userName:
+                                        userName.isEmpty
+                                            ? (user['username'] ?? 'User')
+                                            : userName,
+                                    userImage:
+                                        user['avatarUrl'] ??
+                                        "assets/images/boy.png",
+                                    postText: post["text"] ?? '',
+                                    groupName: community['name'] ?? '',
+                                    postImage:
+                                        post["image"] ??
+                                        "assets/images/test.jpg",
+                                    likes: "${post['reactions']?.length ?? 0}",
+                                    comments:
+                                        "${post['_count']?['comments'] ?? 0}",
+                                    time:
+                                        post['createdAt'] != null
+                                            ? timeago.format(
+                                              DateTime.parse(post['createdAt']),
+                                            )
+                                            : "Recently",
+                                    onTap:
+                                        () => _navigateToPostScreen(
+                                          context,
+                                          post,
+                                        ),
+                                    onAvatarTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder:
+                                            (context) =>
+                                                UserProfileCard(user: user),
+                                      );
+                                    },
+                                    onMoreTap:
+                                        canDeletePost
+                                            ? () {
+                                              showModalBottomSheet(
+                                                context: context,
+                                                builder: (context) {
+                                                  return SafeArea(
+                                                    child: Wrap(
+                                                      children: [
+                                                        ListTile(
+                                                          leading: const Icon(
+                                                            Icons.delete,
+                                                            color: Colors.red,
+                                                          ),
+                                                          title: const Text(
+                                                            'Delete Post',
+                                                            style: TextStyle(
+                                                              color: Colors.red,
+                                                            ),
+                                                          ),
+                                                          onTap: () async {
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                            if (authId !=
+                                                                null) {
+                                                              await context
+                                                                  .read<
+                                                                    CommunityProvider
+                                                                  >()
+                                                                  .deleteCommunityPost(
+                                                                    context
+                                                                        .read<
+                                                                          AuthProvider
+                                                                        >()
+                                                                        .token!,
+                                                                    post['id'],
+                                                                  );
+                                                            }
+                                                          },
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            }
+                                            : null,
+                                  );
                                 },
                               );
-                            },
-                          );
-                        },
-                      ),
-                      SizedBox(height: 5),
+                            } else {
+                              return const Padding(
+                                padding: EdgeInsets.all(20),
+                                child: Text("No posts yet."),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
 
-                      if (events.isNotEmpty)
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: events.length,
-                          itemBuilder: (context, index) {
-                            final event = events[index];
-                            final auth = context.read<AuthProvider>();
-                            final currentUserId = auth.user?['id'];
-                            final attendees = List.from(
-                              event['attendees'] ?? [],
-                            );
-                            bool isAttending = attendees.any(
-                              (a) => a['userId'] == currentUserId,
-                            );
+                  // Forum tab is rendered in a separate full-screen Scaffold above.
+                  // This placeholder is never reached when selectedTab == 'Forum'.
+                  if (selectedTab == "Messages")
+                    Column(
+                      children: [
+                        SizedBox(height: 25),
+                        Builder(
+                          builder: (context) {
+                            final communityMessages =
+                                communityProvider.adminMessages;
+                            if (communityMessages.isNotEmpty) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 0,
+                                    ),
+                                    child: Text(
+                                      "All Message",
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: communityMessages.length,
+                                    itemBuilder: (context, index) {
+                                      final message = communityMessages[index];
+                                      return CommunityMessageCard(
+                                        message: message,
+                                      );
+                                    },
+                                  ),
+                                ],
+                              );
+                            } else {
+                              return const Padding(
+                                padding: EdgeInsets.all(20),
+                                child: Text("No messages yet."),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
 
-                            return EventDottedCard(
-                              event: event,
-                              isAttending: isAttending,
-                              onTap: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (context) {
-                                    return EventDetailsCard(
-                                      event: event,
-                                      isAttending: isAttending,
-                                      onToggleAttend: () async {
-                                        if (isAttending) {
-                                          await communityProvider.unattendEvent(
-                                            auth.token!,
-                                            event['id'],
-                                          );
-                                        } else {
-                                          await communityProvider.attendEvent(
-                                            auth.token!,
-                                            event['id'],
-                                          );
-                                        }
-                                        if (context.mounted) {
-                                          Navigator.pop(context);
-                                        }
-                                      },
-                                    );
+                  if (selectedTab == "Event")
+                    Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        SectionHeader(
+                          title: "All event",
+                          seeAllText: "Filter",
+                          onSeeAllTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) {
+                                return _EventFilterOption(
+                                  currentFilter: _selectedEventFilter,
+                                  onFilterSelected: (val) {
+                                    setState(() => _selectedEventFilter = val);
                                   },
                                 );
                               },
                             );
                           },
-                        )
-                      else
-                        const Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Text("No events scheduled yet."),
                         ),
-                    ],
-                  ),
-              ],
+                        SizedBox(height: 5),
+
+                        if (events.isNotEmpty)
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: events.length,
+                            itemBuilder: (context, index) {
+                              final event = events[index];
+                              final auth = context.read<AuthProvider>();
+                              final currentUserId = auth.user?['id'];
+                              final attendees = List.from(
+                                event['attendees'] ?? [],
+                              );
+                              bool isAttending = attendees.any(
+                                (a) => a['userId'] == currentUserId,
+                              );
+
+                              return EventDottedCard(
+                                event: event,
+                                isAttending: isAttending,
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) {
+                                      return EventDetailsCard(
+                                        event: event,
+                                        isAttending: isAttending,
+                                        isAdmin: isAdmin,
+                                        onEdit: () {
+                                          Navigator.pop(context);
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            builder:
+                                                (context) => EditEventScreen(
+                                                  communityId:
+                                                      widget.communityId,
+                                                  event: event,
+                                                ),
+                                          );
+                                        },
+                                        onDelete: () async {
+                                          final success =
+                                              await communityProvider
+                                                  .deleteEvent(
+                                                    auth.token!,
+                                                    widget.communityId,
+                                                    event['id'],
+                                                  );
+                                          if (success && context.mounted) {
+                                            Navigator.pop(context);
+                                          }
+                                        },
+                                        onToggleAttend: () async {
+                                          if (isAttending) {
+                                            await communityProvider
+                                                .unattendEvent(
+                                                  auth.token!,
+                                                  event['id'],
+                                                );
+                                          } else {
+                                            await communityProvider.attendEvent(
+                                              auth.token!,
+                                              event['id'],
+                                            );
+                                          }
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                          }
+                                        },
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          )
+                        else
+                          const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Text("No events scheduled yet."),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ),

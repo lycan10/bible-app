@@ -1,4 +1,5 @@
 import 'package:animations/animations.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/media/audio/audio_reel_card.dart';
@@ -10,6 +11,9 @@ import 'package:quest/screens/media/audio_reel_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/screens/upload_media_screen.dart';
+import 'package:quest/theme/theme.dart';
+import '../../components/global_more_menu.dart';
 
 class AudioListScreen extends StatefulWidget {
   const AudioListScreen({super.key});
@@ -19,13 +23,39 @@ class AudioListScreen extends StatefulWidget {
 }
 
 class _AudioListScreenState extends State<AudioListScreen> {
+  final ScrollController _scrollController = ScrollController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        context.read<MediaProvider>().loadMoreAudios();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       if (auth.token != null) {
         context.read<MediaProvider>().loadAudioData(auth.token!);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final auth = context.read<AuthProvider>();
+      if (auth.token != null) {
+        context.read<MediaProvider>().loadAudioData(auth.token!, search: query);
       }
     });
   }
@@ -50,14 +80,12 @@ class _AudioListScreenState extends State<AudioListScreen> {
   }
 
   void _openMenu(BuildContext context) {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return const Center(child: _PostListMenuDialogBox());
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const GlobalMoreMenu();
       },
     );
   }
@@ -67,169 +95,211 @@ class _AudioListScreenState extends State<AudioListScreen> {
     final theme = Theme.of(context);
     final mediaProvider = Provider.of<MediaProvider>(context);
     final audios = mediaProvider.audio;
+    final continueListening = mediaProvider.continueListening;
     final isLoading = mediaProvider.isLoading;
+    final isLoadingMore = mediaProvider.isLoadingMoreAudios;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      const UploadMediaScreen(initialMediaType: 'audio'),
+            ),
+          );
+        },
+        backgroundColor: AppTheme.buttonColor,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: SafeArea(
-        child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            final authProvider = context.read<AuthProvider>();
+            if (authProvider.token != null) {
+              await context.read<MediaProvider>().loadAudioData(
+                authProvider.token!,
+              );
+            }
+          },
+          child: ListView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            children: [
+              /// TITLE BAR
+              TitleOne(
+                leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                title: 'Audio Messages',
+                trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                leadingIconTap: () => Navigator.pop(context),
+                trailingIconTap: () => _openMenu(context),
+              ),
+
+              const SizedBox(height: 25),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  /// Menu / List Icon Button
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) {
+                          return const DiscoverMore();
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedLeftToRightListBullet,
+                        size: 22,
+                        color: theme.colorScheme.onSurface,
+                        strokeWidth: 1,
+                      ),
+                    ),
                   ),
-                  children: [
-                    /// TITLE BAR
-                    TitleOne(
-                      leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-                      title: 'Audio Messages',
-                      trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-                      leadingIconTap: () => Navigator.pop(context),
-                      trailingIconTap: () => _openMenu(context),
-                    ),
 
-                    const SizedBox(height: 25),
+                  const SizedBox(width: 10),
 
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        /// Menu / List Icon Button
-                        GestureDetector(
-                          onTap: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) {
-                                return const DiscoverMore();
-                              },
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: HugeIcon(
-                              icon:
-                                  HugeIcons.strokeRoundedLeftToRightListBullet,
-                              size: 22,
-                              color: theme.colorScheme.onSurface,
-                              strokeWidth: 1,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(width: 10),
-
-                        /// Search Bar
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              children: [
-                                HugeIcon(
-                                  icon: HugeIcons.strokeRoundedSearch01,
-                                  size: 18,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-
-                                const SizedBox(width: 8),
-
-                                /// Search Input
-                                const Expanded(
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                      hintText: "Search audio",
-                                      border: InputBorder.none,
-                                      isDense: true,
-                                      hintStyle: TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    /// HEADER
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        /// Title
-                        Text(
-                          "Continue listening",
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                  /// Search Bar
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedSearch01,
+                            size: 18,
                             color: theme.colorScheme.onSurface,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    if (audios.isNotEmpty)
-                      MediaCard(
-                        imagePath:
-                            audios.first['imageUrl'] ?? 'assets/images/boy.png',
-                        title: audios.first['title'] ?? 'The good stuff',
-                        author: audios.first['author'] ?? 'Good kids',
-                        likes: '${audios.first['likes'] ?? 0}',
-                        onTap: () {
-                          _navigateToAudio(context, audios, 0);
-                        },
-                      ),
 
-                    const SizedBox(height: 15),
+                          const SizedBox(width: 8),
 
-                    const SectionHeader(title: "All Audio", seeAllText: ""),
-                    const SizedBox(height: 15),
-                    SizedBox(
-                      height: 200,
-                      child:
-                          audios.isEmpty
-                              ? const Center(child: Text("No audio found"))
-                              : ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                shrinkWrap: true,
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: audios.length,
-                                separatorBuilder:
-                                    (_, __) => const SizedBox(width: 15),
-                                itemBuilder: (context, index) {
-                                  final audio = audios[index];
-                                  final image =
-                                      audio['imageUrl'] ??
-                                      'assets/images/boy.png';
-                                  return AudioReelCard(
-                                    title: audio['title'] ?? 'Audio',
-                                    author: audio['author'] ?? 'Shalom',
-                                    likes: '${audio['likes'] ?? 0}',
-                                    backgroundImage: image,
-                                    duration: audio['duration'] ?? "2:30",
-                                    onTap: () {
-                                      _navigateToAudio(context, audios, index);
-                                    },
-                                  );
-                                },
+                          /// Search Input
+                          Expanded(
+                            child: TextField(
+                              onChanged: _onSearchChanged,
+                              decoration: const InputDecoration(
+                                hintText: "Search audio",
+                                border: InputBorder.none,
+                                isDense: true,
+                                hintStyle: TextStyle(fontSize: 12),
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 25),
+
+              if (isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(50.0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else ...[
+                if (continueListening != null) ...[
+                  /// HEADER
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      /// Title
+                      Text(
+                        "Continue listening",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  MediaCard(
+                    imagePath:
+                        continueListening['imageUrl'] ??
+                        'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=600',
+                    title: continueListening['title'] ?? 'The good stuff',
+                    author: continueListening['author'] ?? 'Good kids',
+                    likes: '${continueListening['likes'] ?? 0}',
+                    onTap: () {
+                      final idx = audios.indexWhere(
+                        (a) => a['id'] == continueListening['id'],
+                      );
+                      if (idx != -1) {
+                        _navigateToAudio(context, audios, idx);
+                      } else {
+                        _navigateToAudio(context, [continueListening], 0);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                ],
+
+                const SectionHeader(
+                  title: "All Audio Messages",
+                  seeAllText: "See more",
+                  showSeeAll: false,
                 ),
+                const SizedBox(height: 15),
+                audios.isEmpty
+                    ? const Center(child: Text("No audio found"))
+                    : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: audios.length + (isLoadingMore ? 1 : 0),
+                      separatorBuilder: (_, __) => const SizedBox(height: 15),
+                      itemBuilder: (context, index) {
+                        if (index == audios.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final audio = audios[index];
+                        final image =
+                            audio['imageUrl'] ??
+                            'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=600';
+                        return AudioReelCard(
+                          title: audio['title'] ?? 'Audio',
+                          author: audio['author'] ?? 'Shalom',
+                          likes: '${audio['likes'] ?? 0}',
+                          width: double.infinity,
+                          backgroundImage: image,
+                          duration: audio['duration'] ?? "2:30",
+                          onTap: () {
+                            _navigateToAudio(context, audios, index);
+                          },
+                        );
+                      },
+                    ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

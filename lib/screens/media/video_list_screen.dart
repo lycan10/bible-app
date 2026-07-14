@@ -1,4 +1,5 @@
 import 'package:animations/animations.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/media/video/video_card.dart';
@@ -10,6 +11,9 @@ import 'package:quest/screens/media/video_reel_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/screens/upload_media_screen.dart';
+import 'package:quest/theme/theme.dart';
+import '../../components/global_more_menu.dart';
 
 class VideoListScreen extends StatefulWidget {
   const VideoListScreen({super.key});
@@ -19,13 +23,39 @@ class VideoListScreen extends StatefulWidget {
 }
 
 class _VideoListScreenState extends State<VideoListScreen> {
+  final ScrollController _scrollController = ScrollController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        context.read<MediaProvider>().loadMoreVideos();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       if (auth.token != null) {
         context.read<MediaProvider>().loadVideoData(auth.token!);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final auth = context.read<AuthProvider>();
+      if (auth.token != null) {
+        context.read<MediaProvider>().loadVideoData(auth.token!, search: query);
       }
     });
   }
@@ -53,14 +83,12 @@ class _VideoListScreenState extends State<VideoListScreen> {
   }
 
   void _openMenu(BuildContext context) {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return const Center(child: _PostListMenuDialogBox());
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const GlobalMoreMenu();
       },
     );
   }
@@ -70,184 +98,247 @@ class _VideoListScreenState extends State<VideoListScreen> {
     final theme = Theme.of(context);
     final mediaProvider = Provider.of<MediaProvider>(context);
     final videos = mediaProvider.videos;
+    final continueWatching = mediaProvider.continueWatching;
     final isLoading = mediaProvider.isLoading;
+    final isLoadingMore = mediaProvider.isLoadingMore;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      const UploadMediaScreen(initialMediaType: 'video'),
+            ),
+          );
+        },
+        backgroundColor: AppTheme.buttonColor,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: SafeArea(
-        child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            final authProvider = context.read<AuthProvider>();
+            if (authProvider.token != null) {
+              await context.read<MediaProvider>().loadVideoData(
+                authProvider.token!,
+              );
+            }
+          },
+          child: ListView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            children: [
+              /// TITLE BAR
+              TitleOne(
+                leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                title: 'Videos',
+                trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                leadingIconTap: () => Navigator.pop(context),
+                trailingIconTap: () => _openMenu(context),
+              ),
+
+              const SizedBox(height: 25),
+
+              // SearchBar(
+              //   hintText: "Search communities",
+              //   onTap: () {
+              //     showModalBottomSheet(
+              //       context: context,
+              //       isScrollControlled: true,
+              //       backgroundColor: Colors.transparent,
+              //       builder: (context) {
+              //         return DiscoverMore();
+              //       },
+              //     );
+              //   },
+              //   onChanged: (value) {
+              //     print("Searching: $value");
+              //   },
+              // ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  /// Menu / List Icon Button
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) {
+                          return DiscoverMore();
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedLeftToRightListBullet,
+                        size: 22,
+                        color: theme.colorScheme.onSurface,
+                        strokeWidth: 1,
+                      ),
+                    ),
                   ),
-                  children: [
-                    /// TITLE BAR
-                    TitleOne(
-                      leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-                      title: 'Videos',
-                      trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-                      leadingIconTap: () => Navigator.pop(context),
-                      trailingIconTap: () => _openMenu(context),
-                    ),
 
-                    const SizedBox(height: 25),
+                  const SizedBox(width: 10),
 
-                    // SearchBar(
-                    //   hintText: "Search communities",
-                    //   onTap: () {
-                    //     showModalBottomSheet(
-                    //       context: context,
-                    //       isScrollControlled: true,
-                    //       backgroundColor: Colors.transparent,
-                    //       builder: (context) {
-                    //         return DiscoverMore();
-                    //       },
-                    //     );
-                    //   },
-                    //   onChanged: (value) {
-                    //     print("Searching: $value");
-                    //   },
-                    // ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        /// Menu / List Icon Button
-                        GestureDetector(
-                          onTap: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) {
-                                return DiscoverMore();
-                              },
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: HugeIcon(
-                              icon:
-                                  HugeIcons.strokeRoundedLeftToRightListBullet,
-                              size: 22,
-                              color: theme.colorScheme.onSurface,
-                              strokeWidth: 1,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(width: 10),
-
-                        /// Search Bar
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              children: [
-                                HugeIcon(
-                                  icon: HugeIcons.strokeRoundedSearch01,
-                                  size: 18,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-
-                                const SizedBox(width: 8),
-
-                                /// Search Input
-                                Expanded(
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      hintText: "Search videos",
-                                      border: InputBorder.none,
-                                      isDense: true,
-                                      hintStyle: TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 25),
-
-                    /// HEADER
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        /// Title
-                        Text(
-                          "Continue watching",
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                  /// Search Bar
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedSearch01,
+                            size: 18,
                             color: theme.colorScheme.onSurface,
                           ),
-                        ),
 
-                        /// Right Action
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    if (videos.isNotEmpty)
-                      MediaCard(
-                        imagePath: videos.first['imageUrl'] ?? '',
-                        title: videos.first['title'] ?? 'The good stuff',
-                        author: videos.first['author'] ?? 'Good kids',
-                        likes: '${videos.first['likes'] ?? 0}',
-                        onTap: () {
-                          _navigateToVideo(context, 0);
-                        },
-                      ),
+                          const SizedBox(width: 8),
 
-                    const SizedBox(height: 15),
-
-                    SectionHeader(title: "All Videos", seeAllText: "See more"),
-                    SizedBox(
-                      height: 200,
-                      child:
-                          videos.isEmpty
-                              ? const Center(child: Text("No videos found"))
-                              : ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                shrinkWrap: true,
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: videos.length,
-                                separatorBuilder:
-                                    (_, __) => const SizedBox(width: 15),
-                                itemBuilder: (context, index) {
-                                  final video = videos[index];
-                                  final image = video['imageUrl'] ?? '';
-                                  return VideoCard(
-                                    title: video['title'] ?? 'Video',
-                                    author: video['author'] ?? 'Shalom',
-                                    likes: '${video['likes'] ?? 0}',
-                                    height: 150,
-                                    width: 150,
-                                    backgroundImage: image,
-                                    onTap: () {
-                                      _navigateToVideo(context, index);
-                                    },
-                                  );
-                                },
+                          /// Search Input
+                          Expanded(
+                            child: TextField(
+                              onChanged: _onSearchChanged,
+                              decoration: const InputDecoration(
+                                hintText: "Search videos",
+                                border: InputBorder.none,
+                                isDense: true,
+                                hintStyle: TextStyle(fontSize: 12),
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 25),
+
+              if (isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(50.0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else ...[
+                if (continueWatching != null) ...[
+                  /// HEADER
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      /// Title
+                      Text(
+                        "Continue watching",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  MediaCard(
+                    imagePath: continueWatching['imageUrl'] ?? '',
+                    title: continueWatching['title'] ?? 'The good stuff',
+                    author: continueWatching['author'] ?? 'Good kids',
+                    likes: '${continueWatching['likes'] ?? 0}',
+                    onTap: () {
+                      // Find index if it exists in the list, otherwise just push the single video.
+                      // For simplicity, since the video screen expects a list and an index,
+                      // we'll pass a 1-item list to the player if it's not in the current list.
+                      final idx = videos.indexWhere(
+                        (v) => v['id'] == continueWatching['id'],
+                      );
+                      if (idx != -1) {
+                        _navigateToVideo(context, idx);
+                      } else {
+                        Navigator.of(context).push(
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    VideoReelScreen(
+                                      videos: [continueWatching],
+                                      initialIndex: 0,
+                                    ),
+                            transitionsBuilder: (
+                              context,
+                              animation,
+                              secondaryAnimation,
+                              child,
+                            ) {
+                              return SharedAxisTransition(
+                                animation: animation,
+                                secondaryAnimation: secondaryAnimation,
+                                transitionType: SharedAxisTransitionType.scaled,
+                                child: child,
+                              );
+                            },
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                ],
+
+                SectionHeader(
+                  title: "All Videos",
+                  seeAllText: "See more",
+                  showSeeAll: false,
                 ),
+                videos.isEmpty
+                    ? const Center(child: Text("No videos found"))
+                    : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: videos.length + (isLoadingMore ? 1 : 0),
+                      separatorBuilder: (_, __) => const SizedBox(height: 15),
+                      itemBuilder: (context, index) {
+                        if (index == videos.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final video = videos[index];
+                        final image = video['imageUrl'] ?? '';
+                        return VideoCard(
+                          title: video['title'] ?? 'Video',
+                          author: video['author'] ?? 'Shalom',
+                          likes: '${video['likes'] ?? 0}',
+                          height: 220,
+                          width: double.infinity,
+                          backgroundImage: image,
+                          onTap: () {
+                            _navigateToVideo(context, index);
+                          },
+                        );
+                      },
+                    ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

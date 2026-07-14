@@ -247,6 +247,64 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  // GET /communities/:id/verse-today
+  static Future<Map<String, dynamic>> fetchCommunityDailyVerse(
+    String token,
+    String communityId,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/communities/$communityId/verse-today'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /communities/:id/verse-today/like
+  static Future<Map<String, dynamic>> toggleCommunityDailyVerseLike(
+    String token,
+    String communityId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/verse-today/like'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /communities/:id/verse-today/share
+  static Future<Map<String, dynamic>> shareCommunityDailyVerse(
+    String token,
+    String communityId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/verse-today/share'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /admin/communities/:id/verse-override
+  static Future<Map<String, dynamic>> overrideCommunityDailyVerse(
+    String token,
+    String communityId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/admin/communities/$communityId/verse-override'),
+        headers: _headers(token),
+        body: jsonEncode(data),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
   // GET /daily-bread/today
   static Future<Map<String, dynamic>> fetchWordCrossPuzzle(String token) async {
     final response = _handleResponse(
@@ -296,6 +354,17 @@ class ApiService {
     final response = _handleResponse(
       await http.get(
         Uri.parse('$baseUrl/explore/explore'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /games/overview
+  static Future<Map<String, dynamic>> fetchGamesOverview(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/games/overview'),
         headers: _headers(token),
       ),
     );
@@ -455,6 +524,31 @@ class ApiService {
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
+  // GET /books/saved
+  static Future<List<dynamic>> fetchSavedBooks(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/books/saved'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  // POST /books/:id/save
+  static Future<Map<String, dynamic>> toggleSaveBook(
+    String token,
+    String bookId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/books/$bookId/save'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
   // POST /friends/:userId/request
   static Future<Map<String, dynamic>> sendFriendRequest(
     String token,
@@ -522,21 +616,58 @@ class ApiService {
   // --- Communities Endpoints ---
 
   // GET /communities
-  static Future<List<dynamic>> fetchCommunities(String token) async {
+  static Future<List<dynamic>> fetchCommunities(
+    String token, {
+    String? query,
+  }) async {
+    final url =
+        query != null && query.isNotEmpty
+            ? '$baseUrl/communities?q=${Uri.encodeComponent(query)}'
+            : '$baseUrl/communities';
     final response = _handleResponse(
-      await http.get(
-        Uri.parse('$baseUrl/communities'),
-        headers: _headers(token),
-      ),
+      await http.get(Uri.parse(url), headers: _headers(token)),
     );
     return jsonDecode(response.body) as List<dynamic>;
   }
 
+  // POST /communities
+  static Future<Map<String, dynamic>> createCommunity(
+    String token,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/communities'),
+      headers: _headers(token),
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
+  }
+
   // GET /communities/recommended
-  static Future<List<dynamic>> fetchRecommendedCommunities(String token) async {
+  static Future<List<dynamic>> fetchRecommendedCommunities(
+    String token, {
+    String? query,
+  }) async {
+    final url =
+        query != null && query.isNotEmpty
+            ? '$baseUrl/communities/recommended?q=${Uri.encodeComponent(query)}'
+            : '$baseUrl/communities/recommended';
+    final response = _handleResponse(
+      await http.get(Uri.parse(url), headers: _headers(token)),
+    );
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  // GET /communities/search
+  static Future<List<dynamic>> searchCommunities(
+    String token,
+    String query,
+  ) async {
     final response = _handleResponse(
       await http.get(
-        Uri.parse('$baseUrl/communities/recommended'),
+        Uri.parse(
+          '$baseUrl/communities/search?q=${Uri.encodeComponent(query)}',
+        ),
         headers: _headers(token),
       ),
     );
@@ -572,6 +703,44 @@ class ApiService {
   }
 
   // POST /communities/:id/join
+  static Future<Map<String, dynamic>> updateCommunitySettings(
+    String token,
+    String communityId, {
+    bool? isForumDisabledGlobally,
+  }) async {
+    final response = _handleResponse(
+      await http.put(
+        Uri.parse('$baseUrl/communities/$communityId/settings'),
+        headers: _headers(token),
+        body: jsonEncode({
+          if (isForumDisabledGlobally != null)
+            'isForumDisabledGlobally': isForumDisabledGlobally,
+        }),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> moderateCommunityMember(
+    String token,
+    String communityId,
+    String userId, {
+    bool? isSuspended,
+    bool? canPostForum,
+  }) async {
+    final response = _handleResponse(
+      await http.put(
+        Uri.parse('$baseUrl/communities/$communityId/members/$userId/moderate'),
+        headers: _headers(token),
+        body: jsonEncode({
+          if (isSuspended != null) 'isSuspended': isSuspended,
+          if (canPostForum != null) 'canPostForum': canPostForum,
+        }),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
   static Future<Map<String, dynamic>> joinCommunity(
     String token,
     String id,
@@ -615,7 +784,154 @@ class ApiService {
     return jsonDecode(response.body) as List<dynamic>;
   }
 
-  // POST /communities/posts
+  // GET /communities/posts/all
+  static Future<List<dynamic>> fetchGlobalPosts(
+    String token, {
+    String? cursor,
+  }) async {
+    final uri =
+        cursor != null
+            ? '$baseUrl/communities/posts/all?cursor=$cursor'
+            : '$baseUrl/communities/posts/all';
+    final response = _handleResponse(
+      await http.get(Uri.parse(uri), headers: _headers(token)),
+    );
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  // GET /communities/me/messages
+  static Future<Map<String, dynamic>> fetchMyAdminMessages(
+    String token, {
+    String? cursor,
+  }) async {
+    final uri =
+        cursor != null
+            ? '$baseUrl/communities/me/messages?cursor=$cursor'
+            : '$baseUrl/communities/me/messages';
+    final response = _handleResponse(
+      await http.get(Uri.parse(uri), headers: _headers(token)),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  // DELETE /communities/forum/messages/:id
+  static Future<bool> deleteForumMessage(String token, String messageId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/communities/forum/messages/$messageId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    }
+    throw Exception('Failed to delete forum message');
+  }
+
+  // DELETE /communities/messages/:id
+  static Future<bool> deleteAdminMessage(String token, String messageId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/communities/messages/$messageId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    }
+    throw Exception('Failed to delete admin message');
+  }
+
+  // PUT /communities/messages/:id
+  static Future<bool> updateAdminMessage(
+    String token,
+    String messageId,
+    String text, {
+    String? imageUrl,
+    String? videoUrl,
+    String? audioUrl,
+    String? videoThumbnail,
+    String? audioThumbnail,
+  }) async {
+    final Map<String, dynamic> body = {'text': text};
+    if (imageUrl != null || videoUrl != null || audioUrl != null) {
+      body['imageUrl'] = imageUrl;
+      body['videoUrl'] = videoUrl;
+      body['audioUrl'] = audioUrl;
+      body['videoThumbnail'] = videoThumbnail;
+      body['audioThumbnail'] = audioThumbnail;
+    } else {
+      // If we are clearing media, we can pass nulls explicitly if we want,
+      // but in Dart jsonEncode automatically includes null values if the key exists.
+      // So if the caller explicitly passes imageUrl: null, we'll map it to null.
+      // Wait, let's just assign them, and they will be encoded as null.
+      body['imageUrl'] = imageUrl;
+      body['videoUrl'] = videoUrl;
+      body['audioUrl'] = audioUrl;
+      body['videoThumbnail'] = videoThumbnail;
+      body['audioThumbnail'] = audioThumbnail;
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/communities/messages/$messageId'),
+      headers: _headers(token),
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200) {
+      return true;
+    }
+    throw Exception('Failed to update admin message');
+  }
+
+  // POST /communities/:id/messages/:msgId/react
+  static Future<bool> reactToAdminMessage(
+    String token,
+    String communityId,
+    String msgId,
+    String emoji,
+  ) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/communities/$communityId/messages/$msgId/react'),
+      headers: _headers(token),
+      body: jsonEncode({'emoji': emoji}),
+    );
+    if (response.statusCode == 200) {
+      return true;
+    }
+    throw Exception('Failed to react to admin message');
+  }
+
+  // POST /communities/:id/messages/comments/:commentId/like
+  static Future<bool> toggleAdminMessageCommentLike(
+    String token,
+    String communityId,
+    String commentId,
+  ) async {
+    final response = await http.post(
+      Uri.parse(
+        '$baseUrl/communities/$communityId/messages/comments/$commentId/like',
+      ),
+      headers: _headers(token),
+    );
+    if (response.statusCode == 200) {
+      return true;
+    }
+    throw Exception('Failed to toggle admin message comment like');
+  }
+
+  static Future<bool> deleteCommunityComment(
+    String token,
+    String commentId,
+  ) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/communities/comments/$commentId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    }
+    throw Exception('Failed to delete comment');
+  }
+
   static Future<Map<String, dynamic>> createCommunityPost(
     String token,
     String communityId,
@@ -729,6 +1045,19 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  static Future<Map<String, dynamic>> deleteComment(
+    String token,
+    String commentId,
+  ) async {
+    final response = _handleResponse(
+      await http.delete(
+        Uri.parse('$baseUrl/communities/comments/$commentId'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
   // POST /posts/:postId/comments/:commentId/react
   static Future<Map<String, dynamic>> reactToComment(
     String token,
@@ -756,8 +1085,10 @@ class ApiService {
     String description,
     String date,
     String time,
-    String location,
-  ) async {
+    String location, {
+    String? link,
+    String? imageUrl,
+  }) async {
     final response = _handleResponse(
       await http.post(
         Uri.parse('$baseUrl/communities/$id/events'),
@@ -768,10 +1099,57 @@ class ApiService {
           'date': date,
           'time': time,
           'location': location,
+          if (link != null) 'link': link,
+          if (imageUrl != null) 'imageUrl': imageUrl,
         }),
       ),
     );
     return jsonDecode(response.body);
+  }
+
+  // PUT /communities/:id/events/:eventId
+  static Future<Map<String, dynamic>> updateCommunityEvent(
+    String token,
+    String id,
+    String eventId,
+    String title,
+    String description,
+    String date,
+    String time,
+    String location, {
+    String? link,
+    String? imageUrl,
+  }) async {
+    final response = _handleResponse(
+      await http.put(
+        Uri.parse('$baseUrl/communities/$id/events/$eventId'),
+        headers: _headers(token),
+        body: jsonEncode({
+          'title': title,
+          'description': description,
+          'date': date,
+          'time': time,
+          'location': location,
+          if (link != null) 'link': link,
+          if (imageUrl != null) 'imageUrl': imageUrl,
+        }),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // DELETE /communities/:id/events/:eventId
+  static Future<void> deleteCommunityEvent(
+    String token,
+    String id,
+    String eventId,
+  ) async {
+    _handleResponse(
+      await http.delete(
+        Uri.parse('$baseUrl/communities/$id/events/$eventId'),
+        headers: _headers(token),
+      ),
+    );
   }
 
   // GET /communities/:id/events
@@ -834,21 +1212,152 @@ class ApiService {
     return jsonDecode(response.body) as List<dynamic>;
   }
 
+  // GET /communities/:id/messages
+  static Future<List<dynamic>> fetchAdminMessages(
+    String token,
+    String id, {
+    String? cursor,
+  }) async {
+    final uri =
+        cursor != null
+            ? '$baseUrl/communities/$id/messages?cursor=$cursor'
+            : '$baseUrl/communities/$id/messages';
+    final response = _handleResponse(
+      await http.get(Uri.parse(uri), headers: _headers(token)),
+    );
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  // POST /communities/:id/messages/:msgId/like
+  static Future<Map<String, dynamic>> toggleAdminMessageLike(
+    String token,
+    String communityId,
+    String msgId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/messages/$msgId/like'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /communities/:id/messages/:msgId/bookmark
+  static Future<Map<String, dynamic>> toggleAdminMessageBookmark(
+    String token,
+    String communityId,
+    String msgId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/messages/$msgId/bookmark'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /communities/:id/messages/:msgId/share
+  static Future<Map<String, dynamic>> shareAdminMessage(
+    String token,
+    String communityId,
+    String msgId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/messages/$msgId/share'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /communities/:id/messages/:msgId/comments
+  static Future<List<dynamic>> fetchAdminMessageComments(
+    String token,
+    String communityId,
+    String msgId,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/communities/$communityId/messages/$msgId/comments'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  // POST /communities/:id/messages/:msgId/comments
+  static Future<Map<String, dynamic>> addAdminMessageComment(
+    String token,
+    String communityId,
+    String msgId,
+    String text, {
+    String? parentId,
+  }) async {
+    final body = {'text': text, if (parentId != null) 'parentId': parentId};
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/messages/$msgId/comments'),
+        headers: _headers(token),
+        body: jsonEncode(body),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
   // POST /communities/:id/forum/messages
-  static Future<Map<String, dynamic>> sendCommunityMessage(
+  static Future<Map<String, dynamic>> sendForumMessage(
     String token,
     String id,
     String text, {
     String? imageUrl,
     String? videoUrl,
+    String? audioUrl,
+    String? videoThumbnail,
+    String? audioThumbnail,
   }) async {
     final body = {'text': text};
     if (imageUrl != null) body['imageUrl'] = imageUrl;
     if (videoUrl != null) body['videoUrl'] = videoUrl;
+    if (audioUrl != null) body['audioUrl'] = audioUrl;
+    if (videoThumbnail != null) body['videoThumbnail'] = videoThumbnail;
+    if (audioThumbnail != null) body['audioThumbnail'] = audioThumbnail;
 
     final response = _handleResponse(
       await http.post(
         Uri.parse('$baseUrl/communities/$id/forum/messages'),
+        headers: _headers(token),
+        body: jsonEncode(body),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /communities/:id/messages
+  static Future<Map<String, dynamic>> sendCommunityMessage(
+    String token,
+    String id,
+    String text, {
+    String? title,
+    String? imageUrl,
+    String? videoUrl,
+    String? audioUrl,
+    String? videoThumbnail,
+    String? audioThumbnail,
+  }) async {
+    final body = {'text': text};
+    if (title != null) body['title'] = title;
+    if (imageUrl != null) body['imageUrl'] = imageUrl;
+    if (videoUrl != null) body['videoUrl'] = videoUrl;
+    if (audioUrl != null) body['audioUrl'] = audioUrl;
+    if (videoThumbnail != null) body['videoThumbnail'] = videoThumbnail;
+    if (audioThumbnail != null) body['audioThumbnail'] = audioThumbnail;
+
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$id/messages'),
         headers: _headers(token),
         body: jsonEncode(body),
       ),
@@ -1205,17 +1714,27 @@ class ApiService {
   // POST /api/v1/media/upload
   static Future<Map<String, dynamic>> uploadMedia(
     String token,
-    String filePath,
-  ) async {
+    String filePath, {
+    bool isEdit = false,
+  }) async {
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/media/upload'),
     );
     request.headers.addAll({'Authorization': 'Bearer $token'});
     request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    if (isEdit) {
+      request.fields['isEdit'] = 'true';
+    }
     final response = await request.send();
     final responseBody = await response.stream.bytesToString();
-    return jsonDecode(responseBody);
+    final decoded = jsonDecode(responseBody);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(decoded['error'] ?? 'Failed to upload media');
+    }
+
+    return decoded;
   }
 
   // --- Devotion Endpoints ---
@@ -1225,6 +1744,20 @@ class ApiService {
     final response = _handleResponse(
       await http.get(
         Uri.parse('$baseUrl/devotions/plans'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  // GET /devotions/search?q={query}
+  static Future<List<dynamic>> searchDevotionPlans(
+    String token,
+    String query,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/devotions/search?q=$query'),
         headers: _headers(token),
       ),
     );
@@ -1434,10 +1967,12 @@ class ApiService {
   static Future<Map<String, dynamic>> fetchVideos(
     String token, {
     String? cursor,
+    String? search,
     int limit = 10,
   }) async {
     final queryParams = <String, String>{'limit': '$limit'};
     if (cursor != null) queryParams['cursor'] = cursor;
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
     final uri = Uri.parse(
       '$baseUrl/media/videos',
     ).replace(queryParameters: queryParams);
@@ -1460,6 +1995,20 @@ class ApiService {
       ),
     );
     return jsonDecode(response.body);
+  }
+
+  // GET /videos/continue
+  static Future<Map<String, dynamic>?> fetchContinueWatching(
+    String token,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/media/videos/continue'),
+        headers: _headers(token),
+      ),
+    );
+    final data = jsonDecode(response.body);
+    return data['item'];
   }
 
   // POST /videos/:id/like
@@ -1501,18 +2050,20 @@ class ApiService {
   static Future<Map<String, dynamic>> fetchAudio(
     String token, {
     String? cursor,
+    String? search,
     int limit = 10,
   }) async {
     final queryParams = <String, String>{'limit': '$limit'};
     if (cursor != null) queryParams['cursor'] = cursor;
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
     final uri = Uri.parse(
       '$baseUrl/media/audio',
     ).replace(queryParameters: queryParams);
-    
+
     final response = _handleResponse(
       await http.get(uri, headers: _headers(token)),
     );
-    
+
     final decoded = jsonDecode(response.body);
     // Backend now returns { items, nextCursor, hasMore }
     if (decoded is Map) return Map<String, dynamic>.from(decoded);
@@ -1529,6 +2080,20 @@ class ApiService {
       ),
     );
     return jsonDecode(response.body);
+  }
+
+  // GET /audio/continue
+  static Future<Map<String, dynamic>?> fetchContinueListening(
+    String token,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/media/audio/continue'),
+        headers: _headers(token),
+      ),
+    );
+    final data = jsonDecode(response.body);
+    return data['item'];
   }
 
   // POST /audio/:id/like
@@ -1640,5 +2205,41 @@ class ApiService {
       ),
     );
     return jsonDecode(response.body);
+  }
+
+  // ---------------------------------------------------------------------------
+  // SUBSCRIPTIONS
+  // ---------------------------------------------------------------------------
+
+  static Future<Map<String, dynamic>> verifySubscription({
+    required String token,
+    required String platform,
+    required String productId,
+    required String receiptData,
+    required String originalTxId,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/subscriptions/verify'),
+      headers: _headers(token),
+      body: jsonEncode({
+        'platform': platform,
+        'productId': productId,
+        'receiptData': receiptData,
+        'originalTxId': originalTxId,
+      }),
+    );
+    final finalRes = _handleResponse(response);
+    return jsonDecode(finalRes.body);
+  }
+
+  static Future<Map<String, dynamic>> getSubscriptionStatus(
+    String token,
+  ) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/subscriptions/me'),
+      headers: _headers(token),
+    );
+    final finalRes = _handleResponse(response);
+    return jsonDecode(finalRes.body);
   }
 }

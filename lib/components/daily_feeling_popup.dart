@@ -15,7 +15,7 @@ class DailyFeelingPopup extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Colors.black,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -27,13 +27,23 @@ class DailyFeelingPopup extends StatefulWidget {
   State<DailyFeelingPopup> createState() => _DailyFeelingPopupState();
 }
 
-class _DailyFeelingPopupState extends State<DailyFeelingPopup> {
+class _DailyFeelingPopupState extends State<DailyFeelingPopup> with SingleTickerProviderStateMixin {
   double _currentSliderValue = 0;
   bool _isLoading = false;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<FeedProvider>(context, listen: false);
       provider.loadFeelingsMetadata().then((_) {
@@ -86,9 +96,13 @@ class _DailyFeelingPopupState extends State<DailyFeelingPopup> {
     }
   }
 
-  // Returns a color matching the feeling somewhat dynamically
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
   Color _getFeelingColor(int index, int max) {
-    // Generate a hue based on the index to sweep across colors
     final hue = (index / (max > 0 ? max : 1)) * 360;
     return HSLColor.fromAHSL(1.0, hue, 0.8, 0.6).toColor();
   }
@@ -112,145 +126,167 @@ class _DailyFeelingPopupState extends State<DailyFeelingPopup> {
         final currentIndex = _currentSliderValue.toInt();
         final currentFeeling = provider.feelingsMetadata[currentIndex];
         final String feelingLabel = currentFeeling['feeling'];
-        final String feelingEmoji = currentFeeling['emoji'];
-        final Color flowerColor = _getFeelingColor(currentIndex, maxIndex);
+        final double baseHue = (currentIndex / (maxIndex > 0 ? maxIndex : 1)) * 360;
 
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Stack(
               children: [
-                Text(
-                  'How are you\nfeeling today?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Flower representation
-                Stack(
-                  alignment: Alignment.center,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Glow effect
-                    Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: flowerColor.withAlpha(100),
-                            blurRadius: 50,
-                            spreadRadius: 20,
-                          ),
-                        ],
+                    const SizedBox(height: 40),
+                    const Text(
+                      'How are you\nfeeling today?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.2,
                       ),
                     ),
-                    // Multi-rotated containers to make a flower
-                    ...List.generate(6, (index) {
-                      return Transform.rotate(
-                        angle: index * (3.14159 / 6),
-                        child: Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            gradient: RadialGradient(
-                              colors: [flowerColor, flowerColor.withAlpha(0)],
+                    const SizedBox(height: 40),
+
+                    // Mood Art with Pulse
+                    AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) {
+                        // Shift the color hue continuously during the pulse
+                        final currentHue = (baseHue + (_pulseController.value * 90)) % 360;
+                        final dynamicPulseColor = HSLColor.fromAHSL(1.0, currentHue, 0.8, 0.6).toColor();
+
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 200 * _pulseAnimation.value,
+                              height: 200 * _pulseAnimation.value,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: dynamicPulseColor.withValues(alpha: 0.5),
+                                    blurRadius: 50,
+                                    spreadRadius: 20,
+                                  ),
+                                ],
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(40),
+                            child!,
+                          ],
+                        );
+                      },
+                      child: Image.asset(
+                        'assets/images/mood-art.png',
+                        width: 250,
+                        height: 250,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+                    Text(
+                      feelingLabel,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Slider Custom Track
+                    Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF333333), // Dark grey track
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: SliderTheme(
+                        data: SliderThemeData(
+                          activeTrackColor: Colors.transparent,
+                          inactiveTrackColor: Colors.transparent,
+                          thumbColor: Colors.white,
+                          overlayColor: Colors.white.withValues(alpha: 0.1),
+                          trackHeight: 40,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 16,
+                            elevation: 0,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 24,
                           ),
                         ),
-                      );
-                    }),
-                    Text(
-                      feelingEmoji,
-                      style: TextStyle(
-                        fontSize: 64,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        child: Slider(
+                          value: _currentSliderValue,
+                          min: 0,
+                          max: maxIndex.toDouble(),
+                          divisions: maxIndex > 0 ? maxIndex : 1,
+                          onChanged: (value) {
+                            setState(() {
+                              _currentSliderValue = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Continue Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed:
+                            _isLoading ? null : () => _submitFeeling(provider),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4C4DFF),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child:
+                            _isLoading
+                                ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                                : const Text(
+                                  'Continue',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                       ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 40),
-                Text(
-                  feelingLabel,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Slider
-                SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.24),
-                    inactiveTrackColor: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.1),
-                    thumbColor: Theme.of(context).colorScheme.onSurface,
-                    overlayColor: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.24),
-                    trackHeight: 30,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 15,
-                    ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 20,
-                    ),
-                  ),
-                  child: Slider(
-                    value: _currentSliderValue,
-                    min: 0,
-                    max: maxIndex.toDouble(),
-                    divisions: maxIndex > 0 ? maxIndex : 1,
-                    onChanged: (value) {
-                      setState(() {
-                        _currentSliderValue = value;
-                      });
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Continue Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed:
-                        _isLoading ? null : () => _submitFeeling(provider),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4C4DFF),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                
+                // Close Button
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 20,
                       ),
                     ),
-                    child:
-                        _isLoading
-                            ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                            : const Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                   ),
                 ),
               ],

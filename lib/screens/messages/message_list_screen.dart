@@ -12,6 +12,7 @@ import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../components/global_more_menu.dart';
 
 class MessageListScreen extends StatefulWidget {
   const MessageListScreen({super.key});
@@ -33,14 +34,12 @@ class _MessageListScreenState extends State<MessageListScreen> {
   }
 
   void _openMenu(BuildContext context) {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return const Center(child: _PostListMenuDialogBox());
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const GlobalMoreMenu();
       },
     );
   }
@@ -177,8 +176,10 @@ class _MessageListScreenState extends State<MessageListScreen> {
                                 color: theme.colorScheme.surface,
                                 borderRadius: BorderRadius.circular(15),
                               ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 15,
                                   vertical: 5,
                                 ),
@@ -229,8 +230,9 @@ class _MessageListScreenState extends State<MessageListScreen> {
                                   _navigateToChat(context, chat);
                                 },
                               ),
-                            );
-                          },
+                            ),
+                          );
+                        },
                         ),
               ),
             ],

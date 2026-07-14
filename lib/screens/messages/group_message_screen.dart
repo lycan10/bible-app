@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/avatar.dart';
-import 'package:quest/components/chat/chat_bubble.dart';
-import 'package:quest/components/chat/chat_menu_dialog.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
 import 'package:quest/theme/theme.dart';
@@ -63,10 +61,7 @@ class GroupMessageScreen extends StatelessWidget {
                             },
                           );
                         },
-                        child: const CustomAvatar(
-                          radius: 20,
-                          imageUrl: null,
-                        ),
+                        child: const CustomAvatar(radius: 20, imageUrl: null),
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(

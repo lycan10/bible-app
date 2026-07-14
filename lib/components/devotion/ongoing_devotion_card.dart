@@ -9,6 +9,7 @@ class OngoingDevotionCard extends StatelessWidget {
   final String likes;
   final String planText;
   final int day;
+  final bool isCompleted;
   final VoidCallback? onContinue;
 
   const OngoingDevotionCard({
@@ -19,6 +20,7 @@ class OngoingDevotionCard extends StatelessWidget {
     required this.likes,
     required this.planText,
     required this.day,
+    this.isCompleted = false,
     this.onContinue,
   });
 
@@ -208,11 +210,11 @@ class OngoingDevotionCard extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.purpleColor,
+                    color: isCompleted ? AppTheme.greenColor : AppTheme.purpleColor,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Text(
-                    'Continue',
+                    isCompleted ? 'Completed' : 'Continue',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,

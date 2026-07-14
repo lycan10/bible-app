@@ -22,6 +22,7 @@ import 'package:quest/screens/bible/bible_home_screen.dart';
 import 'package:quest/utils/date_formatter.dart';
 import 'package:quest/screens/bible/saved_verses_screen.dart' as quest_saved;
 import 'package:quest/main.dart';
+import '../../components/global_more_menu.dart';
 
 class MoreScreen extends StatefulWidget {
   final String initialTab;
@@ -36,6 +37,7 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
   bool _isLoading = false;
   List<dynamic> _notesList = [];
   List<dynamic> _journalsList = [];
+  List<dynamic> _savedBooksList = [];
   String _searchQuery = "";
 
   int _notesPage = 1;
@@ -103,10 +105,16 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
       if (token != null) {
         final notes = await ApiService.getPersonalNotes(token, page: 1);
         final journals = await ApiService.getJournals(token, page: 1);
+        List<dynamic> savedBooks = [];
+        try {
+          savedBooks = await ApiService.fetchSavedBooks(token);
+        } catch (_) {}
+
         if (mounted) {
           setState(() {
             _notesList = notes;
             _journalsList = journals;
+            _savedBooksList = savedBooks;
             if (notes.length < 20) _hasMoreNotes = false;
             if (journals.length < 20) _hasMoreJournals = false;
           });
@@ -660,11 +668,26 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                             SavedMessagesCard(),
                             SavedMessagesCard(),
                             SectionHeader(
-                              title: "Books (34)",
+                              title: "Books (${_savedBooksList.length})",
                               seeAllText: "See all",
                             ),
-                            SavedBooksCard(),
-                            SavedBooksCard(),
+                            if (_savedBooksList.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Text(
+                                  "No saved books yet.",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ..._savedBooksList.map((b) {
+                              final book = b['book'] ?? {};
+                              return SavedBooksCard(
+                                title: book['title'] ?? 'Unknown Title',
+                                subtitle: book['description'] ?? '',
+                                author: book['author'] ?? 'Unknown Author',
+                                imageUrl: book['imageUrl'],
+                              );
+                            }),
                             const SizedBox(height: 60),
                           ],
                         ),

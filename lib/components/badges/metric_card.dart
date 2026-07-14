@@ -3,15 +3,17 @@ import 'package:quest/theme/theme.dart';
 
 class MetricCard extends StatelessWidget {
   final String title;
-  final String badgeStat;
+  final String topLabel;
   final String levelStat;
+  final String bottomLabel;
   final double progress;
 
   const MetricCard({
     super.key,
     required this.title,
-    required this.badgeStat,
+    required this.topLabel,
     required this.levelStat,
+    required this.bottomLabel,
     required this.progress,
   });
 
@@ -22,7 +24,7 @@ class MetricCard extends StatelessWidget {
     double strokeWidth = 5; // Ring thickness
 
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -58,9 +60,11 @@ class MetricCard extends StatelessWidget {
                 ),
               ),
               Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Lvl",
+                    topLabel,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textColor2,
@@ -96,13 +100,13 @@ class MetricCard extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                'Collected $badgeStat Badges',
+                bottomLabel,
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 12,
                   color: AppTheme.textColor2,
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 10),
               GestureDetector(
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 45, vertical: 10),

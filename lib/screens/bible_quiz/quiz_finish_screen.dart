@@ -9,12 +9,14 @@ class QuizFinishScreen extends StatelessWidget {
   final int score;
   final int totalQuestions;
   final int level;
+  final int coinsEarned;
 
   const QuizFinishScreen({
     super.key,
     required this.score,
     required this.totalQuestions,
     required this.level,
+    required this.coinsEarned,
   });
 
   double get _percentage =>
@@ -126,7 +128,35 @@ class QuizFinishScreen extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 12),
+
+              // ── Coins Earned row ───────────────────────────────────
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: AppTheme.goldAccent.withAlpha(20),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.goldAccent.withAlpha(60)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset('assets/images/gold.png', width: 32),
+                    const SizedBox(width: 12),
+                    Text(
+                      '+$coinsEarned Coins',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.goldAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 28),
 
               // ── Restart button ────────────────────────────────────
               SizedBox(
@@ -155,14 +185,16 @@ class QuizFinishScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // ── Exit button ───────────────────────────────────────
+              // ── Next Level button ───────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.of(context)
-                      ..pop()
-                      ..pop();
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => BibleQuizScreen(level: level + 1),
+                      ),
+                    );
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -172,7 +204,7 @@ class QuizFinishScreen extends StatelessWidget {
                     side: BorderSide(color: Colors.grey.shade400),
                   ),
                   child: const Text(
-                    'Back to Levels',
+                    'Next',
                     style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                 ),

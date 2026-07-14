@@ -6,6 +6,7 @@ class BadgeCard extends StatelessWidget {
   final String progressStat;
   final String badgeImage;
   final double progress;
+  final bool isEarned;
 
   const BadgeCard({
     super.key,
@@ -13,6 +14,7 @@ class BadgeCard extends StatelessWidget {
     required this.progressStat,
     required this.badgeImage,
     required this.progress,
+    this.isEarned = false,
   });
 
   ImageProvider _getBadgeImage(String imagePath) {
@@ -49,13 +51,22 @@ class BadgeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(width: 1, color: Colors.grey.shade200),
+          border: Border.all(width: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: ColorFiltered(
+          colorFilter: isEarned 
+            ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply) 
+            : const ColorFilter.matrix([
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0,      0,      0,      1, 0,
+              ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Circular progress around avatar
             Stack(
               alignment: Alignment.center,
@@ -110,7 +121,7 @@ class BadgeCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: theme.textTheme.bodyMedium?.color,
                     fontSize: 12,
                   ),
                 ),
@@ -126,7 +137,8 @@ class BadgeCard extends StatelessWidget {
                 ),
               ],
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -31,8 +31,10 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
 
   List<dynamic> _friends = [];
   List<dynamic> _badgesProgress = [];
+  Map<String, dynamic>? _gamesOverview;
   bool _loadingFriends = false;
   bool _loadingBadges = false;
+  bool _loadingGames = false;
 
   @override
   void initState() {
@@ -67,6 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     setState(() {
       _loadingFriends = true;
       _loadingBadges = true;
+      _loadingGames = true;
     });
 
     try {
@@ -93,6 +96,19 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     } catch (e) {
       if (mounted) setState(() => _loadingBadges = false);
       debugPrint("Error loading badges: $e");
+    }
+
+    try {
+      final gamesOverview = await ApiService.fetchGamesOverview(token);
+      if (mounted) {
+        setState(() {
+          _gamesOverview = gamesOverview;
+          _loadingGames = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loadingGames = false);
+      debugPrint("Error loading games overview: $e");
     }
   }
 
@@ -565,12 +581,14 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                     final double pct =
                                         (bp['percentage'] ?? 0) / 100.0;
                                     final String stat = "$current/$target";
+                                    final bool isEarned = bp['isEarned'] ?? false;
 
                                     return BadgeCard(
                                       title: badgeName,
                                       progressStat: stat,
                                       badgeImage: badgeImg,
                                       progress: pct,
+                                      isEarned: isEarned,
                                     );
                                   },
                                 ),
@@ -651,7 +669,9 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                             ),
 
                       if (selectedTab == "Metric")
-                        GridView.count(
+                        _loadingGames
+                            ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                            : GridView.count(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           crossAxisCount: 2,
@@ -661,18 +681,17 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                           children: [
                             MetricCard(
                               title: "Quiz",
-                              badgeStat: "$points Points",
-                              levelStat: "Streak: $streakCount Days",
-                              progress:
-                                  streakCount > 0
-                                      ? (streakCount / 7.0).clamp(0.0, 1.0)
-                                      : 0.0,
+                              topLabel: "Lvl",
+                              levelStat: "${_gamesOverview?['quiz']?['level'] ?? 1}",
+                              bottomLabel: "Earned ${_gamesOverview?['quiz']?['points'] ?? 0} Points",
+                              progress: (_gamesOverview?['quiz']?['progress']?.toDouble() ?? 0.0),
                             ),
-                            const MetricCard(
+                            MetricCard(
                               title: "Puzzle",
-                              badgeStat: "Daily Bread",
-                              levelStat: "Solves",
-                              progress: 0.5,
+                              topLabel: "Streak",
+                              levelStat: "${_gamesOverview?['puzzle']?['streak'] ?? 0}/${_gamesOverview?['puzzle']?['nextMilestone'] ?? 7} Days",
+                              bottomLabel: "Solved ${_gamesOverview?['puzzle']?['solves'] ?? 0} Puzzles",
+                              progress: (_gamesOverview?['puzzle']?['progress']?.toDouble() ?? 0.0),
                             ),
                           ],
                         ),

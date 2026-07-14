@@ -8,17 +8,17 @@ class SavedBooksCard extends StatelessWidget {
   final String verse;
   final List<String> verses;
   final String author;
+  final String? imageUrl;
   final double? width;
 
   const SavedBooksCard({
     super.key,
-    this.title = "1987",
-    this.subtitle =
-        "The Mystery of the cross of Jesus Christ, The Mystery of the cross of Jesus Christ",
-    this.verse = "John 3:16",
-    this.verses = const ["John 3:16", "Romans 8:28", "Psalm 23:1"],
-    this.author = "Goerge Orwell",
-
+    required this.title,
+    required this.subtitle,
+    this.verse = "",
+    this.verses = const [],
+    required this.author,
+    this.imageUrl,
     this.width, // ✅ important for horizontal list
   });
 
@@ -104,12 +104,19 @@ class SavedBooksCard extends StatelessWidget {
               Spacer(),
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
-                  "assets/images/book.jpeg",
-                  fit: BoxFit.cover,
-                  width: 80,
-                  height: 80,
-                ),
+                child: imageUrl != null 
+                  ? Image.network(
+                      imageUrl!,
+                      fit: BoxFit.cover,
+                      width: 80,
+                      height: 80,
+                    )
+                  : Image.asset(
+                      "assets/images/book.jpeg",
+                      fit: BoxFit.cover,
+                      width: 80,
+                      height: 80,
+                    ),
               ),
               SizedBox(width: 8),
               HugeIcon(

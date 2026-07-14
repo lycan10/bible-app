@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -13,6 +14,8 @@ import 'package:quest/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
+import 'package:quest/screens/create_community_screen.dart';
+import '../../components/global_more_menu.dart';
 
 class CommunityListScreen extends StatefulWidget {
   const CommunityListScreen({super.key});
@@ -22,6 +25,17 @@ class CommunityListScreen extends StatefulWidget {
 }
 
 class _CommunityListScreenState extends State<CommunityListScreen> {
+  String _searchQuery = "";
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -59,14 +73,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   }
 
   void _openMenu(BuildContext context) {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return const Center(child: _PostListMenuDialogBox());
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const GlobalMoreMenu();
       },
     );
   }
@@ -80,9 +92,27 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateCommunityScreen()),
+          );
+        },
+        backgroundColor: AppTheme.buttonColor,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            final authProvider = context.read<AuthProvider>();
+            if (authProvider.token != null) {
+              await context.read<CommunityProvider>().loadCommunities(authProvider.token!);
+            }
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           children: [
             /// TITLE BAR
             TitleOne(
@@ -167,6 +197,26 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                         /// Search Input
                         Expanded(
                           child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                              if (_debounce?.isActive ?? false) _debounce!.cancel();
+                              _debounce = Timer(const Duration(milliseconds: 500), () {
+                                final authProvider = context.read<AuthProvider>();
+                                if (authProvider.token != null) {
+                                  if (value.isNotEmpty) {
+                                    context.read<CommunityProvider>().searchCommunities(
+                                          authProvider.token!,
+                                          value,
+                                        );
+                                  } else {
+                                    context.read<CommunityProvider>().loadCommunities(authProvider.token!);
+                                  }
+                                }
+                              });
+                            },
                             decoration: const InputDecoration(
                               hintText: "Search communities",
                               border: InputBorder.none,
@@ -182,74 +232,115 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               ],
             ),
 
-            /// HEADER
-            const SectionHeader(
-              title: "Your communities",
-              seeAllText: 'see more',
-            ),
-
-            const SizedBox(height: 15),
-
-            /// COMMUNITY LIST
-            if (myCommunities.isNotEmpty)
-              SizedBox(
-                height: 160,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: myCommunities.length,
-                  itemBuilder: (context, index) {
-                    final com = myCommunities[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: CircleStuff(
-                        onTap: () => _navigateToCommunityScreen(context, com),
-                        width: 100,
-                        height: 100,
-                        title: com['name'] ?? 'Community',
-                        description:
-                            '${com['_count']?['members'] ?? 0} members',
-                        image: com['image'],
+            if (_searchQuery.isNotEmpty) ...[
+              const SectionHeader(
+                title: "Search Results",
+                seeAllText: '',
+              ),
+              const SizedBox(height: 15),
+              communityProvider.isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: CircularProgressIndicator(color: Colors.black),
                       ),
-                    );
-                  },
-                ),
-              )
-            else
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Text("You haven't joined any communities yet."),
+                    )
+                  : communityProvider.searchResults.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Text("No communities found."),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemCount: communityProvider.searchResults.length,
+                          itemBuilder: (context, index) {
+                            final com = communityProvider.searchResults[index];
+                            return CommunityImageTile(
+                              name: com['name'] ?? 'Community',
+                              message: com['description'] ?? '',
+                              imagePath: com['image'] ?? "assets/images/user_test.jpg",
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
+                              onTap: () => _navigateToCommunityScreen(context, com),
+                            );
+                          },
+                        ),
+            ] else ...[
+              /// HEADER
+              const SectionHeader(
+                title: "Your communities",
+                seeAllText: 'see more',
               ),
 
-            /// POSTS (Mocked or empty for local area)
-            // Removed static area communities list to focus on user's recommendations
-            const SectionHeader(
-              title: "Suggested communities",
-              seeAllText: 'see more',
-            ),
+              const SizedBox(height: 15),
 
-            /// SUGGESTED COMMUNITIES
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemCount: recommended.length,
-              itemBuilder: (context, index) {
-                final com = recommended[index];
-                return CommunityImageTile(
-                  name: com['name'] ?? 'Community',
-                  message: com['description'] ?? '',
-                  imagePath: com['image'] ?? "assets/images/user_test.jpg",
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: Colors.grey,
-                    size: 20,
+              /// COMMUNITY LIST
+              if (myCommunities.isNotEmpty)
+                SizedBox(
+                  height: 160,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: myCommunities.length,
+                    itemBuilder: (context, index) {
+                      final com = myCommunities[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: CircleStuff(
+                          onTap: () => _navigateToCommunityScreen(context, com),
+                          width: 100,
+                          height: 100,
+                          title: com['name'] ?? 'Community',
+                          description:
+                              '${com['_count']?['members'] ?? 0} members',
+                          image: com['image'],
+                        ),
+                      );
+                    },
                   ),
-                  onTap: () => _navigateToCommunityScreen(context, com),
-                );
-              },
-            ),
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text("You haven't joined any communities yet."),
+                ),
+
+              /// POSTS (Mocked or empty for local area)
+              // Removed static area communities list to focus on user's recommendations
+              const SectionHeader(
+                title: "Suggested communities",
+                seeAllText: 'see more',
+              ),
+
+              /// SUGGESTED COMMUNITIES
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemCount: recommended.length,
+                itemBuilder: (context, index) {
+                  final com = recommended[index];
+                  return CommunityImageTile(
+                    name: com['name'] ?? 'Community',
+                    message: com['description'] ?? '',
+                    imagePath: com['image'] ?? "assets/images/user_test.jpg",
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey,
+                      size: 20,
+                    ),
+                    onTap: () => _navigateToCommunityScreen(context, com),
+                  );
+                },
+              ),
+            ],
           ],
+        ),
         ),
       ),
     );

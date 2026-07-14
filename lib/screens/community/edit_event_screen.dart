@@ -3,30 +3,58 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
+import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/theme/theme.dart';
 import 'dart:io';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-class CreateEventScreen extends StatefulWidget {
+class EditEventScreen extends StatefulWidget {
   final String communityId;
-  const CreateEventScreen({super.key, required this.communityId});
+  final Map<String, dynamic> event;
+  
+  const EditEventScreen({super.key, required this.communityId, required this.event});
 
   @override
-  State<CreateEventScreen> createState() => _CreateEventScreenState();
+  State<EditEventScreen> createState() => _EditEventScreenState();
 }
 
-class _CreateEventScreenState extends State<CreateEventScreen> {
+class _EditEventScreenState extends State<EditEventScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _linkController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _locationController;
+  late TextEditingController _linkController;
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   File? _image;
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.event['title']);
+    _descriptionController = TextEditingController(text: widget.event['description']);
+    _locationController = TextEditingController(text: widget.event['location']);
+    _linkController = TextEditingController(text: widget.event['link']);
+    try {
+      _selectedDate = DateTime.parse(widget.event['date']);
+    } catch (_) {}
+    
+    try {
+      final timeParts = widget.event['time'].toString().split(RegExp(r'[: ]'));
+      int hour = int.parse(timeParts[0]);
+      int minute = int.parse(timeParts[1]);
+      if (widget.event['time'].toString().toLowerCase().contains('pm') && hour != 12) {
+        hour += 12;
+      } else if (widget.event['time'].toString().toLowerCase().contains('am') && hour == 12) {
+        hour = 0;
+      }
+      _selectedTime = TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {}
+  }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -37,7 +65,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
   }
 
-  void _createEvent() async {
+  void _updateEvent() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,9 +82,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
     final timeStr = _selectedTime!.format(context);
 
-    final success = await provider.createEvent(
+    final success = await provider.updateEvent(
       auth.token!,
       widget.communityId,
+      widget.event['id'],
       _titleController.text.trim(),
       _descriptionController.text.trim(),
       dateStr,
@@ -64,15 +93,18 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       _locationController.text.trim(),
       link: _linkController.text.trim().isEmpty ? null : _linkController.text.trim(),
       imagePath: _image?.path,
+      existingImageUrl: widget.event['imageUrl'],
     );
 
     setState(() => _isLoading = false);
 
     if (success && mounted) {
-      Navigator.pop(context);
+      context.read<FeedProvider>().loadExploreData(auth.token!);
+      Navigator.pop(context); // Close edit screen
+      Navigator.pop(context); // Close event details bottom sheet
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create event')),
+        const SnackBar(content: Text('Failed to update event')),
       );
     }
   }
@@ -80,8 +112,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<void> _pickDate() async {
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
         return Theme(
@@ -104,7 +136,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<void> _pickTime() async {
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: _selectedTime ?? TimeOfDay.now(),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -157,7 +189,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 const SizedBox(height: 25),
                 Text(
-                  'Create Event',
+                  'Edit Event',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface,
                     fontSize: 20,
@@ -180,14 +212,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             borderRadius: BorderRadius.circular(15),
                             child: Image.file(_image!, fit: BoxFit.cover),
                           )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              HugeIcon(icon: HugeIcons.strokeRoundedImage01, color: AppTheme.textColor2, size: 40.0),
-                              const SizedBox(height: 10),
-                              Text('Upload Event Image (Optional)', style: TextStyle(color: AppTheme.textColor2)),
-                            ],
-                          ),
+                        : (widget.event['imageUrl'] != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: CachedNetworkImage(
+                                  imageUrl: widget.event['imageUrl'],
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  HugeIcon(icon: HugeIcons.strokeRoundedImage01, color: AppTheme.textColor2, size: 40.0),
+                                  const SizedBox(height: 10),
+                                  Text('Upload Event Image', style: TextStyle(color: AppTheme.textColor2)),
+                                ],
+                              )),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -315,7 +355,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _createEvent,
+                    onPressed: _isLoading ? null : _updateEvent,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       backgroundColor: theme.colorScheme.onSurface,
@@ -333,7 +373,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             ),
                           )
                         : Text(
-                            'Create Event',
+                            'Save Changes',
                             style: TextStyle(
                               color: theme.colorScheme.surface,
                               fontSize: 16,

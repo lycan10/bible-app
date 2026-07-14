@@ -11,6 +11,12 @@ class DevotionProvider extends ChangeNotifier {
   List<dynamic> _allPlans = [];
   List<dynamic> get allPlans => _allPlans;
 
+  bool _isSearching = false;
+  bool get isSearching => _isSearching;
+
+  List<dynamic> _searchResults = [];
+  List<dynamic> get searchResults => _searchResults;
+
   String? _error;
   String? get error => _error;
 
@@ -39,6 +45,29 @@ class DevotionProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<void> searchPlans(String token, String query) async {
+    if (query.isEmpty) {
+      clearSearch();
+      return;
+    }
+    _setLoading(true);
+    _setError(null);
+    _isSearching = true;
+    try {
+      _searchResults = await ApiService.searchDevotionPlans(token, query);
+    } catch (e) {
+      _setError(e.toString());
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void clearSearch() {
+    _isSearching = false;
+    _searchResults = [];
+    notifyListeners();
   }
 
   Future<void> subscribeToPlan(String token, String planId) async {

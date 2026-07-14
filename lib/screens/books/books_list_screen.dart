@@ -10,6 +10,7 @@ import 'package:quest/screens/explore/explore_screen.dart'; // For BooksReelCard
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
+import '../../components/global_more_menu.dart';
 
 final List<Map<String, String>> posts = [
   {
@@ -114,14 +115,12 @@ class _BooksListScreenState extends State<BooksListScreen> {
   }
 
   void _openMenu(BuildContext context) {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return const Center(child: _PostListMenuDialogBox());
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const GlobalMoreMenu();
       },
     );
   }

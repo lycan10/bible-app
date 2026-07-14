@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/feed_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/community_provider.dart';
+import '../services/api_service.dart';
 
 String _formatCount(int count) {
   if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}m';
@@ -13,8 +15,10 @@ String _formatCount(int count) {
 
 class TodayVerseGlass extends StatefulWidget {
   final Map<String, dynamic>? verseData;
+  final bool isCommunityVerse;
+  final String? communityId;
 
-  const TodayVerseGlass({super.key, this.verseData});
+  const TodayVerseGlass({super.key, this.verseData, this.isCommunityVerse = false, this.communityId});
 
   @override
   State<TodayVerseGlass> createState() => _TodayVerseGlassState();
@@ -77,7 +81,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
             transitionDuration: const Duration(milliseconds: 500),
             pageBuilder:
                 (context, animation, secondaryAnimation) =>
-                    FullScreenVerseScreen(verseData: widget.verseData),
+                    FullScreenVerseScreen(verseData: widget.verseData, isCommunityVerse: widget.isCommunityVerse, communityId: widget.communityId),
             transitionsBuilder: (
               context,
               animation,
@@ -98,9 +102,30 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
             children: [
               /// 🔹 Background Image
               Positioned.fill(
-                child: Image.asset(
-                  "assets/images/nature.jpg",
-                  fit: BoxFit.cover,
+                child: widget.verseData?['backgroundImageUrl'] != null && widget.verseData!['backgroundImageUrl'].toString().isNotEmpty
+                    ? Image.network(
+                        ApiService.getFullImageUrl(widget.verseData!['backgroundImageUrl']),
+                        fit: BoxFit.cover,
+                      )
+                    : Image.asset(
+                        "assets/images/nature.jpg",
+                        fit: BoxFit.cover,
+                      ),
+              ),
+
+              /// 🔹 Dark gradient overlay for contrast
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.35),
+                        Colors.black.withValues(alpha: 0.65),
+                      ],
+                    ),
+                  ),
                 ),
               ),
 
@@ -116,7 +141,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                         bottom: 0,
                         sigmaX: 15,
                         sigmaY: 15,
-                        tintAlpha: 0.13,
+                        tintAlpha: 0.05,
                       ),
                     ],
                   ),
@@ -190,14 +215,12 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               context,
                               listen: false,
                             );
-                            final feedProvider = Provider.of<FeedProvider>(
-                              context,
-                              listen: false,
-                            );
                             if (authProvider.token != null) {
-                              await feedProvider.toggleDailyVerseLike(
-                                authProvider.token!,
-                              );
+                              if (widget.isCommunityVerse && widget.communityId != null) {
+                                await Provider.of<CommunityProvider>(context, listen: false).toggleCommunityVerseLike(authProvider.token!, widget.communityId!);
+                              } else {
+                                await Provider.of<FeedProvider>(context, listen: false).toggleDailyVerseLike(authProvider.token!);
+                              }
                             }
                           },
                         ),
@@ -211,14 +234,12 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               context,
                               listen: false,
                             );
-                            final feedProvider = Provider.of<FeedProvider>(
-                              context,
-                              listen: false,
-                            );
                             if (authProvider.token != null) {
-                              await feedProvider.shareDailyVerse(
-                                authProvider.token!,
-                              );
+                              if (widget.isCommunityVerse && widget.communityId != null) {
+                                await Provider.of<CommunityProvider>(context, listen: false).shareCommunityVerse(authProvider.token!, widget.communityId!);
+                              } else {
+                                await Provider.of<FeedProvider>(context, listen: false).shareDailyVerse(authProvider.token!);
+                              }
                             }
                           },
                         ),
@@ -234,14 +255,12 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               context,
                               listen: false,
                             );
-                            final feedProvider = Provider.of<FeedProvider>(
-                              context,
-                              listen: false,
-                            );
                             if (authProvider.token != null) {
-                              await feedProvider.shareDailyVerse(
-                                authProvider.token!,
-                              );
+                              if (widget.isCommunityVerse && widget.communityId != null) {
+                                await Provider.of<CommunityProvider>(context, listen: false).shareCommunityVerse(authProvider.token!, widget.communityId!);
+                              } else {
+                                await Provider.of<FeedProvider>(context, listen: false).shareDailyVerse(authProvider.token!);
+                              }
                             }
                           },
                           child: Container(
@@ -354,8 +373,10 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
 
 class FullScreenVerseScreen extends StatelessWidget {
   final Map<String, dynamic>? verseData;
+  final bool isCommunityVerse;
+  final String? communityId;
 
-  const FullScreenVerseScreen({super.key, this.verseData});
+  const FullScreenVerseScreen({super.key, this.verseData, this.isCommunityVerse = false, this.communityId});
 
   @override
   Widget build(BuildContext context) {
@@ -374,16 +395,30 @@ class FullScreenVerseScreen extends StatelessWidget {
         children: [
           // Background image
           Positioned.fill(
-            child: Image.asset(
-              "assets/images/dailyverspop.jpeg",
-              fit: BoxFit.cover,
-            ),
+            child: verseData?['backgroundImageUrl'] != null && verseData!['backgroundImageUrl'].toString().isNotEmpty
+                ? Image.network(
+                    ApiService.getFullImageUrl(verseData!['backgroundImageUrl']),
+                    fit: BoxFit.cover,
+                  )
+                : Image.asset(
+                    "assets/images/dailyverspop.jpeg",
+                    fit: BoxFit.cover,
+                  ),
           ),
 
           // Darken overlay for the background instead of blur
           Positioned.fill(
             child: Container(
-              color: Colors.black.withValues(alpha: 0.1), // Darken effect
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x88000000), // 53% black at top
+                    Color(0xCC000000), // 80% black at bottom
+                  ],
+                ),
+              ),
             ),
           ),
 
@@ -500,10 +535,10 @@ class FullScreenVerseScreen extends StatelessWidget {
                     ],
                   ),
 
-                  Consumer<FeedProvider>(
-                    builder: (context, feedProvider, child) {
+                  Consumer2<FeedProvider, CommunityProvider>(
+                    builder: (context, feedProvider, communityProvider, child) {
                       final updatedVerseData =
-                          feedProvider.dailyVerse ?? verseData;
+                          isCommunityVerse ? (communityProvider.currentVerse ?? verseData) : (feedProvider.dailyVerse ?? verseData);
                       final likesCount = _formatCount(
                         updatedVerseData?['likesCount'] ?? 0,
                       );
@@ -524,9 +559,11 @@ class FullScreenVerseScreen extends StatelessWidget {
                                 listen: false,
                               );
                               if (authProvider.token != null) {
-                                await feedProvider.toggleDailyVerseLike(
-                                  authProvider.token!,
-                                );
+                                if (isCommunityVerse && communityId != null) {
+                                  await communityProvider.toggleCommunityVerseLike(authProvider.token!, communityId!);
+                                } else {
+                                  await feedProvider.toggleDailyVerseLike(authProvider.token!);
+                                }
                               }
                             },
                           ),
@@ -541,9 +578,11 @@ class FullScreenVerseScreen extends StatelessWidget {
                                 listen: false,
                               );
                               if (authProvider.token != null) {
-                                await feedProvider.shareDailyVerse(
-                                  authProvider.token!,
-                                );
+                                if (isCommunityVerse && communityId != null) {
+                                  await communityProvider.shareCommunityVerse(authProvider.token!, communityId!);
+                                } else {
+                                  await feedProvider.shareDailyVerse(authProvider.token!);
+                                }
                               }
                             },
                           ),
@@ -558,9 +597,11 @@ class FullScreenVerseScreen extends StatelessWidget {
                                 listen: false,
                               );
                               if (authProvider.token != null) {
-                                await feedProvider.toggleDailyVerseLike(
-                                  authProvider.token!,
-                                );
+                                if (isCommunityVerse && communityId != null) {
+                                  await communityProvider.toggleCommunityVerseLike(authProvider.token!, communityId!);
+                                } else {
+                                  await feedProvider.toggleDailyVerseLike(authProvider.token!);
+                                }
                               }
                             },
                           ),
@@ -572,9 +613,11 @@ class FullScreenVerseScreen extends StatelessWidget {
                                 listen: false,
                               );
                               if (authProvider.token != null) {
-                                await feedProvider.shareDailyVerse(
-                                  authProvider.token!,
-                                );
+                                if (isCommunityVerse && communityId != null) {
+                                  await communityProvider.shareCommunityVerse(authProvider.token!, communityId!);
+                                } else {
+                                  await feedProvider.shareDailyVerse(authProvider.token!);
+                                }
                               }
                             },
                             child: Container(

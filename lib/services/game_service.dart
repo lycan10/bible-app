@@ -87,13 +87,13 @@ class GameService {
     }
   }
 
-  static Future<void> submitScore(
+  static Future<Map<String, dynamic>> submitScore(
     String gameType,
     String difficulty,
     int score,
   ) async {
     final userId = await _getUserId();
-    if (userId == null) return;
+    if (userId == null) return {};
 
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/games/score'),
@@ -109,6 +109,8 @@ class GameService {
     if (response.statusCode != 200) {
       throw Exception('Failed to submit score');
     }
+
+    return json.decode(response.body);
   }
 
   static Future<Map<String, dynamic>> fetchScores(String gameType) async {

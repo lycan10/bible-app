@@ -12,6 +12,7 @@ import 'package:quest/theme/theme.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
+import 'package:quest/components/formatted_text.dart';
 
 class PostScreen extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -241,7 +242,17 @@ class _PostScreenState extends State<PostScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 15),
+                      if (post['caption'] != null && post['caption'].toString().isNotEmpty)
+                        FormattedText(
+                          post['caption'],
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.6,
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 14,
+                          ),
+                        ),
+                      const SizedBox(height: 10),
                       if (imageUrl != null) ...[
                         SizedBox(
                           width: double.infinity,
@@ -568,6 +579,14 @@ class _CommentItemState extends State<CommentItem> {
 
     final reactions = widget.comment['reactions'] as List<dynamic>? ?? [];
     final likesCount = reactions.where((r) => r['emoji'] == '👍').length;
+    
+    final authId = context.read<AuthProvider>().user?['id'];
+    final cp = context.read<CommunityProvider>();
+    final isCommunityAdmin = cp.currentCommunity != null &&
+        (cp.currentCommunity!['members'] as List<dynamic>? ?? []).any(
+            (m) => m['id'] == authId && m['role'] == 'ADMIN');
+    final isMe = user['id'] == authId;
+    final canDelete = isCommunityAdmin || isMe;
 
     return Padding(
       padding: EdgeInsets.only(left: widget.isReply ? 30.0 : 0.0),
@@ -636,16 +655,52 @@ class _CommentItemState extends State<CommentItem> {
                         ),
                       ),
                     ),
-                    Text(
-                      widget.comment['createdAt'] != null
-                          ? timeago.format(
-                            DateTime.parse(widget.comment['createdAt']),
-                          )
-                          : "Recently",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                        color: AppTheme.textColor2,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          widget.comment['createdAt'] != null
+                              ? timeago.format(
+                                DateTime.parse(widget.comment['createdAt']),
+                              )
+                              : "Recently",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: AppTheme.textColor2,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (canDelete)
+                          GestureDetector(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return SafeArea(
+                                    child: Wrap(
+                                      children: [
+                                        ListTile(
+                                          leading: const Icon(Icons.delete, color: Colors.red),
+                                          title: const Text('Delete Comment', style: TextStyle(color: Colors.red)),
+                                          onTap: () async {
+                                            Navigator.pop(context);
+                                            final auth = context.read<AuthProvider>();
+                                            if (auth.token != null) {
+                                              await context.read<CommunityProvider>().deleteCommunityComment(
+                                                auth.token!,
+                                                widget.comment['id'],
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: Icon(Icons.more_vert, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -677,19 +732,26 @@ class _CommentItemState extends State<CommentItem> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.comment['text'] ?? '',
-                          maxLines: isExpanded ? null : 5,
-                          overflow:
-                              isExpanded
-                                  ? TextOverflow.visible
-                                  : TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            height: 1.6,
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 13,
-                          ),
-                        ),
+                        isExpanded
+                            ? FormattedText(
+                                widget.comment['text'] ?? '',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  height: 1.6,
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 13,
+                                ),
+                              )
+                            : ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 110),
+                                child: FormattedText(
+                                  widget.comment['text'] ?? '',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    height: 1.6,
+                                    color: theme.colorScheme.onSurface,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
                         if (isOverflowing && !isExpanded)
                           GestureDetector(
                             onTap: () {

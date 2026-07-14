@@ -3,9 +3,45 @@ import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:quest/screens/bible_quiz/play_mode_sheet.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/services/api_service.dart';
 
-class GamesScreen extends StatelessWidget {
+class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
+
+  @override
+  State<GamesScreen> createState() => _GamesScreenState();
+}
+
+class _GamesScreenState extends State<GamesScreen> {
+  List<dynamic> _badges = [];
+  bool _isLoadingBadges = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBadges();
+  }
+
+  Future<void> _loadBadges() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.token == null) return;
+      final badges = await ApiService.fetchBadgesProgress(authProvider.token!);
+      if (mounted) {
+        setState(() {
+          _badges = badges;
+          _isLoadingBadges = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingBadges = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -289,26 +325,37 @@ class GamesScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      _BadgeItem(
-                        title: 'Bronze',
-                        status: 'Owned',
-                        asset: 'assets/images/bronze.png',
-                      ),
-                      _BadgeItem(
-                        title: 'Silver',
-                        status: 'Owned',
-                        asset: 'assets/images/silver.png',
-                      ),
-                      _BadgeItem(
-                        title: 'Diamond',
-                        status: 'Owned',
-                        asset: 'assets/images/diamond.png',
-                      ),
-                    ],
-                  ),
+                  _isLoadingBadges 
+                    ? const Center(child: CircularProgressIndicator())
+                    : _badges.isEmpty
+                      ? Center(
+                          child: Text(
+                            "No badges available",
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: _badges.take(5).map((bp) {
+                              final badge = bp['badge'] ?? {};
+                              final String title = badge['name'] ?? 'Badge';
+                              final String asset = badge['imageUrl'] ?? 'assets/images/bronze.png';
+                              final bool isEarned = bp['isEarned'] ?? false;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 16.0),
+                                child: _BadgeItem(
+                                  title: title,
+                                  status: isEarned ? 'Owned' : 'Locked',
+                                  asset: asset,
+                                  isEarned: isEarned,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
                   const SizedBox(height: 32),
 
                   // Leaderboard Section
@@ -463,19 +510,58 @@ class _BadgeItem extends StatelessWidget {
   final String title;
   final String status;
   final String asset;
+  final bool isEarned;
 
   const _BadgeItem({
     required this.title,
     required this.status,
     required this.asset,
+    this.isEarned = true,
   });
+
+  ImageProvider _getBadgeImage(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return NetworkImage(imagePath);
+    }
+    if (imagePath.contains('first_word')) {
+      return const AssetImage('assets/images/bronze.png');
+    }
+    if (imagePath.contains('quiz_master')) {
+      return const AssetImage('assets/images/silver.png');
+    }
+    if (imagePath.contains('streak_builder')) {
+      return const AssetImage('assets/images/gold.png');
+    }
+    final cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    if (cleanPath.startsWith('assets/')) return AssetImage(cleanPath);
+    return AssetImage('assets/images/$cleanPath');
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
       children: [
-        Image.asset(asset, width: 90, height: 90),
+        ColorFiltered(
+          colorFilter: isEarned 
+            ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply) 
+            : const ColorFilter.matrix([
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0,      0,      0,      1, 0,
+              ]),
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: _getBadgeImage(asset),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           title,

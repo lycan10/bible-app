@@ -130,16 +130,17 @@ class _NewPostScreenState extends State<NewPostScreen> {
           color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Bar
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Bar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
                   child: Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
@@ -236,7 +237,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.1,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -246,7 +249,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                             'Everyone',
                             style: TextStyle(
                               fontSize: 11,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -254,7 +259,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                           Icon(
                             Icons.keyboard_arrow_down,
                             size: 14,
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                         ],
                       ),
@@ -282,8 +289,11 @@ class _NewPostScreenState extends State<NewPostScreen> {
                         maxLength,
                       }) => null,
                   decoration: InputDecoration(
-                    hintText: "Write here use #Bible to add bible to note",
-                    hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 15),
+                    hintText: "Write here",
+                    hintStyle: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontSize: 15,
+                    ),
                     border: InputBorder.none,
                   ),
                 ),
@@ -291,7 +301,10 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   padding: const EdgeInsets.only(bottom: 8.0, right: 8.0),
                   child: Text(
                     '$_charCount/500',
-                    style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 12),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -357,7 +370,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                     margin: const EdgeInsets.only(right: 15),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.05,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: HugeIcon(
@@ -373,7 +388,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                     margin: const EdgeInsets.only(right: 15),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.05,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: HugeIcon(
@@ -388,7 +405,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.05,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: HugeIcon(
@@ -402,6 +421,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
             ),
             const SizedBox(height: 15),
           ],
+        ),
         ),
       ),
     );

@@ -74,7 +74,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     children: [
                       _navItem(HugeIcons.strokeRoundedHome01, "Home", 0),
                       _navItem(HugeIcons.strokeRounded0Circle, "Explore", 1),
-                      _navItem(HugeIcons.strokeRoundedCube, "Cube", 2),
+                      _navItem(HugeIcons.strokeRoundedCube, "Cubes", 2),
                       _navItem(
                         HugeIcons.strokeRoundedMoreHorizontalCircle01,
                         "More",

@@ -13,6 +13,7 @@ import 'package:quest/providers/game_settings_provider.dart';
 import 'package:quest/providers/community_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
 import 'package:quest/providers/media_provider.dart';
+import 'package:quest/providers/subscription_provider.dart';
 import 'package:quest/screens/navigation_screen.dart';
 import 'package:quest/screens/onboarding/flash_screen.dart';
 import 'package:quest/theme/theme.dart';
@@ -60,6 +61,11 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CommunityProvider()),
         ChangeNotifierProvider(create: (_) => DevotionProvider()),
         ChangeNotifierProvider(create: (_) => MediaProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, SubscriptionProvider>(
+          create: (context) => SubscriptionProvider(context.read<AuthProvider>()),
+          update: (_, authProvider, previous) =>
+              previous ?? SubscriptionProvider(authProvider),
+        ),
       ],
       child: const MyApp(),
     ),

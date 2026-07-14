@@ -4,16 +4,24 @@ import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 class EventDetailsCard extends StatelessWidget {
   final Map<String, dynamic> event;
   final bool isAttending;
   final VoidCallback onToggleAttend;
+  final bool isAdmin;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const EventDetailsCard({
     super.key,
     required this.event,
     required this.isAttending,
     required this.onToggleAttend,
+    this.isAdmin = false,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
@@ -46,12 +54,15 @@ class EventDetailsCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(
                 50,
               ), // half of image width/height
-              child: Image.asset(
-                "assets/images/user_test.jpg",
-                width: 75,
-                height: 75,
-                fit: BoxFit.cover,
-              ),
+              child: event['imageUrl'] != null
+                  ? CachedNetworkImage(
+                      imageUrl: event['imageUrl'],
+                      width: 75,
+                      height: 75,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => _defaultImage(),
+                    )
+                  : _defaultImage(),
             ),
             SizedBox(width: 10),
             SizedBox(height: 20),
@@ -91,6 +102,31 @@ class EventDetailsCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (event['link'] != null && event['link'].toString().isNotEmpty) ...[
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.link,
+                    size: 16,
+                    color: Color(0xff8e8e93),
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      event['link'],
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 13,
+                        color: theme.colorScheme.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -195,9 +231,42 @@ class EventDetailsCard extends StatelessWidget {
               label: isAttending ? "Unattend Event" : "Attend Event",
               onTap: onToggleAttend,
             ),
+            if (isAdmin) ...[
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: ActionPillButton(
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      textColor: theme.colorScheme.onSurface,
+                      label: "Edit",
+                      onTap: onEdit ?? () {},
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ActionPillButton(
+                      backgroundColor: AppTheme.redColor.withValues(alpha: 0.1),
+                      textColor: AppTheme.redColor,
+                      label: "Delete",
+                      onTap: onDelete ?? () {},
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _defaultImage() {
+    return Image.asset(
+      "assets/images/user_test.jpg",
+      width: 75,
+      height: 75,
+      fit: BoxFit.cover,
     );
   }
 }

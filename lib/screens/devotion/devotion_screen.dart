@@ -12,6 +12,7 @@ import 'package:quest/providers/devotion_provider.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import '../../components/global_more_menu.dart';
 
 class DevotionScreen extends StatefulWidget {
   final String? planId;
@@ -30,7 +31,6 @@ class _DevotionScreenState extends State<DevotionScreen> {
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
   final ScrollController _scrollController = ScrollController();
-  bool _autoScrollEnabled = false;
   bool _hasLiked = false;
 
   late int _viewedDayNum;
@@ -97,7 +97,10 @@ class _DevotionScreenState extends State<DevotionScreen> {
   }
 
   void _videoListener() {
-    if (_autoScrollEnabled &&
+    final auth = context.read<AuthProvider>();
+    final autoScroll = auth.user?['autoScroll'] ?? false;
+    
+    if (autoScroll &&
         _videoPlayerController!.value.position >=
             _videoPlayerController!.value.duration) {
       // Auto-scroll to text when video ends
@@ -153,7 +156,9 @@ class _DevotionScreenState extends State<DevotionScreen> {
     if (dayId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot react — content not loaded yet')),
+          const SnackBar(
+            content: Text('Cannot react — content not loaded yet'),
+          ),
         );
       }
       return;
@@ -171,9 +176,9 @@ class _DevotionScreenState extends State<DevotionScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to react: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to react: $e')));
         }
       }
     }
@@ -199,9 +204,9 @@ class _DevotionScreenState extends State<DevotionScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to share: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to share: $e')));
         }
       }
     }
@@ -217,21 +222,64 @@ class _DevotionScreenState extends State<DevotionScreen> {
   }
 
   void _openMenu() {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Center(
-          child: _PostMenuDialogBox(
-            planId: widget.planId,
-            autoScrollEnabled: _autoScrollEnabled,
-            onToggleAutoScroll: (val) {
-              setState(() => _autoScrollEnabled = val);
-            },
-          ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return GlobalMoreMenu(
+          customActions: [
+            GestureDetector(
+              onTap: () async {
+                HapticFeedback.lightImpact();
+                if (widget.planId != null) {
+                  final auth = Provider.of<AuthProvider>(context, listen: false);
+                  final dev = Provider.of<DevotionProvider>(context, listen: false);
+                  if (auth.token != null) {
+                    try {
+                      await dev.unsubscribeFromPlan(auth.token!, widget.planId!);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Left the plan.')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to leave plan: $e')),
+                        );
+                      }
+                    }
+                  }
+                }
+              },
+              child: const SettingsRowItem(
+                icon: HugeIcons.strokeRoundedLogout02,
+                iconBackgroundColor: Colors.transparent,
+                title: 'Leave this plan',
+                iconColor: Colors.redAccent,
+                secondIconColor: Colors.transparent,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Report submitted!')),
+                );
+              },
+              child: const SettingsRowItem(
+                icon: HugeIcons.strokeRoundedInformationDiamond,
+                iconBackgroundColor: Colors.transparent,
+                title: 'Report this devotion',
+                iconColor: AppTheme.textColor2,
+                secondIconColor: Colors.transparent,
+              ),
+            ),
+          ],
         );
       },
     );
@@ -313,44 +361,46 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                 planImage.startsWith('http')
                                     ? Image.network(
                                       planImage,
-                                      width: 65,
-                                      height: 65,
+                                      width: 48,
+                                      height: 48,
                                       fit: BoxFit.cover,
                                     )
                                     : Image.asset(
                                       planImage,
-                                      width: 65,
-                                      height: 65,
+                                      width: 48,
+                                      height: 48,
                                       fit: BoxFit.cover,
                                     ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
                       SizedBox(
-                        height: 38,
+                        height: 32,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: durationDays,
-                          separatorBuilder: (_, __) => const SizedBox(width: 10),
+                          separatorBuilder:
+                              (_, __) => const SizedBox(width: 10),
                           itemBuilder: (context, index) {
                             final d = index + 1;
                             final isFuture = d > _maxAllowedDay;
                             return GestureDetector(
-                              onTap: isFuture
-                                  ? null
-                                  : () {
-                                      if (d != _viewedDayNum) {
-                                        setState(() {
-                                          _isLoading = true;
-                                          _viewedDayNum = d;
-                                        });
-                                        _fetchData();
-                                      }
-                                    },
+                              onTap:
+                                  isFuture
+                                      ? null
+                                      : () {
+                                        if (d != _viewedDayNum) {
+                                          setState(() {
+                                            _isLoading = true;
+                                            _viewedDayNum = d;
+                                          });
+                                          _fetchData();
+                                        }
+                                      },
                               child: DayPill(
                                 day: d,
-                                isSkipped: d < _viewedDayNum,
+                                isDone: d < _viewedDayNum,
                                 isFuture: isFuture,
                                 isSelected: d == _viewedDayNum,
                               ),
@@ -381,6 +431,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.normal,
                                       color: theme.colorScheme.onSurface,
+                                      fontSize: 13,
                                     ),
                                   ),
                                   TextSpan(
@@ -388,6 +439,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: AppTheme.greenColor,
+                                      fontSize: 13,
                                     ),
                                   ),
                                 ],
@@ -396,18 +448,18 @@ class _DevotionScreenState extends State<DevotionScreen> {
                             const SizedBox(width: 10),
                             Image.asset(
                               'assets/images/bronze.png',
-                              height: 38,
-                              width: 38,
+                              height: 28,
+                              width: 28,
                               fit: BoxFit.cover,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
 
                       if (_chewieController != null)
                         SizedBox(
-                          height: 230,
+                          height: 200,
                           child: Chewie(controller: _chewieController!),
                         )
                       else if (_dayData?['image'] != null)
@@ -419,12 +471,12 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                 _dayData!['image'].toString().startsWith('http')
                                     ? Image.network(
                                       _dayData!['image'],
-                                      height: 230,
+                                      height: 200,
                                       fit: BoxFit.cover,
                                     )
                                     : Image.asset(
                                       _dayData!['image'],
-                                      height: 230,
+                                      height: 200,
                                       fit: BoxFit.cover,
                                     ),
                           ),
@@ -439,6 +491,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                           fontWeight: FontWeight.normal,
                           height: 1.6,
                           color: theme.colorScheme.onSurface,
+                          fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 25),
@@ -452,14 +505,14 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                 planImage.startsWith('http')
                                     ? Image.network(
                                       planImage,
-                                      width: 42,
-                                      height: 42,
+                                      width: 34,
+                                      height: 34,
                                       fit: BoxFit.cover,
                                     )
                                     : Image.asset(
                                       planImage,
-                                      width: 42,
-                                      height: 42,
+                                      width: 34,
+                                      height: 34,
                                       fit: BoxFit.cover,
                                     ),
                           ),
@@ -499,9 +552,10 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                 icon: HugeIcons.strokeRoundedThumbsUp,
                                 text: "$likesCount",
                                 iconSize: 18,
-                                textColor: _hasLiked
-                                    ? AppTheme.purpleColor
-                                    : AppTheme.textColor2,
+                                textColor:
+                                    _hasLiked
+                                        ? AppTheme.purpleColor
+                                        : AppTheme.textColor2,
                                 textSize: 12,
                               ),
                             ],
@@ -520,15 +574,16 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                   duration: const Duration(milliseconds: 200),
                                   height: 40,
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 13,
-                                    vertical: 10,
+                                    horizontal: 10,
+                                    vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _hasLiked
-                                        ? AppTheme.purpleColor
-                                        : const Color(
-                                            0xff673aff,
-                                          ).withValues(alpha: 0.1),
+                                    color:
+                                        _hasLiked
+                                            ? AppTheme.purpleColor
+                                            : const Color(
+                                              0xff673aff,
+                                            ).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
@@ -539,9 +594,10 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              color: _hasLiked
-                                                  ? Colors.white
-                                                  : const Color(0xff673aff),
+                                              color:
+                                                  _hasLiked
+                                                      ? Colors.white
+                                                      : const Color(0xff673aff),
                                               fontSize: 12,
                                             ),
                                       ),
@@ -549,9 +605,12 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                       VerticalDivider(
                                         width: 4,
                                         thickness: 1.5,
-                                        color: _hasLiked
-                                            ? Colors.white
-                                            : const Color(0xff673aff),
+                                        indent: 7,
+                                        endIndent: 7,
+                                        color:
+                                            _hasLiked
+                                                ? Colors.white
+                                                : const Color(0xff673aff),
                                       ),
                                       const SizedBox(width: 5),
                                       Text(
@@ -559,9 +618,11 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              color: _hasLiked
-                                                  ? Colors.white
-                                                  : const Color(0xff673aff),
+                                              fontSize: 15,
+                                              color:
+                                                  _hasLiked
+                                                      ? Colors.white
+                                                      : const Color(0xff673aff),
                                             ),
                                       ),
                                     ],
@@ -569,7 +630,6 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                 ),
                               ),
                             ],
-
                           ),
                         ],
                       ),
@@ -580,7 +640,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
-                            vertical: 15,
+                            vertical: 10,
                           ),
                           decoration: BoxDecoration(
                             color: AppTheme.purpleColor,
@@ -595,6 +655,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
+                                  fontSize: 15,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -619,156 +680,11 @@ class _DevotionScreenState extends State<DevotionScreen> {
   }
 }
 
-class _PostMenuDialogBox extends StatelessWidget {
-  final String? planId;
-  final bool autoScrollEnabled;
-  final ValueChanged<bool> onToggleAutoScroll;
-
-  const _PostMenuDialogBox({
-    this.planId,
-    required this.autoScrollEnabled,
-    required this.onToggleAutoScroll,
-  });
-
-  void _triggerHaptic() {
-    HapticFeedback.lightImpact();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Dialog(
-      backgroundColor: theme.colorScheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 15),
-
-            // Replaced SettingsRowItem with custom Rows for actions
-            GestureDetector(
-              onTap: () {
-                _triggerHaptic();
-                Navigator.pop(context);
-                // Action logic for reminder
-                if (planId != null) {
-                  final authProvider = Provider.of<AuthProvider>(
-                    context,
-                    listen: false,
-                  );
-                  final devProvider = Provider.of<DevotionProvider>(
-                    context,
-                    listen: false,
-                  );
-                  if (authProvider.token != null) {
-                    devProvider.setReminder(
-                      authProvider.token!,
-                      planId!,
-                      "08:00 AM",
-                      true,
-                    );
-                  }
-                }
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Reminder set!')));
-              },
-              child: const SettingsRowItem(
-                icon: HugeIcons.strokeRoundedAlarmClock,
-                iconBackgroundColor: Colors.transparent,
-                title: 'Set a reminder',
-                iconColor: AppTheme.textColor2,
-                secondIconColor: Colors.transparent,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                _triggerHaptic();
-                Navigator.pop(context);
-                if (planId != null) {
-                  final authProvider = Provider.of<AuthProvider>(
-                    context,
-                    listen: false,
-                  );
-                  final devProvider = Provider.of<DevotionProvider>(
-                    context,
-                    listen: false,
-                  );
-                  if (authProvider.token != null) {
-                    devProvider.unsubscribeFromPlan(
-                      authProvider.token!,
-                      planId!,
-                    );
-                  }
-                }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Plan cancelled!')),
-                );
-              },
-              child: const SettingsRowItem(
-                icon: HugeIcons.strokeRoundedCancel01,
-                iconBackgroundColor: Colors.transparent,
-                title: 'Cancel Plan',
-                iconColor: AppTheme.textColor2,
-                secondIconColor: Colors.transparent,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                _triggerHaptic();
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Feedback received!')),
-                );
-              },
-              child: const SettingsRowItem(
-                icon: HugeIcons.strokeRoundedFavourite,
-                iconBackgroundColor: Colors.transparent,
-                title: 'I\'ll like to see more of this',
-                iconColor: AppTheme.textColor2,
-                secondIconColor: Colors.transparent,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                _triggerHaptic();
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Report submitted!')),
-                );
-              },
-              child: const SettingsRowItem(
-                icon: HugeIcons.strokeRoundedInformationDiamond,
-                iconBackgroundColor: Colors.transparent,
-                title: 'Report this devotion',
-                iconColor: AppTheme.textColor2,
-                secondIconColor: Colors.transparent,
-              ),
-            ),
-
-            const Divider(),
-            SwitchListTile(
-              title: const Text('Auto Scroll'),
-              subtitle: const Text('Scrolls to text when video ends'),
-              value: autoScrollEnabled,
-              onChanged: (val) {
-                _triggerHaptic();
-                onToggleAutoScroll(val);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class DayPill extends StatelessWidget {
   final String label;
   final int day;
-  final bool isSkipped;
+  final bool isDone;
   final bool isFuture;
   final bool isSelected;
 
@@ -776,7 +692,7 @@ class DayPill extends StatelessWidget {
     super.key,
     this.label = "Day",
     required this.day,
-    this.isSkipped = false,
+    this.isDone = false,
     this.isFuture = false,
     this.isSelected = false,
   });
@@ -793,23 +709,26 @@ class DayPill extends StatelessWidget {
       bgColor = Colors.grey.withValues(alpha: 0.1);
       textColor = Colors.grey;
       numberColor = Colors.grey;
-    } else if (isSkipped) {
-      bgColor = Colors.amber.withValues(alpha: 0.15);
-      textColor = Colors.grey;
-      numberColor = Colors.amber;
-    } else {
+    } else if (isDone) {
       bgColor = AppTheme.greenColor.withValues(alpha: 0.1);
       textColor = theme.colorScheme.onSurface;
       numberColor = AppTheme.greenColor;
+    } else {
+      bgColor = AppTheme.purpleColor.withValues(alpha: 0.1);
+      textColor = theme.colorScheme.onSurface;
+      numberColor = AppTheme.purpleColor;
     }
 
     return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: isSelected ? Border.all(color: AppTheme.purpleColor, width: 1.5) : null,
+        border:
+            isSelected
+                ? Border.all(color: AppTheme.purpleColor, width: 1.5)
+                : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -837,13 +756,13 @@ class DayPill extends StatelessWidget {
               fontSize: 12,
             ),
           ),
-          if (isSkipped) ...[
+          if (isDone) ...[
             const SizedBox(width: 8),
             Text(
-              "Skipped",
+              "Done",
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: 11,
-                color: Colors.grey,
+                color: AppTheme.greenColor,
                 fontWeight: FontWeight.w600,
               ),
             ),

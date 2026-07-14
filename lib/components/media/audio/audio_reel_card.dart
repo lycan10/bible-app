@@ -48,6 +48,22 @@ class AudioReelCard extends StatelessWidget {
               /// 🔹 Dark overlay for readability
               Container(color: Colors.black.withValues(alpha: 0.5)),
 
+              /// 🔹 Play Icon Overlay
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+              ),
+
               /// 🔹 Bottom Content
               Padding(
                 padding: const EdgeInsets.symmetric(

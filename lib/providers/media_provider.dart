@@ -21,6 +21,12 @@ class MediaProvider extends ChangeNotifier {
   List<dynamic> _videoCategories = [];
   List<dynamic> get videoCategories => _videoCategories;
 
+  String? _videoSearchQuery;
+  String? get videoSearchQuery => _videoSearchQuery;
+
+  Map<String, dynamic>? _continueWatching;
+  Map<String, dynamic>? get continueWatching => _continueWatching;
+
   List<dynamic> _audio = [];
   List<dynamic> get audio => _audio;
 
@@ -33,6 +39,12 @@ class MediaProvider extends ChangeNotifier {
 
   List<dynamic> _audioCategories = [];
   List<dynamic> get audioCategories => _audioCategories;
+
+  String? _audioSearchQuery;
+  String? get audioSearchQuery => _audioSearchQuery;
+
+  Map<String, dynamic>? _continueListening;
+  Map<String, dynamic>? get continueListening => _continueListening;
 
   String? _token;
 
@@ -47,8 +59,9 @@ class MediaProvider extends ChangeNotifier {
   }
 
   /// Initial load — clears existing data and fetches first page of videos.
-  Future<void> loadVideoData(String token) async {
+  Future<void> loadVideoData(String token, {String? search}) async {
     _token = token;
+    _videoSearchQuery = search;
     _setLoading(true);
     _setError(null);
     _videos = [];
@@ -57,8 +70,9 @@ class MediaProvider extends ChangeNotifier {
 
     try {
       final results = await Future.wait([
-        ApiService.fetchVideos(token, limit: 10),
+        ApiService.fetchVideos(token, limit: 10, search: _videoSearchQuery),
         ApiService.fetchVideoCategories(token),
+        ApiService.fetchContinueWatching(token),
       ]);
 
       final page = results[0] as Map<String, dynamic>;
@@ -66,6 +80,7 @@ class MediaProvider extends ChangeNotifier {
       _nextCursor = page['nextCursor'] as String?;
       _hasMore = (page['hasMore'] as bool?) ?? false;
       _videoCategories = results[1] as List<dynamic>;
+      _continueWatching = results[2] as Map<String, dynamic>?;
     } catch (e) {
       _setError(e.toString());
     } finally {
@@ -85,6 +100,7 @@ class MediaProvider extends ChangeNotifier {
       final page = await ApiService.fetchVideos(
         _token!,
         cursor: _nextCursor,
+        search: _videoSearchQuery,
         limit: 10,
       );
 
@@ -100,8 +116,9 @@ class MediaProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadAudioData(String token) async {
+  Future<void> loadAudioData(String token, {String? search}) async {
     _token = token;
+    _audioSearchQuery = search;
     _setLoading(true);
     _setError(null);
     _audio = [];
@@ -110,8 +127,9 @@ class MediaProvider extends ChangeNotifier {
 
     try {
       final results = await Future.wait([
-        ApiService.fetchAudio(token, limit: 10),
+        ApiService.fetchAudio(token, limit: 10, search: _audioSearchQuery),
         ApiService.fetchAudioCategories(token),
+        ApiService.fetchContinueListening(token),
       ]);
 
       final page = results[0] as Map<String, dynamic>;
@@ -120,6 +138,7 @@ class MediaProvider extends ChangeNotifier {
       _hasMoreAudios = (page['hasMore'] as bool?) ?? false;
 
       _audioCategories = results[1] as List<dynamic>;
+      _continueListening = results[2] as Map<String, dynamic>?;
     } catch (e) {
       _setError(e.toString());
     } finally {
@@ -138,6 +157,7 @@ class MediaProvider extends ChangeNotifier {
       final page = await ApiService.fetchAudio(
         _token!,
         cursor: _nextAudioCursor,
+        search: _audioSearchQuery,
         limit: 10,
       );
 

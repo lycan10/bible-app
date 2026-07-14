@@ -1,4 +1,5 @@
 import 'package:animations/animations.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +14,7 @@ import 'package:quest/screens/devotion/devotion_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
+import '../../components/global_more_menu.dart';
 
 class DevotionListScreen extends StatefulWidget {
   const DevotionListScreen({super.key});
@@ -22,13 +24,36 @@ class DevotionListScreen extends StatefulWidget {
 }
 
 class _DevotionListScreenState extends State<DevotionListScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      setState(() {});
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       if (auth.token != null) {
         context.read<DevotionProvider>().loadPlans(auth.token!);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final auth = context.read<AuthProvider>();
+      if (auth.token != null) {
+        context.read<DevotionProvider>().searchPlans(auth.token!, query);
       }
     });
   }
@@ -69,15 +94,67 @@ class _DevotionListScreenState extends State<DevotionListScreen> {
   }
 
   void _openMenu(BuildContext context) {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: "Filter",
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return const Center(child: _PostListMenuDialogBox());
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const GlobalMoreMenu();
       },
+    );
+  }
+
+  Widget _buildPlanCard(BuildContext context, dynamic plan) {
+    final image = plan['image'] ?? 'assets/images/user_test.jpg';
+    int totalLikes = 0;
+    if (plan['days'] != null) {
+      for (var day in plan['days']) {
+        totalLikes += (day['likesCount'] as int? ?? 0);
+      }
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DevotionArticleCard(
+        title: plan['title'] ?? '',
+        description: plan['description'] ?? '',
+        author: plan['authorName'] ?? 'Shalom',
+        imagePath: image,
+        likes: totalLikes > 0 ? totalLikes.toString() : "",
+        tag: '${plan['durationDays'] ?? 0} Days Plan',
+        onTap: () {
+          showStartPlanModal(
+            context: context,
+            planTitle: plan['title'] ?? '',
+            planImagePath: image,
+            authorName: plan['authorName'] ?? 'Shalom',
+            authorHandle: plan['authorHandle'] ?? '',
+            reminderText: "Set daily reminder",
+            reminderTime: "08:00 AM",
+            onStart: () async {
+              final authProvider = Provider.of<AuthProvider>(
+                context,
+                listen: false,
+              );
+              final devProvider = Provider.of<DevotionProvider>(
+                context,
+                listen: false,
+              );
+              if (authProvider.token != null) {
+                try {
+                  await devProvider.subscribeToPlan(
+                    authProvider.token!,
+                    plan['id'],
+                  );
+                } catch (e) {
+                  // Handle err
+                }
+              }
+              Navigator.pop(context); // Close modal
+              _navigateToDevotionScreen(context, plan['id'], 1);
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -95,197 +172,214 @@ class _DevotionListScreenState extends State<DevotionListScreen> {
         child:
             isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : ListView(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
-                  children: [
-                    /// TITLE BAR
-                    TitleOne(
-                      leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-                      title: 'Devotions',
-                      trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-                      leadingIconTap: () => Navigator.pop(context),
-                      trailingIconTap: () => _openMenu(context),
+                : RefreshIndicator(
+                  color: AppTheme.purpleColor,
+                  backgroundColor: theme.colorScheme.surface,
+                  onRefresh: () async {
+                    final auth = context.read<AuthProvider>();
+                    if (auth.token != null) {
+                      await context.read<DevotionProvider>().loadPlans(
+                        auth.token!,
+                      );
+                    }
+                  },
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 16,
                     ),
+                    children: [
+                      /// TITLE BAR
+                      TitleOne(
+                        leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                        title: 'Devotions',
+                        trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                        leadingIconTap: () => Navigator.pop(context),
+                        trailingIconTap: () => _openMenu(context),
+                      ),
 
-                    const SizedBox(height: 25),
+                      const SizedBox(height: 25),
 
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        /// Menu / List Icon Button
-                        GestureDetector(
-                          onTap: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) {
-                                return DiscoverMore();
-                              },
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: HugeIcon(
-                              icon:
-                                  HugeIcons.strokeRoundedLeftToRightListBullet,
-                              size: 22,
-                              color: theme.colorScheme.onSurface,
-                              strokeWidth: 1,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(width: 10),
-
-                        /// Search Bar
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              children: [
-                                HugeIcon(
-                                  icon: HugeIcons.strokeRoundedSearch01,
-                                  size: 18,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-
-                                const SizedBox(width: 8),
-
-                                /// Search Input
-                                Expanded(
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      hintText: "Search for books",
-                                      border: InputBorder.none,
-                                      isDense: true,
-                                      hintStyle: TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    /// HEADER
-                    const SizedBox(height: 25),
-
-                    if (myPlans.isNotEmpty) ...[
-                      Builder(builder: (context) {
-                        int myTotalLikes = 0;
-                        if (myPlans.first['plan']['days'] != null) {
-                          for (var day in myPlans.first['plan']['days']) {
-                            myTotalLikes += (day['likesCount'] as int? ?? 0);
-                          }
-                        }
-                        return OngoingDevotionCard(
-                          title: myPlans.first['plan']['title'] ?? '',
-                          author: myPlans.first['plan']['authorName'] ?? '',
-                          imagePath:
-                              myPlans.first['plan']['image'] ??
-                              'assets/images/user_test.jpg',
-                          likes: myTotalLikes > 0 ? myTotalLikes.toString() : "",
-                          planText:
-                            "- ${myPlans.first['plan']['durationDays']} Days Plan",
-                        day: myPlans.first['currentDay'] ?? 1,
-                        onContinue:
-                            () => _navigateToDevotionScreen(
-                              context,
-                              myPlans.first['plan']['id'],
-                              myPlans.first['currentDay'] ?? 1,
-                            ),
-                        );
-                      }),
-                    ],
-
-                    SectionHeader(
-                      title: "Trending now",
-                      seeAllText: "See more",
-                    ),
-                    if (allPlans.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: Center(child: Text("No plans available")),
-                      )
-                    else
-                      ...allPlans.map((plan) {
-                        final image =
-                            plan['image'] ?? 'assets/images/user_test.jpg';
-                        int totalLikes = 0;
-                        if (plan['days'] != null) {
-                          for (var day in plan['days']) {
-                            totalLikes += (day['likesCount'] as int? ?? 0);
-                          }
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: DevotionArticleCard(
-                            title: plan['title'] ?? '',
-                            description: plan['description'] ?? '',
-                            author: plan['authorName'] ?? 'Shalom',
-                            imagePath: image,
-                            likes: totalLikes > 0 ? totalLikes.toString() : "",
-                            tag: '${plan['durationDays'] ?? 0} Days Plan',
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          /// Menu / List Icon Button
+                          GestureDetector(
                             onTap: () {
-                              showStartPlanModal(
+                              showModalBottomSheet(
                                 context: context,
-                                planTitle: plan['title'] ?? '',
-                                planImagePath: image,
-                                authorName: plan['authorName'] ?? 'Shalom',
-                                authorHandle: plan['authorHandle'] ?? '',
-                                reminderText: "Set daily reminder",
-                                reminderTime: "08:00 AM",
-                                onStart: () async {
-                                  final authProvider =
-                                      Provider.of<AuthProvider>(
-                                        context,
-                                        listen: false,
-                                      );
-                                  final devProvider =
-                                      Provider.of<DevotionProvider>(
-                                        context,
-                                        listen: false,
-                                      );
-                                  if (authProvider.token != null) {
-                                    try {
-                                      await devProvider.subscribeToPlan(
-                                        authProvider.token!,
-                                        plan['id'],
-                                      );
-                                    } catch (e) {
-                                      // Handle err
-                                    }
-                                  }
-                                  Navigator.pop(context); // Close modal
-                                  _navigateToDevotionScreen(
-                                    context,
-                                    plan['id'],
-                                    1,
-                                  );
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) {
+                                  return DiscoverMore();
                                 },
                               );
                             },
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: HugeIcon(
+                                icon:
+                                    HugeIcons
+                                        .strokeRoundedLeftToRightListBullet,
+                                size: 22,
+                                color: theme.colorScheme.onSurface,
+                                strokeWidth: 1,
+                              ),
+                            ),
                           ),
-                        );
-                      }),
-                  ],
+
+                          const SizedBox(width: 10),
+
+                          /// Search Bar
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                children: [
+                                  HugeIcon(
+                                    icon: HugeIcons.strokeRoundedSearch01,
+                                    size: 18,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+
+                                  const SizedBox(width: 8),
+
+                                  /// Search Input
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _searchController,
+                                      onChanged: _onSearchChanged,
+                                      decoration: InputDecoration(
+                                        hintText: "Search for plans",
+                                        border: InputBorder.none,
+                                        isDense: true,
+                                        hintStyle: const TextStyle(
+                                          fontSize: 12,
+                                        ),
+                                        suffixIcon:
+                                            _searchController.text.isNotEmpty
+                                                ? GestureDetector(
+                                                  onTap: () {
+                                                    _searchController.clear();
+                                                    _onSearchChanged('');
+                                                    FocusScope.of(
+                                                      context,
+                                                    ).unfocus();
+                                                  },
+                                                  child: const Icon(
+                                                    Icons.close,
+                                                    size: 16,
+                                                    color: Colors.grey,
+                                                  ),
+                                                )
+                                                : null,
+                                        suffixIconConstraints:
+                                            const BoxConstraints(
+                                              minWidth: 30,
+                                              minHeight: 16,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      /// HEADER
+                      const SizedBox(height: 25),
+
+                      if (devotionProvider.isSearching ||
+                          _searchController.text.isNotEmpty) ...[
+                        const SectionHeader(
+                          title: "Search Results",
+                          seeAllText: "",
+                        ),
+                        if (devotionProvider.searchResults.isEmpty &&
+                            !devotionProvider.isLoading)
+                          const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Center(child: Text("No plans found")),
+                          )
+                        else
+                          ...devotionProvider.searchResults.map(
+                            (plan) => _buildPlanCard(context, plan),
+                          ),
+                      ] else ...[
+                        if (myPlans.isNotEmpty) ...[
+                          Builder(
+                            builder: (context) {
+                              int myTotalLikes = 0;
+                              if (myPlans.first['plan']['days'] != null) {
+                                for (var day in myPlans.first['plan']['days']) {
+                                  myTotalLikes +=
+                                      (day['likesCount'] as int? ?? 0);
+                                }
+                              }
+                              final int currentDay =
+                                  myPlans.first['currentDay'] ?? 1;
+                              final int durationDays =
+                                  myPlans.first['plan']['durationDays'] ?? 1;
+                              final bool isCompleted =
+                                  currentDay > durationDays;
+                              final int displayDay =
+                                  isCompleted ? durationDays : currentDay;
+
+                              return OngoingDevotionCard(
+                                title: myPlans.first['plan']['title'] ?? '',
+                                author:
+                                    myPlans.first['plan']['authorName'] ?? '',
+                                imagePath:
+                                    myPlans.first['plan']['image'] ??
+                                    'assets/images/user_test.jpg',
+                                likes:
+                                    myTotalLikes > 0
+                                        ? myTotalLikes.toString()
+                                        : "",
+                                planText:
+                                    "- ${myPlans.first['plan']['durationDays']} Days Plan",
+                                day: displayDay,
+                                isCompleted: isCompleted,
+                                onContinue:
+                                    () => _navigateToDevotionScreen(
+                                      context,
+                                      myPlans.first['plan']['id'],
+                                      displayDay,
+                                    ),
+                              );
+                            },
+                          ),
+                        ],
+
+                        const SectionHeader(
+                          title: "Trending now",
+                          seeAllText: "See more",
+                        ),
+                        if (allPlans.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Center(child: Text("No plans available")),
+                          )
+                        else
+                          ...allPlans.map(
+                            (plan) => _buildPlanCard(context, plan),
+                          ),
+                      ],
+                    ],
+                  ),
                 ),
       ),
     );
@@ -594,6 +688,7 @@ void showStartPlanModal({
                       reminderText,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                         color: const Color(0xff673aff),
                       ),
                     ),
@@ -613,6 +708,7 @@ void showStartPlanModal({
                     reminderTime,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: 12,
                       color: theme.colorScheme.onSurface,
                     ),
                   ),
@@ -638,6 +734,7 @@ void showStartPlanModal({
                       "Start",
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 15,
                         color: theme.colorScheme.surface,
                       ),
                     ),

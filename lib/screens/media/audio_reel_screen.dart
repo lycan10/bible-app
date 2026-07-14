@@ -22,7 +22,8 @@ class AudioReelScreen extends StatefulWidget {
   State<AudioReelScreen> createState() => _AudioReelScreenState();
 }
 
-class _AudioReelScreenState extends State<AudioReelScreen> {
+class _AudioReelScreenState extends State<AudioReelScreen>
+    with WidgetsBindingObserver {
   late final PageController _pageController;
   final Map<int, AudioPlayer> _players = {};
 
@@ -33,6 +34,7 @@ class _AudioReelScreenState extends State<AudioReelScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _audios = List<dynamic>.from(widget.audios);
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
@@ -120,9 +122,21 @@ class _AudioReelScreenState extends State<AudioReelScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _players[_currentIndex]?.pause();
+    } else if (state == AppLifecycleState.resumed) {
+      _players[_currentIndex]?.resume();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     for (final p in _players.values) {
+      p.pause();
       p.dispose();
     }
     super.dispose();
@@ -144,6 +158,12 @@ class _AudioReelScreenState extends State<AudioReelScreen> {
                 key: ValueKey(_audios[index]['id'] ?? index),
                 audioData: _audios[index],
                 player: _players[index],
+                onNext: () {
+                  _pageController.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
               );
             },
           ),
@@ -213,11 +233,13 @@ class _AudioReelScreenState extends State<AudioReelScreen> {
 class _AudioPage extends StatefulWidget {
   final dynamic audioData;
   final AudioPlayer? player;
+  final VoidCallback? onNext;
 
   const _AudioPage({
     super.key,
     required this.audioData,
     required this.player,
+    this.onNext,
   });
 
   @override
@@ -278,6 +300,11 @@ class _AudioPageState extends State<_AudioPage> {
         if (!_completed && _progress >= 0.95) {
           _completed = true;
           _trackPlayback();
+          final auth = context.read<AuthProvider>();
+          final autoScroll = auth.user?['autoScroll'] ?? false;
+          if (autoScroll) {
+            widget.onNext?.call();
+          }
         }
       }
     });
@@ -313,14 +340,12 @@ class _AudioPageState extends State<_AudioPage> {
     final mediaProvider = context.read<MediaProvider>();
     if (auth.token != null && widget.player != null) {
       final position = await widget.player!.getCurrentPosition();
-      if (mounted) {
-        mediaProvider.trackAudioPlayback(
-          auth.token!,
-          widget.audioData['id'],
-          position?.inSeconds ?? 0,
-          _completed,
-        );
-      }
+      mediaProvider.trackAudioPlayback(
+        auth.token!,
+        widget.audioData['id'],
+        position?.inSeconds ?? 0,
+        _completed,
+      );
     }
   }
 

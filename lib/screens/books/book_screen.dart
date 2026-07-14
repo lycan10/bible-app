@@ -9,6 +9,9 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:quest/components/share/in_app_share_sheet.dart';
+import 'package:quest/screens/books/pdf_viewer_screen.dart';
+import 'package:quest/components/formatted_text.dart';
 
 class BookScreen extends StatefulWidget {
   final Map<String, dynamic>? book;
@@ -22,6 +25,7 @@ class _BookScreenState extends State<BookScreen> {
   bool _isLoading = true;
   List<dynamic> _comments = [];
   List<dynamic> _reactions = [];
+  bool _isSaved = false;
   final TextEditingController _commentController = TextEditingController();
 
   @override
@@ -58,11 +62,14 @@ class _BookScreenState extends State<BookScreen> {
         token,
         widget.book!['id'],
       );
+      final savedBooksRes = await ApiService.fetchSavedBooks(token);
+      final isSaved = savedBooksRes.any((b) => b['bookId'] == widget.book!['id']);
 
       if (mounted) {
         setState(() {
           _comments = commentsRes;
           _reactions = reactionsRes;
+          _isSaved = isSaved;
           _isLoading = false;
         });
       }
@@ -128,7 +135,7 @@ class _BookScreenState extends State<BookScreen> {
     }
   }
 
-  Future<void> _launchUrl() async {
+  void _launchUrl() {
     if (widget.book == null || widget.book!['downloadUrl'] == null) {
       ScaffoldMessenger.of(
         context,
@@ -136,15 +143,48 @@ class _BookScreenState extends State<BookScreen> {
       return;
     }
 
-    final url = Uri.parse(widget.book!['downloadUrl']);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
+    final url = widget.book!['downloadUrl'];
+    final title = widget.book!['title'] ?? 'Book';
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PdfViewerScreen(
+          title: title,
+          pdfUrl: url,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleSave() async {
+    if (widget.book == null || widget.book!['id'] == null) return;
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final token = auth.token;
+    if (token == null) return;
+    
+    try {
+      final res = await ApiService.toggleSaveBook(token, widget.book!['id']);
+      setState(() {
+        _isSaved = res['saved'] == true;
+      });
+      if (mounted) {
+        Navigator.pop(context); // Close dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['message'] ?? (_isSaved ? "Saved" : "Unsaved"))),
+        );
+      }
+    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Could not launch $url")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save book.")));
     }
+  }
+
+  void _shareBook() {
+    showInAppShareSheet(
+      context,
+      shareMessage: "Check out this book on Quest! ${widget.book?['title'] ?? ''} - ${widget.book?['downloadUrl'] ?? ''}",
+    );
   }
 
   @override
@@ -175,7 +215,11 @@ class _BookScreenState extends State<BookScreen> {
                     barrierColor: Colors.black.withValues(alpha: 0.4),
                     transitionDuration: const Duration(milliseconds: 250),
                     pageBuilder: (context, animation, secondaryAnimation) {
-                      return Center(child: _PostMenuDialogBox());
+                      return Center(child: _PostMenuDialogBox(
+                        onShare: _shareBook,
+                        onSave: _toggleSave,
+                        isSaved: _isSaved,
+                      ));
                     },
                   );
                 },
@@ -277,7 +321,7 @@ class _BookScreenState extends State<BookScreen> {
                                       ActionPillButton(
                                         icon: HugeIcons.strokeRoundedShare08,
                                         label: "Share",
-                                        onTap: () {},
+                                        onTap: _shareBook,
                                       ),
                                       SizedBox(width: 10),
                                       GestureDetector(
@@ -646,18 +690,24 @@ class _CommentItemState extends State<CommentItem> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.comment['content'] ?? "",
-                    maxLines: isExpanded ? null : 5,
-                    overflow:
-                        isExpanded
-                            ? TextOverflow.visible
-                            : TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      height: 1.6,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
+                  isExpanded
+                      ? FormattedText(
+                          widget.comment['content'] ?? "",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            height: 1.6,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        )
+                      : ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 110),
+                          child: FormattedText(
+                            widget.comment['content'] ?? "",
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              height: 1.6,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
                   if (isOverflowing && !isExpanded)
                     GestureDetector(
                       onTap: () {
@@ -717,6 +767,16 @@ class _CommentItemState extends State<CommentItem> {
 }
 
 class _PostMenuDialogBox extends StatelessWidget {
+  final VoidCallback onShare;
+  final VoidCallback onSave;
+  final bool isSaved;
+
+  const _PostMenuDialogBox({
+    required this.onShare,
+    required this.onSave,
+    required this.isSaved,
+  });
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -737,13 +797,18 @@ class _PostMenuDialogBox extends StatelessWidget {
               title: 'Share this book',
               iconColor: AppTheme.textColor2,
               secondIconColor: Colors.transparent,
+              onTap: () {
+                Navigator.pop(context);
+                onShare();
+              },
             ),
             SettingsRowItem(
-              icon: HugeIcons.strokeRoundedFavourite,
+              icon: isSaved ? HugeIcons.strokeRoundedBookmark02 : HugeIcons.strokeRoundedBookmark02,
               iconBackgroundColor: Colors.transparent,
-              title: 'I\'ll like to see more like this',
+              title: isSaved ? 'Remove from saved books' : 'Save this book',
               iconColor: AppTheme.textColor2,
               secondIconColor: Colors.transparent,
+              onTap: onSave,
             ),
             SettingsRowItem(
               icon: HugeIcons.strokeRoundedAlertDiamond,

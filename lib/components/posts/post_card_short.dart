@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/stats/stats.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/components/formatted_text.dart';
 
 class PostCardShort extends StatelessWidget {
   final String postText;
@@ -56,13 +57,14 @@ class PostCardShort extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            postText,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 13,
-                              color: theme.colorScheme.onSurface,
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 45), // ~2 lines
+                            child: FormattedText(
+                              postText,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 13,
+                                color: theme.colorScheme.onSurface,
+                              ),
                             ),
                           ),
 
