@@ -272,42 +272,19 @@ class _NewPostScreenState extends State<NewPostScreen> {
             ),
             const SizedBox(height: 20),
 
-            // TextArea & Word/Character Count
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                TextField(
-                  controller: _controller,
-                  maxLines: 6,
-                  autofocus: true,
-                  maxLength: 500,
-                  buildCounter:
-                      (
-                        context, {
-                        required currentLength,
-                        required isFocused,
-                        maxLength,
-                      }) => null,
-                  decoration: InputDecoration(
-                    hintText: "Write here",
-                    hintStyle: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 15,
-                    ),
-                    border: InputBorder.none,
-                  ),
+            // TextArea
+            TextField(
+              controller: _controller,
+              maxLines: 6,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: "Write here",
+                hintStyle: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontSize: 15,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, right: 8.0),
-                  child: Text(
-                    '$_charCount/500',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+                border: InputBorder.none,
+              ),
             ),
             const SizedBox(height: 15),
 

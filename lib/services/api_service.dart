@@ -11,8 +11,8 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    return 'http://192.168.1.250:8787/api/v1';
-    //return 'https://quest.vidarave.com/api/v1';
+    //return 'http://192.168.1.250:8787/api/v1';
+    return 'https://quest.vidarave.com/api/v1';
   }
 
   static String getFullImageUrl(String url) {
@@ -1232,8 +1232,9 @@ class ApiService {
     };
     final response = _handleResponse(
       await http.get(
-        Uri.parse('$baseUrl/communities/messages/saved')
-            .replace(queryParameters: queryParams),
+        Uri.parse(
+          '$baseUrl/communities/messages/saved',
+        ).replace(queryParameters: queryParams),
         headers: _headers(token),
       ),
     );

@@ -187,14 +187,23 @@ class _PostScreenState extends State<PostScreen> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(50),
-                                    child: Image.asset(
-                                      'assets/images/user_test.jpg',
-                                      width: 42,
-                                      height: 42,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  CircleAvatar(
+                                    radius: 21,
+                                    backgroundImage:
+                                        user['avatarUrl'] != null
+                                            ? NetworkImage(user['avatarUrl'])
+                                            : null,
+                                    backgroundColor: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.1),
+                                    child:
+                                        user['avatarUrl'] == null
+                                            ? HugeIcon(
+                                              icon: HugeIcons.strokeRoundedUser,
+                                              size: 20,
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                            )
+                                            : null,
                                   ),
                                   SizedBox(width: 10),
                                   Expanded(
@@ -243,16 +252,6 @@ class _PostScreenState extends State<PostScreen> {
                         ],
                       ),
                       const SizedBox(height: 15),
-                      if (post['caption'] != null && post['caption'].toString().isNotEmpty)
-                        FormattedText(
-                          post['caption'],
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            height: 1.6,
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 14,
-                          ),
-                        ),
-                      const SizedBox(height: 10),
                       if (imageUrl != null) ...[
                         SizedBox(
                           width: double.infinity,
@@ -269,7 +268,7 @@ class _PostScreenState extends State<PostScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 20),
+                        SizedBox(height: 15),
                       ],
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -360,16 +359,17 @@ class _PostScreenState extends State<PostScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
-                      Text(
-                        text,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.normal,
-                          fontSize: 14,
-                          height: 1.6,
-                          color: theme.colorScheme.onSurface,
+                      if (text.isNotEmpty) ...[
+                        const SizedBox(height: 15),
+                        FormattedText(
+                          text.replaceAll(RegExp(r'\n(?!\n)'), '\n\n'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.6,
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
+                      ],
                       SizedBox(height: 25),
                       Text(
                         "Comments($commentsCount)",
@@ -579,12 +579,14 @@ class _CommentItemState extends State<CommentItem> {
 
     final reactions = widget.comment['reactions'] as List<dynamic>? ?? [];
     final likesCount = reactions.where((r) => r['emoji'] == '👍').length;
-    
+
     final authId = context.read<AuthProvider>().user?['id'];
     final cp = context.read<CommunityProvider>();
-    final isCommunityAdmin = cp.currentCommunity != null &&
+    final isCommunityAdmin =
+        cp.currentCommunity != null &&
         (cp.currentCommunity!['members'] as List<dynamic>? ?? []).any(
-            (m) => m['id'] == authId && m['role'] == 'ADMIN');
+          (m) => m['id'] == authId && m['role'] == 'ADMIN',
+        );
     final isMe = user['id'] == authId;
     final canDelete = isCommunityAdmin || isMe;
 
@@ -679,16 +681,25 @@ class _CommentItemState extends State<CommentItem> {
                                     child: Wrap(
                                       children: [
                                         ListTile(
-                                          leading: const Icon(Icons.delete, color: Colors.red),
-                                          title: const Text('Delete Comment', style: TextStyle(color: Colors.red)),
+                                          leading: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
+                                          title: const Text(
+                                            'Delete Comment',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
                                           onTap: () async {
                                             Navigator.pop(context);
-                                            final auth = context.read<AuthProvider>();
+                                            final auth =
+                                                context.read<AuthProvider>();
                                             if (auth.token != null) {
-                                              await context.read<CommunityProvider>().deleteCommunityComment(
-                                                auth.token!,
-                                                widget.comment['id'],
-                                              );
+                                              await context
+                                                  .read<CommunityProvider>()
+                                                  .deleteCommunityComment(
+                                                    auth.token!,
+                                                    widget.comment['id'],
+                                                  );
                                             }
                                           },
                                         ),
@@ -698,7 +709,13 @@ class _CommentItemState extends State<CommentItem> {
                                 },
                               );
                             },
-                            child: Icon(Icons.more_vert, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                            child: Icon(
+                              Icons.more_vert,
+                              size: 16,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -734,24 +751,28 @@ class _CommentItemState extends State<CommentItem> {
                       children: [
                         isExpanded
                             ? FormattedText(
-                                widget.comment['text'] ?? '',
+                              (widget.comment['text'] ?? '')
+                                  .toString()
+                                  .replaceAll(RegExp(r'\n(?!\n)'), '\n\n'),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                height: 1.6,
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 13,
+                              ),
+                            )
+                            : ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 110),
+                              child: FormattedText(
+                                (widget.comment['text'] ?? '')
+                                    .toString()
+                                    .replaceAll(RegExp(r'\n(?!\n)'), '\n\n'),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   height: 1.6,
                                   color: theme.colorScheme.onSurface,
                                   fontSize: 13,
                                 ),
-                              )
-                            : ConstrainedBox(
-                                constraints: const BoxConstraints(maxHeight: 110),
-                                child: FormattedText(
-                                  widget.comment['text'] ?? '',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    height: 1.6,
-                                    color: theme.colorScheme.onSurface,
-                                    fontSize: 13,
-                                  ),
-                                ),
                               ),
+                            ),
                         if (isOverflowing && !isExpanded)
                           GestureDetector(
                             onTap: () {

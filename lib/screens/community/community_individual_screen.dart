@@ -1213,7 +1213,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                         ),
               ),
               // Fixed bottom input bar
-              if (isAdmin) _buildForumInputBar(context, communityProvider),
+              if (canPostForum) _buildForumInputBar(context, communityProvider),
             ],
           ),
         ),
