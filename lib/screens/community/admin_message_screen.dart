@@ -160,10 +160,11 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => NewMessageScreen(
-        communityId: activeMessage['communityId'] ?? '',
-        initialMessage: activeMessage,
-      ),
+      builder:
+          (ctx) => NewMessageScreen(
+            communityId: activeMessage['communityId'] ?? '',
+            initialMessage: activeMessage,
+          ),
     );
   }
 
@@ -865,7 +866,8 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
               ),
             ],
           ),
-          if (comment['replies'] != null && (comment['replies'] as List).isNotEmpty)
+          if (comment['replies'] != null &&
+              (comment['replies'] as List).isNotEmpty)
             ...((comment['replies'] as List).map(
               (reply) => _buildCommentNode(
                 reply,
@@ -969,11 +971,10 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
                     IconButton(
                       icon: HugeIcon(
                         icon: HugeIcons.strokeRoundedSent,
-                        color: theme.colorScheme.primary,
+                        color: AppTheme.primaryBlue,
                         size: 24,
                       ),
                       onPressed: () {
-                        // Normally this would open a mention picker, but for now we just submit
                         _addComment();
                       },
                     ),

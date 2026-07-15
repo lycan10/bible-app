@@ -12,6 +12,7 @@ import 'package:quest/providers/devotion_provider.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../../components/global_more_menu.dart';
 
 class DevotionScreen extends StatefulWidget {
@@ -293,8 +294,29 @@ class _DevotionScreenState extends State<DevotionScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final title = _dayData?['title'] ?? 'Devotion';
-    final durationDays = _planData?['durationDays'] ?? 365;
+    if (_planData == null || _dayData == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Failed to load devotion content.'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final title = _dayData!['title'] ?? 'Devotion';
+    final durationDays = (_planData!['days'] != null && (_planData!['days'] as List).isNotEmpty)
+        ? (_planData!['days'] as List).length
+        : (_planData!['durationDays'] ?? 1);
     final planImage = _planData?['image'] ?? 'assets/images/user_test.jpg';
     final pointsEarned = _dayData?['pointsEarned'] ?? 20;
     final bodyText = _dayData?['bodyText'] ?? 'No content available.';
@@ -485,14 +507,18 @@ class _DevotionScreenState extends State<DevotionScreen> {
                       const SizedBox(height: 20),
 
                       // Text Body
-                      Text(
-                        bodyText,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.normal,
-                          height: 1.6,
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 14,
-                        ),
+                      Html(
+                        data: bodyText,
+                        style: {
+                          "body": Style(
+                            fontWeight: FontWeight.normal,
+                            lineHeight: LineHeight(1.6),
+                            color: theme.colorScheme.onSurface,
+                            fontSize: FontSize(14.0),
+                            margin: Margins.zero,
+                            padding: HtmlPaddings.zero,
+                          ),
+                        },
                       ),
                       const SizedBox(height: 25),
                       Row(

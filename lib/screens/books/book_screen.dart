@@ -63,7 +63,8 @@ class _BookScreenState extends State<BookScreen> {
         widget.book!['id'],
       );
       final savedBooksRes = await ApiService.fetchSavedBooks(token);
-      final isSaved = savedBooksRes.any((b) => b['bookId'] == widget.book!['id']);
+      final savedBooksList = List<dynamic>.from(savedBooksRes['data'] ?? []);
+      final isSaved = savedBooksList.any((b) => b['bookId'] == widget.book!['id']);
 
       if (mounted) {
         setState(() {

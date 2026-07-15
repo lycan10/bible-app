@@ -4,22 +4,20 @@ import 'package:quest/theme/theme.dart';
 
 class SavedMessagesCard extends StatelessWidget {
   final String title;
-  final String subtitle;
-  final String verse;
-  final List<String> verses;
+  final String authorName;
+  final String? messageImage;
+  final int likesCount;
   final String time;
   final double? width;
 
   const SavedMessagesCard({
     super.key,
-    this.title = "The Journey of faith in Modern Times",
-    this.subtitle =
-        "The Mystery of the cross of Jesus Christ, The Mystery of the cross of Jesus Christ",
-    this.verse = "John 3:16",
-    this.verses = const ["John 3:16", "Romans 8:28", "Psalm 23:1"],
-    this.time = "Today • 2:49pm",
-
-    this.width, // ✅ important for horizontal list
+    required this.title,
+    required this.authorName,
+    this.messageImage,
+    required this.likesCount,
+    required this.time,
+    this.width,
   });
 
   @override
@@ -70,7 +68,7 @@ class SavedMessagesCard extends StatelessWidget {
                           ),
                         ),
                         TextSpan(
-                          text: "Author",
+                          text: authorName,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 12,
                             color: theme.textTheme.bodyMedium?.color,
@@ -89,7 +87,7 @@ class SavedMessagesCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        "385",
+                        likesCount.toString(),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 11,
                           color: AppTheme.textColor2,
@@ -128,12 +126,26 @@ class SavedMessagesCard extends StatelessWidget {
               Spacer(),
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
-                  "assets/images/alucard.png",
-                  fit: BoxFit.cover,
-                  width: 80,
-                  height: 80,
-                ),
+                child: messageImage != null && messageImage!.startsWith('http')
+                    ? Image.network(
+                        messageImage!,
+                        fit: BoxFit.cover,
+                        width: 80,
+                        height: 80,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Image.asset(
+                          "assets/images/alucard.png",
+                          fit: BoxFit.cover,
+                          width: 80,
+                          height: 80,
+                        ),
+                      )
+                    : Image.asset(
+                        "assets/images/alucard.png",
+                        fit: BoxFit.cover,
+                        width: 80,
+                        height: 80,
+                      ),
               ),
               SizedBox(width: 8),
               HugeIcon(

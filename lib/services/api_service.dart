@@ -11,8 +11,8 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    //return 'http://192.168.1.250:8787/api/v1';
-    return 'https://quest.vidarave.com/api/v1';
+    return 'http://192.168.1.250:8787/api/v1';
+    //return 'https://quest.vidarave.com/api/v1';
   }
 
   static String getFullImageUrl(String url) {
@@ -371,6 +371,17 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  // POST /games/daily-bread/share
+  static Future<Map<String, dynamic>> shareDailyBread(String token) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/games/daily-bread/share'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
   // GET /feelings/metadata
   static Future<List<dynamic>> fetchFeelingsMetadata() async {
     final response = await http.get(
@@ -525,14 +536,24 @@ class ApiService {
   }
 
   // GET /books/saved
-  static Future<List<dynamic>> fetchSavedBooks(String token) async {
+  static Future<Map<String, dynamic>> fetchSavedBooks(
+    String token, {
+    int page = 1,
+    int limit = 20,
+    String search = '',
+  }) async {
+    final queryParams = {
+      'page': '$page',
+      'limit': '$limit',
+      if (search.isNotEmpty) 'search': search,
+    };
     final response = _handleResponse(
       await http.get(
-        Uri.parse('$baseUrl/books/saved'),
+        Uri.parse('$baseUrl/books/saved').replace(queryParameters: queryParams),
         headers: _headers(token),
       ),
     );
-    return jsonDecode(response.body) as List<dynamic>;
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
   // POST /books/:id/save
@@ -1197,6 +1218,28 @@ class ApiService {
   }
 
   // GET /communities/:id/forum
+  // GET /communities/messages/saved
+  static Future<Map<String, dynamic>> fetchSavedMessages(
+    String token, {
+    int page = 1,
+    int limit = 20,
+    String search = '',
+  }) async {
+    final queryParams = {
+      'page': '$page',
+      'limit': '$limit',
+      if (search.isNotEmpty) 'search': search,
+    };
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/communities/messages/saved')
+            .replace(queryParameters: queryParams),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
   static Future<List<dynamic>> fetchCommunityMessages(
     String token,
     String id, {
@@ -1716,6 +1759,7 @@ class ApiService {
     String token,
     String filePath, {
     bool isEdit = false,
+    bool isReel = false,
   }) async {
     final request = http.MultipartRequest(
       'POST',
@@ -1725,6 +1769,9 @@ class ApiService {
     request.files.add(await http.MultipartFile.fromPath('file', filePath));
     if (isEdit) {
       request.fields['isEdit'] = 'true';
+    }
+    if (isReel) {
+      request.fields['isReel'] = 'true';
     }
     final response = await request.send();
     final responseBody = await response.stream.bytesToString();

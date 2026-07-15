@@ -479,7 +479,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
     final authId = context.read<AuthProvider>().user?['id'];
 
     final memberInfo = community['member'] as Map<String, dynamic>?;
-    final isAdmin = memberInfo?['role'] == 'ADMIN';
+    final isOwner = community['ownerId'] == authId;
+    final isAdmin = isOwner || memberInfo?['role'] == 'ADMIN';
     final isSuspended = memberInfo?['isSuspended'] == true;
     final canPostForum =
         memberInfo?['canPostForum'] != false &&
@@ -488,7 +489,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
 
     bool shouldShowAddButton = false;
     if (selectedTab == "Space" && canCreatePost) shouldShowAddButton = true;
-    if (selectedTab == "Messages" && isAdmin) shouldShowAddButton = true;
+    if (selectedTab == "Admin message" && isAdmin) shouldShowAddButton = true;
     if (selectedTab == "Event" && isAdmin) shouldShowAddButton = true;
 
     if (isSuspended) {
@@ -844,6 +845,25 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                         onTap: () => setState(() => selectedTab = "Forum"),
                       ),
                       const SizedBox(width: 10),
+                      ActionPillButton2(
+                        icon: HugeIcons.strokeRoundedMessage02,
+                        iconColor:
+                            selectedTab == "Admin message"
+                                ? theme.colorScheme.surface
+                                : theme.colorScheme.onSurface,
+                        label: "Message",
+                        backgroundColor:
+                            selectedTab == "Admin message"
+                                ? theme.colorScheme.onSurface
+                                : Colors.transparent,
+                        textColor:
+                            selectedTab == "Admin message"
+                                ? theme.colorScheme.surface
+                                : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
+                        onTap: () => setState(() => selectedTab = "Admin message"),
+                      ),
                       const SizedBox(width: 10),
                       ActionPillButton2(
                         icon: HugeIcons.strokeRoundedCalendar02,
@@ -1287,7 +1307,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                                         communityId: widget.communityId,
                                       ),
                                 );
-                              } else if (selectedTab == "Messages") {
+                              } else if (selectedTab == "Admin message") {
                                 showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
@@ -1539,22 +1559,24 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                           ActionPillButton2(
                             icon: HugeIcons.strokeRoundedMessage02,
                             iconColor:
-                                selectedTab == "Messages"
+                                selectedTab == "Admin message"
                                     ? theme.colorScheme.surface
                                     : theme.colorScheme.onSurface,
-                            label: "Messages",
+                            label: "Message",
                             backgroundColor:
-                                selectedTab == "Messages"
+                                selectedTab == "Admin message"
                                     ? theme.colorScheme.onSurface
                                     : Colors.transparent,
                             textColor:
-                                selectedTab == "Messages"
+                                selectedTab == "Admin message"
                                     ? theme.colorScheme.surface
                                     : theme.colorScheme.onSurface.withValues(
                                       alpha: 0.7,
                                     ),
                             onTap:
-                                () => setState(() => selectedTab = "Messages"),
+                                () => setState(
+                                  () => selectedTab = "Admin message",
+                                ),
                           ),
                           const SizedBox(width: 10),
                           ActionPillButton2(
@@ -1750,7 +1772,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
 
                   // Forum tab is rendered in a separate full-screen Scaffold above.
                   // This placeholder is never reached when selectedTab == 'Forum'.
-                  if (selectedTab == "Messages")
+                  if (selectedTab == "Admin message")
                     Column(
                       children: [
                         SizedBox(height: 25),

@@ -142,7 +142,7 @@ class _UploadMediaScreenState extends State<UploadMediaScreen> {
         throw Exception('Not authenticated');
       }
 
-      final response = await ApiService.uploadMedia(token, _selectedMedia!.path);
+      final response = await ApiService.uploadMedia(token, _selectedMedia!.path, isReel: true);
       
       if (response.containsKey('error')) {
         final error = response['error'] as String;

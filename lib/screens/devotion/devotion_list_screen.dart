@@ -105,6 +105,10 @@ class _DevotionListScreenState extends State<DevotionListScreen> {
   }
 
   Widget _buildPlanCard(BuildContext context, dynamic plan) {
+    final devProvider = Provider.of<DevotionProvider>(context, listen: false);
+    final myPlans = devProvider.myPlans;
+    final int existingIndex = myPlans.indexWhere((p) => p['plan']['id'] == plan['id']);
+
     final image = plan['image'] ?? 'assets/images/user_test.jpg';
     int totalLikes = 0;
     if (plan['days'] != null) {
@@ -122,37 +126,46 @@ class _DevotionListScreenState extends State<DevotionListScreen> {
         likes: totalLikes > 0 ? totalLikes.toString() : "",
         tag: '${plan['durationDays'] ?? 0} Days Plan',
         onTap: () {
-          showStartPlanModal(
-            context: context,
-            planTitle: plan['title'] ?? '',
-            planImagePath: image,
-            authorName: plan['authorName'] ?? 'Shalom',
-            authorHandle: plan['authorHandle'] ?? '',
-            reminderText: "Set daily reminder",
-            reminderTime: "08:00 AM",
-            onStart: () async {
-              final authProvider = Provider.of<AuthProvider>(
-                context,
-                listen: false,
-              );
-              final devProvider = Provider.of<DevotionProvider>(
-                context,
-                listen: false,
-              );
-              if (authProvider.token != null) {
-                try {
-                  await devProvider.subscribeToPlan(
-                    authProvider.token!,
-                    plan['id'],
-                  );
-                } catch (e) {
-                  // Handle err
+          if (existingIndex != -1) {
+            final myPlan = myPlans[existingIndex];
+            final int currentDay = myPlan['currentDay'] ?? 1;
+            final int durationDays = myPlan['plan']['durationDays'] ?? 1;
+            final int displayDay = (currentDay > durationDays) ? durationDays : currentDay;
+            _navigateToDevotionScreen(context, plan['id'], displayDay);
+          } else {
+            showStartPlanModal(
+              context: context,
+              planTitle: plan['title'] ?? '',
+              planImagePath: image,
+              authorName: plan['authorName'] ?? 'Shalom',
+              authorHandle: plan['authorHandle'] ?? '',
+              planDurationText: '${plan['durationDays'] ?? 0} days',
+              reminderText: "Set daily reminder",
+              reminderTime: "08:00 AM",
+              onStart: () async {
+                final authProvider = Provider.of<AuthProvider>(
+                  context,
+                  listen: false,
+                );
+                final devProvider = Provider.of<DevotionProvider>(
+                  context,
+                  listen: false,
+                );
+                if (authProvider.token != null) {
+                  try {
+                    await devProvider.subscribeToPlan(
+                      authProvider.token!,
+                      plan['id'],
+                    );
+                  } catch (e) {
+                    // Handle err
+                  }
                 }
-              }
-              Navigator.pop(context); // Close modal
-              _navigateToDevotionScreen(context, plan['id'], 1);
-            },
-          );
+                Navigator.pop(context); // Close modal
+                _navigateToDevotionScreen(context, plan['id'], 1);
+              },
+            );
+          }
         },
       ),
     );
@@ -320,48 +333,36 @@ class _DevotionListScreenState extends State<DevotionListScreen> {
                           ),
                       ] else ...[
                         if (myPlans.isNotEmpty) ...[
-                          Builder(
-                            builder: (context) {
-                              int myTotalLikes = 0;
-                              if (myPlans.first['plan']['days'] != null) {
-                                for (var day in myPlans.first['plan']['days']) {
-                                  myTotalLikes +=
-                                      (day['likesCount'] as int? ?? 0);
-                                }
+                          ...myPlans.map((myPlan) {
+                            int myTotalLikes = 0;
+                            if (myPlan['plan']['days'] != null) {
+                              for (var day in myPlan['plan']['days']) {
+                                myTotalLikes += (day['likesCount'] as int? ?? 0);
                               }
-                              final int currentDay =
-                                  myPlans.first['currentDay'] ?? 1;
-                              final int durationDays =
-                                  myPlans.first['plan']['durationDays'] ?? 1;
-                              final bool isCompleted =
-                                  currentDay > durationDays;
-                              final int displayDay =
-                                  isCompleted ? durationDays : currentDay;
+                            }
+                            final int currentDay = myPlan['currentDay'] ?? 1;
+                            final int durationDays = myPlan['plan']['durationDays'] ?? 1;
+                            final bool isCompleted = currentDay > durationDays;
+                            final int displayDay = isCompleted ? durationDays : currentDay;
 
-                              return OngoingDevotionCard(
-                                title: myPlans.first['plan']['title'] ?? '',
-                                author:
-                                    myPlans.first['plan']['authorName'] ?? '',
-                                imagePath:
-                                    myPlans.first['plan']['image'] ??
-                                    'assets/images/user_test.jpg',
-                                likes:
-                                    myTotalLikes > 0
-                                        ? myTotalLikes.toString()
-                                        : "",
-                                planText:
-                                    "- ${myPlans.first['plan']['durationDays']} Days Plan",
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: OngoingDevotionCard(
+                                title: myPlan['plan']['title'] ?? '',
+                                author: myPlan['plan']['authorName'] ?? '',
+                                imagePath: myPlan['plan']['image'] ?? 'assets/images/user_test.jpg',
+                                likes: myTotalLikes > 0 ? myTotalLikes.toString() : "",
+                                planText: "- ${myPlan['plan']['durationDays']} Days Plan",
                                 day: displayDay,
                                 isCompleted: isCompleted,
-                                onContinue:
-                                    () => _navigateToDevotionScreen(
-                                      context,
-                                      myPlans.first['plan']['id'],
-                                      displayDay,
-                                    ),
-                              );
-                            },
-                          ),
+                                onContinue: () => _navigateToDevotionScreen(
+                                  context,
+                                  myPlan['plan']['id'],
+                                  displayDay,
+                                ),
+                              ),
+                            );
+                          }),
                         ],
 
                         const SectionHeader(
@@ -576,6 +577,7 @@ void showStartPlanModal({
   required String planImagePath,
   required String authorName,
   required String authorHandle,
+  required String planDurationText,
   String reminderText = "Set daily reminder",
   String reminderTime = "9:41 AM",
   required VoidCallback onStart,
@@ -604,12 +606,35 @@ void showStartPlanModal({
             const SizedBox(height: 20),
             ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.asset(
-                planImagePath,
-                width: 62,
-                height: 62,
-                fit: BoxFit.cover,
-              ),
+              child: planImagePath.trim().replaceAll('"', '').startsWith('http')
+                  ? Image.network(
+                      planImagePath.trim().replaceAll('"', ''),
+                      width: 62,
+                      height: 62,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 62,
+                          height: 62,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      planImagePath.trim().replaceAll('"', ''),
+                      width: 62,
+                      height: 62,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 62,
+                          height: 62,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
+                        );
+                      },
+                    ),
             ),
             const SizedBox(height: 5),
             SizedBox(
@@ -626,7 +651,7 @@ void showStartPlanModal({
             ),
             const SizedBox(height: 3),
             Text(
-              '365 days',
+              planDurationText,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,

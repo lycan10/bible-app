@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:quest/screens/community/admin_message_screen.dart';
+import 'package:quest/screens/books/book_screen.dart';
+import 'package:quest/screens/more/saved_messages_screen.dart';
+import 'package:quest/screens/more/saved_books_screen.dart';
 import 'package:quest/components/action_pill/action_pill_button_2.dart';
 import 'package:quest/components/feature_guard.dart';
 import 'package:quest/components/more/journal_card.dart';
@@ -38,6 +43,7 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
   List<dynamic> _notesList = [];
   List<dynamic> _journalsList = [];
   List<dynamic> _savedBooksList = [];
+  List<dynamic> _savedMessagesList = [];
   String _searchQuery = "";
 
   int _notesPage = 1;
@@ -106,8 +112,12 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
         final notes = await ApiService.getPersonalNotes(token, page: 1);
         final journals = await ApiService.getJournals(token, page: 1);
         List<dynamic> savedBooks = [];
+        List<dynamic> savedMessages = [];
         try {
-          savedBooks = await ApiService.fetchSavedBooks(token);
+          final booksResp = await ApiService.fetchSavedBooks(token);
+          final msgsResp = await ApiService.fetchSavedMessages(token);
+          savedBooks = List<dynamic>.from(booksResp['data'] ?? []);
+          savedMessages = List<dynamic>.from(msgsResp['data'] ?? []);
         } catch (_) {}
 
         if (mounted) {
@@ -115,6 +125,7 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
             _notesList = notes;
             _journalsList = journals;
             _savedBooksList = savedBooks;
+            _savedMessagesList = savedMessages;
             if (notes.length < 20) _hasMoreNotes = false;
             if (journals.length < 20) _hasMoreJournals = false;
           });
@@ -617,59 +628,121 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                                   return ref.contains(_searchQuery);
                                 })
                                 .map(
-                                  (b) => SavedCard(
-                                    title: b['verseRef'] ?? 'Unknown Reference',
-                                    subtitle: "Bookmarked verse",
-                                    verse: b['verseRef'] ?? '',
-                                    time: DateFormatter.formatTimeAgo(
-                                      b['createdAt'],
-                                    ),
-                                    onDelete: () async {
-                                      final authProvider =
-                                          Provider.of<AuthProvider>(
-                                            context,
-                                            listen: false,
-                                          );
-                                      if (authProvider.token != null) {
-                                        final verseRef = b['verseRef'];
-                                        if (verseRef != null) {
-                                          final parsed =
-                                              BibleService.parseReference(
-                                                verseRef,
-                                              );
-                                          if (parsed != null) {
-                                            final oldBook =
-                                                bibleProvider.currentBookIndex;
-                                            final oldChapter =
-                                                bibleProvider.currentChapter;
-                                            await bibleProvider.loadVerses(
-                                              parsed['book']!,
-                                              parsed['chapter']!,
-                                            );
-                                            await bibleProvider.toggleBookmark(
-                                              authProvider.token!,
-                                              parsed['verse']!,
-                                            );
-                                            await bibleProvider.loadVerses(
-                                              oldBook,
-                                              oldChapter,
-                                            );
+                                  (b) => GestureDetector(
+                                    onTap: () async {
+                                      final verseRef = b['verseRef'];
+                                      if (verseRef != null) {
+                                        final parsed = BibleService.parseReference(verseRef);
+                                        if (parsed != null) {
+                                          final bp = Provider.of<BibleProvider>(context, listen: false);
+                                          await bp.loadVerses(parsed['book']!, parsed['chapter']!);
+                                          if (context.mounted) {
+                                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BibleHomeScreen()));
                                           }
                                         }
                                       }
                                     },
+                                    child: SavedCard(
+                                      title: b['verseRef'] ?? 'Unknown Reference',
+                                      subtitle: "Bookmarked verse",
+                                      verse: b['verseRef'] ?? '',
+                                      time: DateFormatter.formatTimeAgo(
+                                        b['createdAt'],
+                                      ),
+                                      onDelete: () async {
+                                        final authProvider =
+                                            Provider.of<AuthProvider>(
+                                              context,
+                                              listen: false,
+                                            );
+                                        if (authProvider.token != null) {
+                                          final verseRef = b['verseRef'];
+                                          if (verseRef != null) {
+                                            final parsed =
+                                                BibleService.parseReference(
+                                                  verseRef,
+                                                );
+                                            if (parsed != null) {
+                                              final oldBook =
+                                                  bibleProvider.currentBookIndex;
+                                              final oldChapter =
+                                                  bibleProvider.currentChapter;
+                                              await bibleProvider.loadVerses(
+                                                parsed['book']!,
+                                                parsed['chapter']!,
+                                              );
+                                              await bibleProvider.toggleBookmark(
+                                                authProvider.token!,
+                                                parsed['verse']!,
+                                              );
+                                              await bibleProvider.loadVerses(
+                                                oldBook,
+                                                oldChapter,
+                                              );
+                                            }
+                                          }
+                                        }
+                                      },
+                                    ),
                                   ),
-                                ),
+                                )
+                                .toList(),
                             SectionHeader(
-                              title: "Messages (34)",
+                              title: "Messages (${_savedMessagesList.length})",
                               seeAllText: "See all",
+                              onSeeAllTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SavedMessagesScreen(),
+                                ),
+                              ),
                             ),
-                            SavedMessagesCard(),
-                            SavedMessagesCard(),
-                            SavedMessagesCard(),
+                            if (_savedMessagesList.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Text(
+                                  "No saved messages yet.",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ..._savedMessagesList.map((m) {
+                              final sender = m['sender'] ?? {};
+                              String timeStr = "Unknown time";
+                              if (m['createdAt'] != null) {
+                                try {
+                                  final dt = DateTime.parse(m['createdAt']);
+                                  timeStr = timeago.format(dt);
+                                } catch (_) {}
+                              }
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AdminMessageScreen(
+                                        message: {...m, 'hasBookmarked': true},
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: SavedMessagesCard(
+                                  title: m['title'] ?? m['text'] ?? 'Message',
+                                  authorName: sender['fullName'] ?? sender['username'] ?? 'Unknown',
+                                  messageImage: m['imageUrl'] ?? sender['avatarUrl'],
+                                  likesCount: m['likesCount'] ?? 0,
+                                  time: timeStr,
+                                ),
+                              );
+                            }),
                             SectionHeader(
                               title: "Books (${_savedBooksList.length})",
                               seeAllText: "See all",
+                              onSeeAllTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SavedBooksScreen(),
+                                ),
+                              ),
                             ),
                             if (_savedBooksList.isEmpty)
                               const Padding(
@@ -681,11 +754,21 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                               ),
                             ..._savedBooksList.map((b) {
                               final book = b['book'] ?? {};
-                              return SavedBooksCard(
-                                title: book['title'] ?? 'Unknown Title',
-                                subtitle: book['description'] ?? '',
-                                author: book['author'] ?? 'Unknown Author',
-                                imageUrl: book['imageUrl'],
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => BookScreen(book: book),
+                                    ),
+                                  );
+                                },
+                                child: SavedBooksCard(
+                                  title: book['title'] ?? 'Unknown Title',
+                                  subtitle: book['description'] ?? '',
+                                  author: book['author'] ?? 'Unknown Author',
+                                  imageUrl: book['imageUrl'],
+                                ),
                               );
                             }),
                             const SizedBox(height: 60),
