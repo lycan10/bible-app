@@ -45,6 +45,12 @@ class CommunityProvider with ChangeNotifier {
   bool get isLoadingMoreAdminMessages => _isLoadingMoreAdminMessages;
   bool get hasMoreAdminMessages => _hasMoreAdminMessages;
 
+  bool get isLoadingMorePosts => _isLoadingMorePosts;
+  bool get hasMorePosts => _hasMorePosts;
+
+  bool get isLoadingMoreEvents => _isLoadingMoreEvents;
+  bool get hasMoreEvents => _hasMoreEvents;
+
   List<dynamic> _globalPosts = [];
   bool _isLoadingMoreGlobalPosts = false;
   bool _hasMoreGlobalPosts = true;

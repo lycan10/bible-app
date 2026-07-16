@@ -5,6 +5,7 @@ import 'package:quest/components/messages/admin_message_card.dart';
 import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:quest/main.dart';
 
 class AdminMessageListScreen extends StatefulWidget {
   const AdminMessageListScreen({super.key});
@@ -13,9 +14,20 @@ class AdminMessageListScreen extends StatefulWidget {
   State<AdminMessageListScreen> createState() => _AdminMessageListScreenState();
 }
 
-class _AdminMessageListScreenState extends State<AdminMessageListScreen> {
+class _AdminMessageListScreenState extends State<AdminMessageListScreen> with RouteAware {
   List<dynamic> _messages = [];
   bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    _loadMessages();
+  }
 
   @override
   void initState() {
@@ -23,6 +35,12 @@ class _AdminMessageListScreenState extends State<AdminMessageListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadMessages();
     });
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   Future<void> _loadMessages() async {

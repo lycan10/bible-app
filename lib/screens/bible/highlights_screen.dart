@@ -5,6 +5,7 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/bible/bible_home_screen.dart';
 import 'package:quest/services/bible_service.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:quest/main.dart';
 
 class HighlightsScreen extends StatefulWidget {
   const HighlightsScreen({super.key});
@@ -13,13 +14,35 @@ class HighlightsScreen extends StatefulWidget {
   State<HighlightsScreen> createState() => _HighlightsScreenState();
 }
 
-class _HighlightsScreenState extends State<HighlightsScreen> {
+class _HighlightsScreenState extends State<HighlightsScreen> with RouteAware {
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    _loadData();
+  }
+
+  void _loadData() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      bibleProvider.syncData(authProvider.token!);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   void _scrollListener() {
@@ -37,6 +60,7 @@ class _HighlightsScreenState extends State<HighlightsScreen> {
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _scrollController.dispose();
     super.dispose();
   }

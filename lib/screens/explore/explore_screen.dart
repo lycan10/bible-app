@@ -35,6 +35,7 @@ import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/feature_guard.dart';
+import 'package:quest/main.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -43,8 +44,24 @@ class ExploreScreen extends StatefulWidget {
   State<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _ExploreScreenState extends State<ExploreScreen> {
+class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      feedProvider.loadExploreData(authProvider.token!);
+      feedProvider.loadProfileDetails(authProvider.token!);
+    }
+  }
 
   @override
   void initState() {
@@ -61,6 +78,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _searchController.dispose();
     super.dispose();
   }

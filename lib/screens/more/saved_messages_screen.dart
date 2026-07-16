@@ -7,6 +7,7 @@ import 'package:quest/services/api_service.dart';
 import 'package:quest/components/more/saved_messages_card.dart';
 import 'package:quest/screens/community/admin_message_screen.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/main.dart';
 
 class SavedMessagesScreen extends StatefulWidget {
   const SavedMessagesScreen({super.key});
@@ -15,7 +16,7 @@ class SavedMessagesScreen extends StatefulWidget {
   State<SavedMessagesScreen> createState() => _SavedMessagesScreenState();
 }
 
-class _SavedMessagesScreenState extends State<SavedMessagesScreen> {
+class _SavedMessagesScreenState extends State<SavedMessagesScreen> with RouteAware {
   // Data
   final List<dynamic> _messages = [];
   int _page = 1;
@@ -33,14 +34,28 @@ class _SavedMessagesScreenState extends State<SavedMessagesScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
     _load(reset: true);
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _load(reset: true);
+    });
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _scrollController.dispose();
     _searchController.dispose();
     _debounce?.cancel();

@@ -153,13 +153,9 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     _formKey.currentState!.save();
 
     // --- Subscription gate: check before hitting the API ---
-    final featureProvider = Provider.of<FeatureProvider>(context, listen: false);
     final subProvider = Provider.of<SubscriptionProvider>(context, listen: false);
-    final requiresSub = featureProvider.isFeatureEnabled(
-      'community_creation_requires_subscription',
-    );
 
-    if (requiresSub && !subProvider.isSubscribed) {
+    if (!subProvider.isSubscribed) {
       _showSubscriptionRequiredModal();
       return;
     }

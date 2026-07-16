@@ -15,6 +15,7 @@ import 'package:quest/theme/theme.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
 import '../../components/global_more_menu.dart';
+import 'package:quest/main.dart';
 
 class DevotionListScreen extends StatefulWidget {
   const DevotionListScreen({super.key});
@@ -23,9 +24,23 @@ class DevotionListScreen extends StatefulWidget {
   State<DevotionListScreen> createState() => _DevotionListScreenState();
 }
 
-class _DevotionListScreenState extends State<DevotionListScreen> {
+class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    final auth = context.read<AuthProvider>();
+    if (auth.token != null) {
+      context.read<DevotionProvider>().loadPlans(auth.token!);
+    }
+  }
 
   @override
   void initState() {
@@ -43,6 +58,7 @@ class _DevotionListScreenState extends State<DevotionListScreen> {
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();

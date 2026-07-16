@@ -11,6 +11,7 @@ import 'package:quest/providers/community_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../components/global_more_menu.dart';
+import 'package:quest/main.dart';
 
 class PostList extends StatefulWidget {
   const PostList({super.key});
@@ -19,8 +20,14 @@ class PostList extends StatefulWidget {
   State<PostList> createState() => _PostListState();
 }
 
-class _PostListState extends State<PostList> {
+class _PostListState extends State<PostList> with RouteAware {
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
 
   @override
   void initState() {
@@ -33,8 +40,14 @@ class _PostListState extends State<PostList> {
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _loadPosts(refresh: true);
   }
 
   void _onScroll() {

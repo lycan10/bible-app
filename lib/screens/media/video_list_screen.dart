@@ -14,6 +14,7 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/upload_media_screen.dart';
 import 'package:quest/theme/theme.dart';
 import '../../components/global_more_menu.dart';
+import 'package:quest/main.dart';
 
 class VideoListScreen extends StatefulWidget {
   const VideoListScreen({super.key});
@@ -22,9 +23,23 @@ class VideoListScreen extends StatefulWidget {
   State<VideoListScreen> createState() => _VideoListScreenState();
 }
 
-class _VideoListScreenState extends State<VideoListScreen> {
+class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    final auth = context.read<AuthProvider>();
+    if (auth.token != null) {
+      context.read<MediaProvider>().loadVideoData(auth.token!);
+    }
+  }
 
   @override
   void initState() {
@@ -45,6 +60,7 @@ class _VideoListScreenState extends State<VideoListScreen> {
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _debounce?.cancel();
     _scrollController.dispose();
     super.dispose();

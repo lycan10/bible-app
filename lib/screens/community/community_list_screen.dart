@@ -16,6 +16,7 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
 import 'package:quest/screens/create_community_screen.dart';
 import '../../components/global_more_menu.dart';
+import 'package:quest/main.dart';
 
 class CommunityListScreen extends StatefulWidget {
   const CommunityListScreen({super.key});
@@ -24,27 +25,43 @@ class CommunityListScreen extends StatefulWidget {
   State<CommunityListScreen> createState() => _CommunityListScreenState();
 }
 
-class _CommunityListScreenState extends State<CommunityListScreen> {
+class _CommunityListScreenState extends State<CommunityListScreen> with RouteAware {
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
+  void didPopNext() {
+    _loadData();
+  }
+
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.token != null) {
-        context.read<CommunityProvider>().loadCommunities(authProvider.token!);
-      }
+      _loadData();
     });
+  }
+
+  void _loadData() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      context.read<CommunityProvider>().loadCommunities(authProvider.token!);
+    }
   }
 
   void _navigateToCommunityScreen(
@@ -280,7 +297,14 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               const SizedBox(height: 15),
 
               /// COMMUNITY LIST
-              if (myCommunities.isNotEmpty)
+              if (communityProvider.isLoading && myCommunities.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.black),
+                  ),
+                )
+              else if (myCommunities.isNotEmpty)
                 SizedBox(
                   height: 160,
                   child: ListView.builder(
@@ -318,12 +342,20 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               ),
 
               /// SUGGESTED COMMUNITIES
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemCount: recommended.length,
-                itemBuilder: (context, index) {
+              if (communityProvider.isLoading && recommended.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.black),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemCount: recommended.length,
+                  itemBuilder: (context, index) {
                   final com = recommended[index];
                   return CommunityImageTile(
                     name: com['name'] ?? 'Community',

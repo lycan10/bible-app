@@ -6,6 +6,7 @@ import 'package:quest/services/api_service.dart';
 import 'package:quest/components/more/saved_books_card.dart';
 import 'package:quest/screens/books/book_screen.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/main.dart';
 
 class SavedBooksScreen extends StatefulWidget {
   const SavedBooksScreen({super.key});
@@ -14,7 +15,7 @@ class SavedBooksScreen extends StatefulWidget {
   State<SavedBooksScreen> createState() => _SavedBooksScreenState();
 }
 
-class _SavedBooksScreenState extends State<SavedBooksScreen> {
+class _SavedBooksScreenState extends State<SavedBooksScreen> with RouteAware {
   // Data
   final List<dynamic> _books = [];
   int _page = 1;
@@ -32,14 +33,28 @@ class _SavedBooksScreenState extends State<SavedBooksScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
     _load(reset: true);
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _load(reset: true);
+    });
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _scrollController.dispose();
     _searchController.dispose();
     _debounce?.cancel();

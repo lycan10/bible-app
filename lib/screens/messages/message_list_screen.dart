@@ -13,6 +13,7 @@ import 'package:quest/theme/theme.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../components/global_more_menu.dart';
+import 'package:quest/main.dart';
 
 class MessageListScreen extends StatefulWidget {
   const MessageListScreen({super.key});
@@ -21,7 +22,21 @@ class MessageListScreen extends StatefulWidget {
   State<MessageListScreen> createState() => _MessageListScreenState();
 }
 
-class _MessageListScreenState extends State<MessageListScreen> {
+class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    final auth = context.read<AuthProvider>();
+    if (auth.token != null) {
+      context.read<ChatProvider>().loadChats(auth.token!);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +46,12 @@ class _MessageListScreenState extends State<MessageListScreen> {
         context.read<ChatProvider>().loadChats(auth.token!);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   void _openMenu(BuildContext context) {

@@ -8,6 +8,7 @@ import 'package:quest/components/action_pill/action_pill_button_2.dart';
 import 'package:quest/components/event/event_details_card.dart';
 import 'package:quest/components/event/event_dotted_card.dart';
 import 'package:quest/components/posts/post_card_long.dart';
+import 'package:quest/main.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
@@ -45,7 +46,7 @@ class CommunityIndividualScreen extends StatefulWidget {
       _CommunityIndividualScreenState();
 }
 
-class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
+class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> with RouteAware {
   String selectedTab = "Space";
   final TextEditingController _forumController = TextEditingController();
   final ScrollController _forumScrollController = ScrollController();
@@ -54,6 +55,31 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
   XFile? _pendingAttachment;
   bool _isVideo = false;
   String _selectedEventFilter = "All";
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    _loadData();
+  }
+
+  void _loadData() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      context.read<CommunityProvider>().loadCommunityDetails(
+            authProvider.token!,
+            widget.communityId,
+          );
+      context.read<CommunityProvider>().loadCommunityVerse(
+        authProvider.token!,
+        widget.communityId,
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -79,22 +105,13 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.token != null) {
-        context.read<CommunityProvider>().loadCommunityDetails(
-          authProvider.token!,
-          widget.communityId,
-        );
-        context.read<CommunityProvider>().loadCommunityVerse(
-          authProvider.token!,
-          widget.communityId,
-        );
-      }
+      _loadData();
     });
   }
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _forumController.dispose();
     _forumScrollController.dispose();
     _mainScrollController.dispose();
@@ -1659,105 +1676,116 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                           builder: (context) {
                             final communityPosts = posts;
                             if (communityPosts.isNotEmpty) {
-                              return ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: communityPosts.length,
-                                itemBuilder: (context, index) {
-                                  final post = communityPosts[index];
-                                  final user = post['user'] ?? {};
-                                  final userName =
-                                      "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
-                                          .trim();
-                                  final isMe = user['id'] == authId;
-                                  final canDeletePost = isAdmin || isMe;
-                                  return PostCardLong(
-                                    userName:
-                                        userName.isEmpty
-                                            ? (user['username'] ?? 'User')
-                                            : userName,
-                                    userImage:
-                                        user['avatarUrl'] ??
-                                        "assets/images/boy.png",
-                                    postText: post["text"] ?? '',
-                                    groupName: community['name'] ?? '',
-                                    postImage:
-                                        post["image"] ??
-                                        "assets/images/test.jpg",
-                                    likes: "${post['reactions']?.length ?? 0}",
-                                    comments:
-                                        "${post['_count']?['comments'] ?? 0}",
-                                    time:
-                                        post['createdAt'] != null
-                                            ? timeago.format(
-                                              DateTime.parse(post['createdAt']),
-                                            )
-                                            : "Recently",
-                                    onTap:
-                                        () => _navigateToPostScreen(
-                                          context,
-                                          post,
-                                        ),
-                                    onAvatarTap: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        builder:
-                                            (context) =>
-                                                UserProfileCard(user: user),
+                              return Column(
+                                children: [
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: communityPosts.length,
+                                    itemBuilder: (context, index) {
+                                      final post = communityPosts[index];
+                                      final user = post['user'] ?? {};
+                                      final userName =
+                                          "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
+                                              .trim();
+                                      final isMe = user['id'] == authId;
+                                      final canDeletePost = isAdmin || isMe;
+                                      return PostCardLong(
+                                        userName:
+                                            userName.isEmpty
+                                                ? (user['username'] ?? 'User')
+                                                : userName,
+                                        userImage:
+                                            user['avatarUrl'] ??
+                                            "assets/images/boy.png",
+                                        postText: post["text"] ?? '',
+                                        groupName: community['name'] ?? '',
+                                        postImage:
+                                            post["image"] ??
+                                            "assets/images/test.jpg",
+                                        likes: "${post['reactions']?.length ?? 0}",
+                                        comments:
+                                            "${post['_count']?['comments'] ?? 0}",
+                                        time:
+                                            post['createdAt'] != null
+                                                ? timeago.format(
+                                                  DateTime.parse(post['createdAt']),
+                                                )
+                                                : "Recently",
+                                        onTap:
+                                            () => _navigateToPostScreen(
+                                              context,
+                                              post,
+                                            ),
+                                        onAvatarTap: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            builder:
+                                                (context) =>
+                                                    UserProfileCard(user: user),
+                                          );
+                                        },
+                                        onMoreTap:
+                                            canDeletePost
+                                                ? () {
+                                                  showModalBottomSheet(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return SafeArea(
+                                                        child: Wrap(
+                                                          children: [
+                                                            ListTile(
+                                                              leading: const Icon(
+                                                                Icons.delete,
+                                                                color: Colors.red,
+                                                              ),
+                                                              title: const Text(
+                                                                'Delete Post',
+                                                                style: TextStyle(
+                                                                  color: Colors.red,
+                                                                ),
+                                                              ),
+                                                              onTap: () async {
+                                                                Navigator.pop(
+                                                                  context,
+                                                                );
+                                                                if (authId !=
+                                                                    null) {
+                                                                  await context
+                                                                      .read<
+                                                                        CommunityProvider
+                                                                      >()
+                                                                      .deleteCommunityPost(
+                                                                        context
+                                                                            .read<
+                                                                              AuthProvider
+                                                                            >()
+                                                                            .token!,
+                                                                        post['id'],
+                                                                      );
+                                                                }
+                                                              },
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                                : null,
                                       );
                                     },
-                                    onMoreTap:
-                                        canDeletePost
-                                            ? () {
-                                              showModalBottomSheet(
-                                                context: context,
-                                                builder: (context) {
-                                                  return SafeArea(
-                                                    child: Wrap(
-                                                      children: [
-                                                        ListTile(
-                                                          leading: const Icon(
-                                                            Icons.delete,
-                                                            color: Colors.red,
-                                                          ),
-                                                          title: const Text(
-                                                            'Delete Post',
-                                                            style: TextStyle(
-                                                              color: Colors.red,
-                                                            ),
-                                                          ),
-                                                          onTap: () async {
-                                                            Navigator.pop(
-                                                              context,
-                                                            );
-                                                            if (authId !=
-                                                                null) {
-                                                              await context
-                                                                  .read<
-                                                                    CommunityProvider
-                                                                  >()
-                                                                  .deleteCommunityPost(
-                                                                    context
-                                                                        .read<
-                                                                          AuthProvider
-                                                                        >()
-                                                                        .token!,
-                                                                    post['id'],
-                                                                  );
-                                                            }
-                                                          },
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                            }
-                                            : null,
-                                  );
-                                },
+                                  ),
+                                  if (communityProvider.isLoadingMorePosts)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 20),
+                                      child: Center(
+                                        child: CircularProgressIndicator(color: Colors.black),
+                                      ),
+                                    ),
+                                ],
                               );
                             } else {
                               return const Padding(
@@ -1849,83 +1877,94 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> {
                         SizedBox(height: 5),
 
                         if (events.isNotEmpty)
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: events.length,
-                            itemBuilder: (context, index) {
-                              final event = events[index];
-                              final auth = context.read<AuthProvider>();
-                              final currentUserId = auth.user?['id'];
-                              final attendees = List.from(
-                                event['attendees'] ?? [],
-                              );
-                              bool isAttending = attendees.any(
-                                (a) => a['userId'] == currentUserId,
-                              );
+                          Column(
+                            children: [
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: events.length,
+                                itemBuilder: (context, index) {
+                                  final event = events[index];
+                                  final auth = context.read<AuthProvider>();
+                                  final currentUserId = auth.user?['id'];
+                                  final attendees = List.from(
+                                    event['attendees'] ?? [],
+                                  );
+                                  bool isAttending = attendees.any(
+                                    (a) => a['userId'] == currentUserId,
+                                  );
 
-                              return EventDottedCard(
-                                event: event,
-                                isAttending: isAttending,
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (context) {
-                                      return EventDetailsCard(
-                                        event: event,
-                                        isAttending: isAttending,
-                                        isAdmin: isAdmin,
-                                        onEdit: () {
-                                          Navigator.pop(context);
-                                          showModalBottomSheet(
-                                            context: context,
-                                            isScrollControlled: true,
-                                            backgroundColor: Colors.transparent,
-                                            builder:
-                                                (context) => EditEventScreen(
-                                                  communityId:
-                                                      widget.communityId,
-                                                  event: event,
-                                                ),
-                                          );
-                                        },
-                                        onDelete: () async {
-                                          final success =
-                                              await communityProvider
-                                                  .deleteEvent(
-                                                    auth.token!,
-                                                    widget.communityId,
-                                                    event['id'],
-                                                  );
-                                          if (success && context.mounted) {
-                                            Navigator.pop(context);
-                                          }
-                                        },
-                                        onToggleAttend: () async {
-                                          if (isAttending) {
-                                            await communityProvider
-                                                .unattendEvent(
+                                  return EventDottedCard(
+                                    event: event,
+                                    isAttending: isAttending,
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (context) {
+                                          return EventDetailsCard(
+                                            event: event,
+                                            isAttending: isAttending,
+                                            isAdmin: isAdmin,
+                                            onEdit: () {
+                                              Navigator.pop(context);
+                                              showModalBottomSheet(
+                                                context: context,
+                                                isScrollControlled: true,
+                                                backgroundColor: Colors.transparent,
+                                                builder:
+                                                    (context) => EditEventScreen(
+                                                      communityId:
+                                                          widget.communityId,
+                                                      event: event,
+                                                    ),
+                                              );
+                                            },
+                                            onDelete: () async {
+                                              final success =
+                                                  await communityProvider
+                                                      .deleteEvent(
+                                                        auth.token!,
+                                                        widget.communityId,
+                                                        event['id'],
+                                                      );
+                                              if (success && context.mounted) {
+                                                Navigator.pop(context);
+                                              }
+                                            },
+                                            onToggleAttend: () async {
+                                              if (isAttending) {
+                                                await communityProvider
+                                                    .unattendEvent(
+                                                      auth.token!,
+                                                      event['id'],
+                                                    );
+                                              } else {
+                                                await communityProvider.attendEvent(
                                                   auth.token!,
                                                   event['id'],
                                                 );
-                                          } else {
-                                            await communityProvider.attendEvent(
-                                              auth.token!,
-                                              event['id'],
-                                            );
-                                          }
-                                          if (context.mounted) {
-                                            Navigator.pop(context);
-                                          }
+                                              }
+                                              if (context.mounted) {
+                                                Navigator.pop(context);
+                                              }
+                                            },
+                                          );
                                         },
                                       );
                                     },
                                   );
                                 },
-                              );
-                            },
+                              ),
+                              if (communityProvider.isLoadingMoreEvents)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 20),
+                                  child: Center(
+                                    child: CircularProgressIndicator(color: Colors.black),
+                                  ),
+                                ),
+                            ],
                           )
                         else
                           const Padding(

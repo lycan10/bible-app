@@ -10,6 +10,7 @@ import 'package:quest/screens/explore/explore_screen.dart'; // For BooksReelCard
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
+import 'package:quest/main.dart';
 import '../../components/global_more_menu.dart';
 
 final List<Map<String, String>> posts = [
@@ -63,14 +64,31 @@ class BooksListScreen extends StatefulWidget {
   State<BooksListScreen> createState() => _BooksListScreenState();
 }
 
-class _BooksListScreenState extends State<BooksListScreen> {
+class _BooksListScreenState extends State<BooksListScreen> with RouteAware {
   List<dynamic> _books = [];
   bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    _fetchBooks();
+  }
 
   @override
   void initState() {
     super.initState();
     _fetchBooks();
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   Future<void> _fetchBooks() async {

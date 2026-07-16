@@ -5,8 +5,8 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/components/more/saved_card.dart';
 import 'package:quest/screens/bible/bible_home_screen.dart';
 import 'package:quest/services/bible_service.dart';
-
 import 'package:quest/utils/date_formatter.dart';
+import 'package:quest/main.dart';
 
 class SavedVersesScreen extends StatefulWidget {
   const SavedVersesScreen({super.key});
@@ -15,13 +15,35 @@ class SavedVersesScreen extends StatefulWidget {
   State<SavedVersesScreen> createState() => _SavedVersesScreenState();
 }
 
-class _SavedVersesScreenState extends State<SavedVersesScreen> {
+class _SavedVersesScreenState extends State<SavedVersesScreen> with RouteAware {
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    _loadData();
+  }
+
+  void _loadData() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      bibleProvider.syncData(authProvider.token!);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   void _scrollListener() {
@@ -39,6 +61,7 @@ class _SavedVersesScreenState extends State<SavedVersesScreen> {
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _scrollController.dispose();
     super.dispose();
   }
