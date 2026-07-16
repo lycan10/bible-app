@@ -11,8 +11,8 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    //return 'http://192.168.1.250:8787/api/v1';
-    return 'https://quest.vidarave.com/api/v1';
+    return 'http://192.168.1.250:8787/api/v1';
+    // return 'https://quest.vidarave.com/api/v1';
   }
 
   static String getFullImageUrl(String url) {
@@ -1755,12 +1755,23 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  // GET /api/v1/media/upload/limit-check
+  static Future<Map<String, dynamic>> checkUploadLimit(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/media/upload/limit-check'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
   // POST /api/v1/media/upload
   static Future<Map<String, dynamic>> uploadMedia(
     String token,
     String filePath, {
     bool isEdit = false,
     bool isReel = false,
+    String? title,
+    String? thumbnailPath,
   }) async {
     final request = http.MultipartRequest(
       'POST',
@@ -1768,6 +1779,12 @@ class ApiService {
     );
     request.headers.addAll({'Authorization': 'Bearer $token'});
     request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    if (thumbnailPath != null) {
+      request.files.add(await http.MultipartFile.fromPath('thumbnail', thumbnailPath));
+    }
+    if (title != null && title.isNotEmpty) {
+      request.fields['title'] = title;
+    }
     if (isEdit) {
       request.fields['isEdit'] = 'true';
     }

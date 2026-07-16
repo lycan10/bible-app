@@ -21,6 +21,7 @@ import 'package:quest/components/today_verse_glass.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
+import 'package:quest/providers/media_provider.dart';
 import 'package:quest/screens/devotion/devotion_article_card.dart';
 import 'package:quest/screens/devotion/devotion_list_screen.dart';
 import 'package:quest/screens/devotion/devotion_screen.dart';
@@ -78,12 +79,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
     final devotionProvider = Provider.of<DevotionProvider>(context, listen: false);
+    final mediaProvider = Provider.of<MediaProvider>(context, listen: false);
 
     if (authProvider.token != null && authProvider.user?['id'] != null) {
       feedProvider.loadHomeData(authProvider.token!, authProvider.user!['id']);
       notifProvider.fetchNotifications(authProvider.token!);
       chatProvider.loadChats(authProvider.token!);
       devotionProvider.loadPlans(authProvider.token!);
+      // Refresh media so home screen shows latest uploaded videos/audio
+      mediaProvider.loadVideoData(authProvider.token!);
+      mediaProvider.loadAudioData(authProvider.token!);
     }
   }
 

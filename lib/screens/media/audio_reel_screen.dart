@@ -6,6 +6,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/main.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
 
 class AudioReelScreen extends StatefulWidget {
@@ -23,13 +24,15 @@ class AudioReelScreen extends StatefulWidget {
 }
 
 class _AudioReelScreenState extends State<AudioReelScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RouteAware {
   late final PageController _pageController;
   final Map<int, AudioPlayer> _players = {};
 
   late List<dynamic> _audios;
   int _currentIndex = 0;
   bool _isFetchingMore = false;
+  /// True only when this route is the top-most visible route.
+  bool _isActive = false;
 
   @override
   void initState() {
@@ -40,14 +43,41 @@ class _AudioReelScreenState extends State<AudioReelScreen>
     _pageController = PageController(initialPage: widget.initialIndex);
 
     _initPlayer(widget.initialIndex);
-    for (int i = 1; i <= 3; i++) {
-      if (widget.initialIndex + i < _audios.length) {
-        _initPlayer(widget.initialIndex + i);
-      }
+    if (widget.initialIndex + 1 < _audios.length) {
+      _initPlayer(widget.initialIndex + 1);
     }
     if (widget.initialIndex - 1 >= 0) {
       _initPlayer(widget.initialIndex - 1);
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  }
+
+  // ── RouteAware callbacks ─────────────────────────────────────────────────
+  @override
+  void didPush() {
+    _isActive = true;
+  }
+
+  @override
+  void didPopNext() {
+    _isActive = true;
+    _players[_currentIndex]?.resume();
+  }
+
+  @override
+  void didPushNext() {
+    _isActive = false;
+    _players[_currentIndex]?.pause();
+  }
+
+  @override
+  void didPop() {
+    _isActive = false;
   }
 
   void _initPlayer(int index) {
@@ -74,17 +104,25 @@ class _AudioReelScreenState extends State<AudioReelScreen>
   }
 
   void _onPageChanged(int index) {
-    _players[_currentIndex]?.pause();
+    // Stop and immediately dispose the previous player to free memory
+    final prevPlayer = _players[_currentIndex];
+    if (prevPlayer != null) {
+      prevPlayer.pause();
+      // Schedule disposal so the widget tree has a chance to update first
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_players.containsKey(_currentIndex) || _currentIndex != index) {
+          prevPlayer.dispose();
+        }
+      });
+    }
     _currentIndex = index;
 
     _players[index]?.resume();
 
-    for (int i = 1; i <= 3; i++) {
-      if (index + i < _audios.length) _initPlayer(index + i);
-    }
+    if (index + 1 < _audios.length) _initPlayer(index + 1);
     if (index - 1 >= 0) _initPlayer(index - 1);
 
-    final toDispose = _players.keys.where((k) => (k - index).abs() > 3).toList();
+    final toDispose = _players.keys.where((k) => (k - index).abs() > 1).toList();
     for (final k in toDispose) {
       _disposePlayer(k);
     }
@@ -123,6 +161,8 @@ class _AudioReelScreenState extends State<AudioReelScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Only act if this screen is actually visible to the user.
+    if (!_isActive) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       _players[_currentIndex]?.pause();
@@ -133,20 +173,32 @@ class _AudioReelScreenState extends State<AudioReelScreen>
 
   @override
   void dispose() {
+    _isActive = false;
     WidgetsBinding.instance.removeObserver(this);
+    routeObserver.unsubscribe(this);
     _pageController.dispose();
+    // Stop and release all audio players to free memory and audio session
     for (final p in _players.values) {
       p.pause();
       p.dispose();
     }
+    _players.clear();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        _isActive = false;
+        // Stop all audio players when user navigates back
+        for (final p in _players.values) {
+          p.pause();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
         children: [
           PageView.builder(
             controller: _pageController,
@@ -225,6 +277,7 @@ class _AudioReelScreenState extends State<AudioReelScreen>
             ),
           ),
         ],
+      ),
       ),
     );
   }

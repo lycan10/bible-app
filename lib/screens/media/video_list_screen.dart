@@ -13,6 +13,8 @@ import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/upload_media_screen.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/services/api_service.dart';
+import 'package:quest/screens/paywall_screen.dart';
 import '../../components/global_more_menu.dart';
 import 'package:quest/main.dart';
 
@@ -98,6 +100,100 @@ class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
     );
   }
 
+  void _showUploadLimitDialog(BuildContext context, int used, int limit) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Upload Limit Reached',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'You\'ve used $used of $limit free uploads. Subscribe to unlock unlimited media uploads and more premium features.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    backgroundColor: AppTheme.buttonColor,
+                  ),
+                  child: const Text(
+                    'Upgrade to Pro',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'Not now',
+                  style: TextStyle(color: Colors.grey.shade500),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _openMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -121,7 +217,25 @@ class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
+          final authProvider = context.read<AuthProvider>();
+          final token = authProvider.token;
+          if (token == null) return;
+          try {
+            final check = await ApiService.checkUploadLimit(token);
+            if (!mounted) return;
+            if (check['limitReached'] == true) {
+              _showUploadLimitDialog(
+                context,
+                check['used'] as int,
+                check['limit'] as int,
+              );
+              return;
+            }
+          } catch (_) {
+            // If check fails, let the upload screen handle it
+          }
+          if (!mounted) return;
           Navigator.push(
             context,
             MaterialPageRoute(

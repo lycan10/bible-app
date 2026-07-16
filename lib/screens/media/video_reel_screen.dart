@@ -6,7 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
-
+import 'package:quest/main.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
 
 ///
@@ -27,7 +27,7 @@ class VideoReelScreen extends StatefulWidget {
 }
 
 class _VideoReelScreenState extends State<VideoReelScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RouteAware {
   late final PageController _pageController;
 
   /// Map of page-index → VideoPlayerController so we can manage each
@@ -38,6 +38,8 @@ class _VideoReelScreenState extends State<VideoReelScreen>
   int _currentIndex = 0;
   bool _isFetchingMore = false;
   bool _isMuted = false;
+  /// True only when this route is the top-most visible route.
+  bool _isActive = false;
 
   @override
   void initState() {
@@ -49,14 +51,46 @@ class _VideoReelScreenState extends State<VideoReelScreen>
 
     // Pre-initialise controllers around the starting index
     _initController(widget.initialIndex);
-    for (int i = 1; i <= 3; i++) {
-      if (widget.initialIndex + i < _videos.length) {
-        _initController(widget.initialIndex + i);
-      }
+    if (widget.initialIndex + 1 < _videos.length) {
+      _initController(widget.initialIndex + 1);
     }
     if (widget.initialIndex - 1 >= 0) {
       _initController(widget.initialIndex - 1);
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to route events so we know when we are the top route.
+    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  }
+
+  // ── RouteAware callbacks ─────────────────────────────────────────────────
+  @override
+  void didPush() {
+    // This screen just became the top route.
+    _isActive = true;
+  }
+
+  @override
+  void didPopNext() {
+    // Returned to this screen after a sub-route was popped.
+    _isActive = true;
+    _controllers[_currentIndex]?.play();
+  }
+
+  @override
+  void didPushNext() {
+    // A new route was pushed on top of this one – pause immediately.
+    _isActive = false;
+    _controllers[_currentIndex]?.pause();
+  }
+
+  @override
+  void didPop() {
+    // This screen is being popped.
+    _isActive = false;
   }
 
   // ──────────────────────────── Controller management ────────────────────────
@@ -96,23 +130,30 @@ class _VideoReelScreenState extends State<VideoReelScreen>
   }
 
   void _onPageChanged(int index) {
-    // Pause previous page's controller
-    _controllers[_currentIndex]?.pause();
+    // Stop and dispose the previous page's controller immediately to free memory
+    final prevController = _controllers[_currentIndex];
+    if (prevController != null) {
+      prevController.pause();
+      // Schedule disposal after frame so the widget tree has a chance to update
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_controllers.containsKey(_currentIndex) || _currentIndex != index) {
+          prevController.dispose();
+        }
+      });
+    }
     _currentIndex = index;
 
     // Play the current page
     _controllers[index]?.play();
     _controllers[index]?.setLooping(true);
 
-    // Pre-load ahead and behind
-    for (int i = 1; i <= 3; i++) {
-      if (index + i < _videos.length) _initController(index + i);
-    }
+    // Pre-load ahead and behind (only 1 step)
+    if (index + 1 < _videos.length) _initController(index + 1);
     if (index - 1 >= 0) _initController(index - 1);
 
-    // Dispose controllers that are > 3 pages away (memory management)
+    // Dispose controllers that are > 1 page away (free memory as requested)
     final toDispose =
-        _controllers.keys.where((k) => (k - index).abs() > 3).toList();
+        _controllers.keys.where((k) => (k - index).abs() > 1).toList();
     for (final k in toDispose) {
       _disposeController(k);
     }
@@ -191,6 +232,8 @@ class _VideoReelScreenState extends State<VideoReelScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Only act if this screen is actually visible to the user.
+    if (!_isActive) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       _controllers[_currentIndex]?.pause();
@@ -201,12 +244,16 @@ class _VideoReelScreenState extends State<VideoReelScreen>
 
   @override
   void dispose() {
+    _isActive = false;
     WidgetsBinding.instance.removeObserver(this);
+    routeObserver.unsubscribe(this);
     _pageController.dispose();
-    for (final c in _controllers.values) {
-      c.pause();
-      c.dispose();
+    // Stop all active players immediately to free memory and audio session
+    for (final ctrl in _controllers.values) {
+      ctrl.pause();
+      ctrl.dispose();
     }
+    _controllers.clear();
     super.dispose();
   }
 
@@ -214,11 +261,20 @@ class _VideoReelScreenState extends State<VideoReelScreen>
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        // Mark inactive so lifecycle observer won't restart playback
+        _isActive = false;
+        // Stop and release all video players when user navigates back
+        for (final ctrl in _controllers.values) {
+          ctrl.pause();
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
           children: [
             // ── Vertical PageView ──
             PageView.builder(
@@ -296,7 +352,8 @@ class _VideoReelScreenState extends State<VideoReelScreen>
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
