@@ -11,8 +11,8 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    return 'http://192.168.1.250:8787/api/v1';
-    // return 'https://quest.vidarave.com/api/v1';
+    // return 'http://192.168.1.250:8787/api/v1';
+    return 'https://quest.vidarave.com/api/v1';
   }
 
   static String getFullImageUrl(String url) {
@@ -1780,7 +1780,9 @@ class ApiService {
     request.headers.addAll({'Authorization': 'Bearer $token'});
     request.files.add(await http.MultipartFile.fromPath('file', filePath));
     if (thumbnailPath != null) {
-      request.files.add(await http.MultipartFile.fromPath('thumbnail', thumbnailPath));
+      request.files.add(
+        await http.MultipartFile.fromPath('thumbnail', thumbnailPath),
+      );
     }
     if (title != null && title.isNotEmpty) {
       request.fields['title'] = title;
