@@ -20,7 +20,7 @@ class SubscriptionProvider with ChangeNotifier {
   List<ProductDetails> get products => _products;
   bool get isLoading => _isLoading;
 
-  static const String _kSubscriptionId = 'com.bible.quest';
+  static const String _kSubscriptionId = 'com.sozo.tribe';
 
   SubscriptionProvider(this._authProvider) {
     _init();

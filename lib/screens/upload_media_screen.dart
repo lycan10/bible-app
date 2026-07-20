@@ -169,6 +169,11 @@ class _UploadMediaScreenState extends State<UploadMediaScreen> {
         const SnackBar(content: Text('Upload successful')),
       );
       Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload failed: $e')),
+      );
     } finally {
       if (mounted) {
         setState(() => _isUploading = false);
