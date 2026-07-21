@@ -9,6 +9,7 @@ import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
 import 'package:quest/theme/theme.dart';
+import '../../components/report_bottom_sheet.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
@@ -671,8 +672,7 @@ class _CommentItemState extends State<CommentItem> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        if (canDelete)
-                          GestureDetector(
+                        GestureDetector(
                             onTap: () {
                               showModalBottomSheet(
                                 context: context,
@@ -680,27 +680,51 @@ class _CommentItemState extends State<CommentItem> {
                                   return SafeArea(
                                     child: Wrap(
                                       children: [
+                                        if (canDelete)
+                                          ListTile(
+                                            leading: const Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
+                                            ),
+                                            title: const Text(
+                                              'Delete Comment',
+                                              style: TextStyle(color: Colors.red),
+                                            ),
+                                            onTap: () async {
+                                              Navigator.pop(context);
+                                              final auth =
+                                                  context.read<AuthProvider>();
+                                              if (auth.token != null) {
+                                                await context
+                                                    .read<CommunityProvider>()
+                                                    .deleteCommunityComment(
+                                                      auth.token!,
+                                                      widget.comment['id'],
+                                                    );
+                                              }
+                                            },
+                                          ),
                                         ListTile(
                                           leading: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
+                                            Icons.report_problem,
+                                            color: AppTheme.textColor2,
                                           ),
-                                          title: const Text(
-                                            'Delete Comment',
-                                            style: TextStyle(color: Colors.red),
+                                          title: Text(
+                                            'Report Comment',
+                                            style: TextStyle(color: theme.colorScheme.onSurface),
                                           ),
-                                          onTap: () async {
+                                          onTap: () {
                                             Navigator.pop(context);
-                                            final auth =
-                                                context.read<AuthProvider>();
-                                            if (auth.token != null) {
-                                              await context
-                                                  .read<CommunityProvider>()
-                                                  .deleteCommunityComment(
-                                                    auth.token!,
-                                                    widget.comment['id'],
-                                                  );
-                                            }
+                                            showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              backgroundColor: Colors.transparent,
+                                              builder: (context) => ReportBottomSheet(
+                                                itemType: 'COMMENT',
+                                                itemId: widget.comment['id'],
+                                                reportedUserId: widget.comment['userId'],
+                                              ),
+                                            );
                                           },
                                         ),
                                       ],
@@ -892,19 +916,18 @@ class _PostMenuDialogBox extends StatelessWidget {
             ),
             if (!isOwner) ...[
               GestureDetector(
-                onTap: () async {
-                  final provider = context.read<CommunityProvider>();
-                  await provider.reportPost(
-                    auth.token!,
-                    post['id'],
-                    "Inappropriate content",
+                onTap: () {
+                  Navigator.pop(context); // Close the options bottom sheet
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => ReportBottomSheet(
+                      itemType: 'POST',
+                      itemId: post['id'],
+                      reportedUserId: post['userId'],
+                    ),
                   );
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Post reported.')),
-                    );
-                  }
                 },
                 child: SettingsRowItem(
                   icon: HugeIcons.strokeRoundedAlertDiamond,

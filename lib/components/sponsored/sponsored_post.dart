@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
+import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:quest/components/stats/stats.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/titles/title_one.dart';
@@ -581,6 +582,18 @@ class _PostMenuDialogBox extends StatelessWidget {
               title: 'Report this post',
               iconColor: AppTheme.textColor2,
               secondIconColor: Colors.transparent,
+              onTap: () {
+                Navigator.pop(context);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ReportBottomSheet(
+                    itemType: 'POST',
+                    itemId: '0',
+                  ),
+                );
+              },
             ),
             SettingsRowItem(
               icon: HugeIcons.strokeRoundedDelete01,

@@ -11,7 +11,7 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    // return 'http://192.168.1.250:8787/api/v1';
+    //return 'http://192.168.1.250:8787/api/v1';
     return 'https://quest.vidarave.com/api/v1';
   }
 
@@ -1021,7 +1021,7 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  // POST /posts/:postId/report
+  // POST /posts/:postId/report (legacy)
   static Future<Map<String, dynamic>> reportCommunityPost(
     String token,
     String postId,
@@ -1032,6 +1032,21 @@ class ApiService {
         Uri.parse('$baseUrl/communities/posts/$postId/report'),
         headers: _headers(token),
         body: jsonEncode({'reason': reason}),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /reports
+  static Future<Map<String, dynamic>> submitReport(
+    String token,
+    Map<String, dynamic> reportData,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/reports'),
+        headers: _headers(token),
+        body: jsonEncode(reportData),
       ),
     );
     return jsonDecode(response.body);

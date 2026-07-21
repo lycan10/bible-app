@@ -8,6 +8,7 @@ import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/main.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
+import 'package:quest/components/report_bottom_sheet.dart';
 
 class AudioReelScreen extends StatefulWidget {
   final List<dynamic> audios;
@@ -715,6 +716,32 @@ class _AudioPageState extends State<_AudioPage> {
                       ),
                       child: const HugeIcon(
                         icon: HugeIcons.strokeRoundedLinkForward,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => ReportBottomSheet(
+                          itemType: 'AUDIO',
+                          itemId: widget.audioData['id'] ?? '',
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.buttonColor3,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlertDiamond,
                         size: 20,
                         color: Colors.white,
                       ),

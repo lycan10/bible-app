@@ -5,6 +5,7 @@ import 'package:quest/theme/theme.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
+import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
@@ -85,8 +86,14 @@ class CommunityMenuDialogBox extends StatelessWidget {
               secondIconColor: Colors.transparent,
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Community reported')),
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ReportBottomSheet(
+                    itemType: 'COMMUNITY',
+                    itemId: community['id'],
+                  ),
                 );
               },
             ),

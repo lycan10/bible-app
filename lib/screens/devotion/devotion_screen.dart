@@ -10,6 +10,7 @@ import 'package:quest/theme/theme.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
+import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -268,8 +269,14 @@ class _DevotionScreenState extends State<DevotionScreen> {
               onTap: () {
                 HapticFeedback.lightImpact();
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Report submitted!')),
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ReportBottomSheet(
+                    itemType: 'DEVOTION',
+                    itemId: _dayData?['id'] ?? widget.planId ?? '',
+                  ),
                 );
               },
               child: const SettingsRowItem(

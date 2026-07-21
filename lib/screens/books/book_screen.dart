@@ -10,6 +10,7 @@ import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
+import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:quest/screens/books/pdf_viewer_screen.dart';
 import 'package:quest/components/formatted_text.dart';
 
@@ -220,6 +221,7 @@ class _BookScreenState extends State<BookScreen> {
                         onShare: _shareBook,
                         onSave: _toggleSave,
                         isSaved: _isSaved,
+                        book: widget.book,
                       ));
                     },
                   );
@@ -771,11 +773,14 @@ class _PostMenuDialogBox extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback onSave;
   final bool isSaved;
+  final dynamic book;
 
   const _PostMenuDialogBox({
+    super.key,
     required this.onShare,
     required this.onSave,
     required this.isSaved,
+    required this.book,
   });
 
   @override
@@ -817,6 +822,18 @@ class _PostMenuDialogBox extends StatelessWidget {
               title: 'Report this book',
               iconColor: AppTheme.textColor2,
               secondIconColor: Colors.transparent,
+              onTap: () {
+                Navigator.pop(context);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ReportBottomSheet(
+                    itemType: 'BOOK',
+                    itemId: book['id'],
+                  ),
+                );
+              },
             ),
             SettingsRowItem(
               icon: HugeIcons.strokeRoundedDelete01,

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
@@ -560,6 +562,33 @@ class _ChatMenuDialogBox extends StatelessWidget {
               icon: HugeIcons.strokeRoundedDelete01,
               iconBackgroundColor: Colors.transparent,
               title: 'Clear chat',
+              iconColor: AppTheme.textColor2,
+            ),
+            SettingsRowItem(
+              onTap: () {
+                Navigator.pop(context);
+                final recentMessages = chatProvider.getMessages(chatId).take(10).map((m) => {
+                  'id': m['id'],
+                  'text': m['text'],
+                  'senderId': m['senderId'],
+                  'createdAt': m['createdAt'],
+                }).toList();
+                
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ReportBottomSheet(
+                    itemType: 'USER',
+                    itemId: friendId,
+                    reportedUserId: friendId,
+                    attachedMessages: recentMessages,
+                  ),
+                );
+              },
+              icon: HugeIcons.strokeRoundedAlertDiamond,
+              iconBackgroundColor: Colors.transparent,
+              title: 'Report user',
               iconColor: AppTheme.textColor2,
             ),
             SettingsRowItem(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
+import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/community/community_card_snippet.dart';
 import 'package:quest/providers/auth_provider.dart';
@@ -193,6 +194,24 @@ class _UserProfileCardState extends State<UserProfileCard> {
                     icon: HugeIcons.strokeRoundedShare08,
                     label: "Share",
                     onTap: () => _shareProfile(context),
+                  ),
+                  const SizedBox(width: 10),
+                  ActionPillButton(
+                    icon: HugeIcons.strokeRoundedAlertDiamond,
+                    label: "Report",
+                    onTap: () {
+                      Navigator.pop(context);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => ReportBottomSheet(
+                          itemType: 'USER',
+                          itemId: widget.user?['id'] ?? '',
+                          reportedUserId: widget.user?['id'] ?? '',
+                        ),
+                      );
+                    },
                   ),
                 ] else ...[
                   ActionPillButton(
