@@ -6,6 +6,7 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/onboarding/verification.dart';
 import 'package:quest/screens/onboarding/login.dart';
 import 'package:quest/screens/navigation_screen.dart';
+import 'package:quest/screens/onboarding/create_account.dart';
 
 class CountryModel {
   final String name;
@@ -269,6 +270,25 @@ class _GetStartedState extends State<GetStarted> {
     );
   }
 
+  void _navigateToCreateAccountScreen(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        reverseTransitionDuration: const Duration(milliseconds: 400),
+        pageBuilder:
+            (context, animation, secondaryAnimation) => const CreateAccount(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.scaled,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _handleContinue() async {
     final phoneText = _phoneController.text.trim();
     if (phoneText.isEmpty) {
@@ -284,7 +304,13 @@ class _GetStartedState extends State<GetStarted> {
 
     if (mounted) {
       if (success) {
-        _navigateToVerificationScreen(context);
+        if (!authProvider.isOtpEnabled) {
+          // Skip OTP Verification and stash empty code
+          authProvider.stashPasswordAndCode(code: '', password: '');
+          _navigateToCreateAccountScreen(context);
+        } else {
+          _navigateToVerificationScreen(context);
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

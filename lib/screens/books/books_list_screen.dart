@@ -6,11 +6,13 @@ import 'package:quest/components/tile/settings_switch_row.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/screens/books/book_screen.dart';
+import 'package:quest/screens/books/submit_book_screen.dart';
 import 'package:quest/screens/explore/explore_screen.dart'; // For BooksReelCard
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/main.dart';
+import 'package:quest/theme/theme.dart';
 import '../../components/global_more_menu.dart';
 
 final List<Map<String, String>> posts = [
@@ -146,7 +148,23 @@ class _BooksListScreenState extends State<BooksListScreen> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final auth = context.watch<AuthProvider>();
+    final canCreate = auth.user?['verificationBadge'] == 'GOLD' || auth.user?['isAdmin'] == true;
+
     return Scaffold(
+      floatingActionButton: canCreate ? FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SubmitBookScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppTheme.buttonColor,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Upload Book', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ) : null,
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
@@ -289,6 +307,7 @@ class _BooksListScreenState extends State<BooksListScreen> with RouteAware {
                     likes: book['_count']?['reactions']?.toString() ?? '0',
                     backgroundImage:
                         book['imageUrl'] ?? 'assets/images/book.jpeg',
+                    status: book['status'],
                     onTap: () {
                       _navigateToBookScreen(context, book);
                     },

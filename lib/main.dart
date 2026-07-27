@@ -14,6 +14,7 @@ import 'package:quest/providers/community_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/subscription_provider.dart';
+import 'package:quest/providers/economy_provider.dart';
 import 'package:quest/screens/navigation_screen.dart';
 import 'package:quest/screens/onboarding/flash_screen.dart';
 import 'package:quest/theme/theme.dart';
@@ -65,6 +66,11 @@ void main() async {
           create: (context) => SubscriptionProvider(context.read<AuthProvider>()),
           update: (_, authProvider, previous) =>
               previous ?? SubscriptionProvider(authProvider),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, EconomyProvider>(
+          create: (context) => EconomyProvider(context.read<AuthProvider>()),
+          update: (_, authProvider, previous) =>
+              previous ?? EconomyProvider(authProvider),
         ),
       ],
       child: const MyApp(),

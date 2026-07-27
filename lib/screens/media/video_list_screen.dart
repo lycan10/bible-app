@@ -222,7 +222,7 @@ class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
           final token = authProvider.token;
           if (token == null) return;
           try {
-            final check = await ApiService.checkUploadLimit(token);
+            final check = await ApiService.checkMediaUploadLimit(token);
             if (!mounted) return;
             if (check['limitReached'] == true) {
               _showUploadLimitDialog(

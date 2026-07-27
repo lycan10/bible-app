@@ -157,6 +157,7 @@ class _PostListState extends State<PostList> with RouteAware {
                           return PostCardLong(
                             userName: userName.isNotEmpty ? userName : user['username'] ?? 'User',
                             userImage: userImage,
+                            verificationBadge: user['verificationBadge'] ?? 'NONE',
                             postText: post['text'] ?? '',
                             groupName: groupName,
                             postImage: post['image'] ?? '',

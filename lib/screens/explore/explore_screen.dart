@@ -509,6 +509,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                         likes:
                                             '${plan['durationDays'] ?? 0} Days',
                                         backgroundImage: plan['image'] ?? '',
+                                        status: plan['status'],
                                         onTap: () {
                                           if (plan['id'] != null) {
                                             Navigator.push(
@@ -1270,6 +1271,7 @@ class BooksReelCard extends StatelessWidget {
   final String author;
   final String likes;
   final String backgroundImage;
+  final String? status;
   final VoidCallback? onTap;
   final double? height;
 
@@ -1279,6 +1281,7 @@ class BooksReelCard extends StatelessWidget {
     required this.author,
     required this.likes,
     required this.backgroundImage,
+    this.status,
     this.onTap,
     this.height,
   });
@@ -1377,6 +1380,25 @@ class BooksReelCard extends StatelessWidget {
                             ],
                           ),
                         ),
+
+                        if (status == 'PENDING_REVIEW') ...[
+                          const SizedBox(height: 5),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'PENDING REVIEW',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 3),
                       ],

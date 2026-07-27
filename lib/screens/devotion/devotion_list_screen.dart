@@ -11,6 +11,7 @@ import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/components/titles/title_two.dart';
 import 'package:quest/screens/devotion/devotion_article_card.dart';
 import 'package:quest/screens/devotion/devotion_screen.dart';
+import 'package:quest/screens/devotion/submit_devotion_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
@@ -141,6 +142,7 @@ class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware
         imagePath: image,
         likes: totalLikes > 0 ? totalLikes.toString() : "",
         tag: '${plan['durationDays'] ?? 0} Days Plan',
+        status: plan['status'],
         onTap: () {
           if (existingIndex != -1) {
             final myPlan = myPlans[existingIndex];
@@ -195,7 +197,23 @@ class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware
     final myPlans = devotionProvider.myPlans;
     final allPlans = devotionProvider.allPlans;
 
+    final auth = context.watch<AuthProvider>();
+    final canCreate = auth.user?['verificationBadge'] == 'GOLD' || auth.user?['isAdmin'] == true;
+
     return Scaffold(
+      floatingActionButton: canCreate ? FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SubmitDevotionScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppTheme.buttonColor,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Create Devotion', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ) : null,
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child:

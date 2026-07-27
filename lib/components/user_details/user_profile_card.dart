@@ -136,7 +136,18 @@ class _UserProfileCardState extends State<UserProfileCard> {
                             height: 2.5,
                           ),
                           children: [
-                            TextSpan(text: '$firstName $lastName\n'.trim()),
+                            TextSpan(text: '$firstName $lastName '),
+                            if (user['verificationBadge'] == 'BLUE')
+                              WidgetSpan(
+                                child: Icon(Icons.verified, color: Colors.blue, size: 16),
+                                alignment: PlaceholderAlignment.middle,
+                              )
+                            else if (user['verificationBadge'] == 'GOLD')
+                              WidgetSpan(
+                                child: Icon(Icons.verified, color: Colors.amber, size: 16),
+                                alignment: PlaceholderAlignment.middle,
+                              ),
+                            TextSpan(text: '\n'),
                             TextSpan(
                               text: '@$username',
                               style: theme.textTheme.bodySmall?.copyWith(

@@ -9,6 +9,7 @@ class DevotionArticleCard extends StatelessWidget {
   final String imagePath;
   final String likes;
   final String tag; // e.g. "365 Days Plan"
+  final String? status;
   final VoidCallback? onTap;
 
   const DevotionArticleCard({
@@ -19,6 +20,7 @@ class DevotionArticleCard extends StatelessWidget {
     required this.imagePath,
     required this.likes,
     required this.tag,
+    this.status,
     this.onTap,
   });
 
@@ -125,6 +127,25 @@ class DevotionArticleCard extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                if (status == 'PENDING_REVIEW') ...[
+                  const SizedBox(height: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'PENDING REVIEW',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 6),
 

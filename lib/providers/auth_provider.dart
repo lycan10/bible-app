@@ -19,6 +19,8 @@ class AuthProvider with ChangeNotifier {
   String? _firstName;
   String? _lastName;
   String? _gender;
+  
+  bool _isOtpEnabled = true;
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
@@ -31,6 +33,8 @@ class AuthProvider with ChangeNotifier {
   String? get firstName => _firstName;
   String? get lastName => _lastName;
   String? get gender => _gender;
+  
+  bool get isOtpEnabled => _isOtpEnabled;
 
   bool get isAuthenticated => _token != null;
   bool get isOnboardingComplete {
@@ -69,6 +73,12 @@ class AuthProvider with ChangeNotifier {
       if (_token != null) {
         _syncFCMToken();
       }
+      
+      // Fetch public settings for OTP requirement
+      final settings = await ApiService.getPublicSettings();
+      if (settings['settings'] != null && settings['settings']['registrationOtpEnabled'] != null) {
+        _isOtpEnabled = settings['settings']['registrationOtpEnabled'];
+      }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -90,6 +100,9 @@ class AuthProvider with ChangeNotifier {
         _errorMessage = res['error'];
         return false;
       }
+      if (res['mocked'] == true) {
+        _isOtpEnabled = false;
+      }
       return true;
     } catch (e) {
       _errorMessage = e.toString();
@@ -98,6 +111,7 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+
   }
 
   // Stash details

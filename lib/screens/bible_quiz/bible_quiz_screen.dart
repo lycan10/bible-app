@@ -92,18 +92,17 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
     if (index == question['correctAnswerIndex']) {
       _score++;
       _gameSettings?.playCorrectSound();
-
-      // Delay before next question
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (mounted) _advanceOrSubmit();
-      });
     } else {
       _gameSettings?.playIncorrectSound();
-      _showIncorrectDialog();
     }
+
+    // Delay before next question
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) _advanceOrSubmit();
+    });
   }
 
-  void _showIncorrectDialog() {
+  void _showFailedLevelDialog(int cutoff) {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     final firstName = user?['firstName'] ?? 'Player';
 
@@ -124,7 +123,8 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
                 Image.asset('assets/images/star.png', height: 150),
                 const SizedBox(height: 16),
                 Text(
-                  'That is Incorrect, $firstName',
+                  'You scored $_score/${_questions.length}. You need $cutoff to pass this level, $firstName',
+                  textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 18, color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
@@ -290,6 +290,18 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
   }
 
   Future<void> _submitAnswers() async {
+    int cutoff = 7;
+    if (widget.level > 100 && widget.level <= 200) {
+      cutoff = 8;
+    } else if (widget.level > 200) {
+      cutoff = 9;
+    }
+
+    if (_score < cutoff) {
+      _showFailedLevelDialog(cutoff);
+      return;
+    }
+
     if (!mounted) return;
     setState(() => _isLoading = true);
 

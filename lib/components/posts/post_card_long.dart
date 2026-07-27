@@ -14,6 +14,7 @@ class PostCardLong extends StatelessWidget {
   final String likes;
   final String comments;
   final String time;
+  final String verificationBadge;
   final VoidCallback onTap;
   final VoidCallback? onAvatarTap;
   final VoidCallback? onMoreTap;
@@ -28,6 +29,7 @@ class PostCardLong extends StatelessWidget {
     required this.likes,
     required this.comments,
     required this.time,
+    this.verificationBadge = 'NONE',
     required this.onTap,
     this.onAvatarTap,
     this.onMoreTap,
@@ -70,6 +72,13 @@ class PostCardLong extends StatelessWidget {
                               color: AppTheme.textColor2,
                             ),
                           ),
+                          if (verificationBadge == 'BLUE') ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.verified, color: Colors.blue, size: 14),
+                          ] else if (verificationBadge == 'GOLD') ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.verified, color: Colors.amber, size: 14),
+                          ],
                         ],
                       ),
                     ),

@@ -14,6 +14,7 @@ import '../../services/api_service.dart';
 import '../../components/bible_reference_picker.dart';
 import '../../components/embeds/smart_image_embed.dart';
 import '../../components/embeds/voice_note_embed.dart';
+import '../../components/coin_purchase_dialog.dart';
 
 class NewJournalScreen extends StatefulWidget {
   const NewJournalScreen({super.key});
@@ -74,9 +75,49 @@ class _NewJournalScreenState extends State<NewJournalScreen>
       return;
     }
 
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final token = authProvider.token;
+    if (token == null) return;
+
     setState(() => _isSaving = true);
+
     try {
-      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      final costCheck = await ApiService.checkActionCost(token, 'create_journal');
+      if (costCheck['error'] != null) {
+        throw Exception(costCheck['error']);
+      }
+
+      if (costCheck['isFree'] == false && (costCheck['cost'] ?? 0) > 0) {
+        setState(() => _isSaving = false);
+        final bool proceed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Action Costs Coins"),
+            content: Text("Creating a journal will cost ${costCheck['cost']} coins.\n\nReason: ${costCheck['reason']}\n\nDo you want to proceed?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Proceed"),
+              ),
+            ],
+          ),
+        ) ?? false;
+        
+        if (!proceed) return;
+        setState(() => _isSaving = true);
+      }
+    } catch (e) {
+      setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cost check failed: $e')));
+      }
+      return;
+    }
+    try {
       if (token != null) {
         final extractedVerses =
             RegExp(
@@ -85,7 +126,7 @@ class _NewJournalScreenState extends State<NewJournalScreen>
 
         final bodyJson = jsonEncode(_controller.document.toDelta().toJson());
 
-        await ApiService.createJournal(
+        final res = await ApiService.createJournal(
           token,
           title,
           bodyJson,
@@ -93,19 +134,33 @@ class _NewJournalScreenState extends State<NewJournalScreen>
           feelings: _selectedFeelings,
         );
 
-        final parts = _selectedFeelings.first.split(' ');
-        if (parts.length >= 2) {
-          final emoji = parts.first;
-          final feelingText = parts.sublist(1).join(' ');
-          if (mounted) {
-            Provider.of<FeedProvider>(
-              context,
-              listen: false,
-            ).changeFeeling(token, feelingText, emoji);
+        if (mounted) {
+          if (res['error'] != null) {
+            if (res['error'].toString().contains('Insufficient coins') || res['error'].toString().contains('limit')) {
+              showGeneralDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierLabel: "Purchase Coins",
+                pageBuilder: (_, __, ___) => const CoinPurchaseDialog(),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: ${res['error']}')),
+              );
+            }
+          } else {
+            final parts = _selectedFeelings.first.split(' ');
+            if (parts.length >= 2) {
+              final emoji = parts.first;
+              final feelingText = parts.sublist(1).join(' ');
+              Provider.of<FeedProvider>(
+                context,
+                listen: false,
+              ).changeFeeling(token, feelingText, emoji);
+            }
+            Navigator.pop(context);
           }
         }
-
-        if (mounted) Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(

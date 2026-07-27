@@ -18,6 +18,19 @@ class AppTheme {
   static const Color purpleColor = Color(0XFF4a3aff);
   static const Color buttonColor2 = Color(0xFFe9e9ea);
   static const Color buttonColor3 = Color(0xFF007aff);
+  static const Color surfaceColor = Colors.white;
+  static const Color secondaryTextColor = textColor2;
+
+  static const TextStyle headingStyle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+
+  static const TextStyle bodyStyle = TextStyle(
+    fontSize: 16,
+    color: Colors.black,
+  );
 
   /// 🌞 Light Theme
   static final ThemeData lightTheme = ThemeData(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/subscription_provider.dart';
-import '../providers/feature_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/community_provider.dart';
-import 'package:quest/theme/theme.dart';
+import '../services/api_service.dart';
+import '../theme/theme.dart';
+import '../components/coin_purchase_dialog.dart';
 import 'paywall_screen.dart';
 
 class CreateCommunityScreen extends StatefulWidget {
@@ -152,19 +152,45 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
-    // --- Subscription gate: check before hitting the API ---
-    final subProvider = Provider.of<SubscriptionProvider>(context, listen: false);
-
-    if (!subProvider.isSubscribed) {
-      _showSubscriptionRequiredModal();
-      return;
-    }
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final token = authProvider.token;
     if (token == null) return;
 
     final guidelines = _guidelinesController.text;
+
+    try {
+      final costCheck = await ApiService.checkActionCost(token, 'create_community');
+      if (costCheck['error'] != null) {
+        throw Exception(costCheck['error']);
+      }
+
+      if (costCheck['isFree'] == false && (costCheck['cost'] ?? 0) > 0) {
+        final bool proceed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Action Costs Coins"),
+            content: Text("Creating a community will cost ${costCheck['cost']} coins.\n\nReason: ${costCheck['reason']}\n\nDo you want to proceed?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Proceed"),
+              ),
+            ],
+          ),
+        ) ?? false;
+        
+        if (!proceed) return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cost check failed: $e')));
+      }
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Creating community...')),
@@ -188,10 +214,13 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      // Fallback: backend also blocks unsubscribed users
-      if (e.toString().contains('You must be subscribed') ||
-          e.toString().contains('subscribed')) {
-        _showSubscriptionRequiredModal();
+      if (e.toString().contains('Insufficient coins') || e.toString().contains('limit')) {
+        showGeneralDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierLabel: "Purchase Coins",
+          pageBuilder: (_, __, ___) => const CoinPurchaseDialog(),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to create community: $e')),

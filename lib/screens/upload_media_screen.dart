@@ -11,7 +11,7 @@ import '../providers/subscription_provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import 'package:quest/theme/theme.dart';
-import 'paywall_screen.dart';
+import '../components/coin_purchase_dialog.dart';
 
 class UploadMediaScreen extends StatefulWidget {
   final String initialMediaType; // 'video' or 'audio'
@@ -142,6 +142,85 @@ class _UploadMediaScreenState extends State<UploadMediaScreen> {
         throw Exception('Not authenticated');
       }
 
+      // Check global settings for duration limit
+      try {
+        final settingsRes = await ApiService.getSettings(token);
+        if (settingsRes['settings'] != null) {
+          final settings = settingsRes['settings'];
+          
+          if (widget.initialMediaType == 'video') {
+             final maxVideoDuration = settings['videoUploadDurationLimitSec'] ?? 300;
+             if (_selectedMedia != null) {
+               final controller = VideoPlayerController.file(_selectedMedia!);
+               await controller.initialize();
+               final durationInSeconds = controller.value.duration.inSeconds;
+               controller.dispose();
+               if (durationInSeconds > maxVideoDuration) {
+                 throw Exception('Video duration exceeds the limit of $maxVideoDuration seconds.');
+               }
+             }
+          } else if (widget.initialMediaType == 'audio') {
+             final maxAudioDuration = settings['audioUploadDurationLimitSec'] ?? 1800;
+             if (_selectedMedia != null) {
+               final player = AudioPlayer();
+               await player.setSourceDeviceFile(_selectedMedia!.path);
+               final duration = await player.getDuration();
+               await player.dispose();
+               if (duration != null && duration.inSeconds > maxAudioDuration) {
+                 throw Exception('Audio duration exceeds the limit of $maxAudioDuration seconds.');
+               }
+             }
+          }
+        }
+      } catch (e) {
+        if (e.toString().contains('exceeds the limit')) {
+           setState(() => _isUploading = false);
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))));
+           }
+           return;
+        }
+        // ignore other settings errors and proceed
+      }
+
+      try {
+        final action = widget.initialMediaType == 'video' ? 'post_video' : 'post_audio';
+        final costCheck = await ApiService.checkActionCost(token, action);
+        if (costCheck['error'] != null) {
+          throw Exception(costCheck['error']);
+        }
+
+        if (costCheck['isFree'] == false && (costCheck['cost'] ?? 0) > 0) {
+          setState(() => _isUploading = false);
+          final bool proceed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("Action Costs Coins"),
+              content: Text("Uploading this media will cost ${costCheck['cost']} coins.\n\nReason: ${costCheck['reason']}\n\nDo you want to proceed?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text("Proceed"),
+                ),
+              ],
+            ),
+          ) ?? false;
+          
+          if (!proceed) return;
+          setState(() => _isUploading = true);
+        }
+      } catch (e) {
+        setState(() => _isUploading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cost check failed: $e')));
+        }
+        return;
+      }
+
       final uploadTitle = title.trim();
       final response = await ApiService.uploadMedia(
         token, 
@@ -153,10 +232,13 @@ class _UploadMediaScreenState extends State<UploadMediaScreen> {
       
       if (response.containsKey('error')) {
         final error = response['error'] as String;
-        if (error.contains('limit reached')) {
+        if (error.contains('limit reached') || error.contains('Insufficient coins') || error.contains('limit')) {
           if (!mounted) return;
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PaywallScreen()),
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: "Purchase Coins",
+            pageBuilder: (_, __, ___) => const CoinPurchaseDialog(),
           );
           return;
         } else {

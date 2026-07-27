@@ -11,8 +11,8 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    //return 'http://192.168.1.250:8787/api/v1';
-    return 'https://quest.vidarave.com/api/v1';
+    return 'http://192.168.1.250:8787/api/v1';
+    //return 'https://quest.vidarave.com/api/v1';
   }
 
   static String getFullImageUrl(String url) {
@@ -1770,8 +1770,37 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  static Future<Map<String, dynamic>> getSettings(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/settings'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return {'error': 'Failed to load settings'};
+    } catch (e) {
+      return {'error': e.toString()};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPublicSettings() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/settings/public'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return {'error': 'Failed to load public settings'};
+    } catch (e) {
+      return {'error': e.toString()};
+    }
+  }
+
   // GET /api/v1/media/upload/limit-check
-  static Future<Map<String, dynamic>> checkUploadLimit(String token) async {
+  static Future<Map<String, dynamic>> checkMediaUploadLimit(
+    String token,
+  ) async {
     final response = await http.get(
       Uri.parse('$baseUrl/media/upload/limit-check'),
       headers: {'Authorization': 'Bearer $token'},
@@ -2323,5 +2352,245 @@ class ApiService {
     );
     final finalRes = _handleResponse(response);
     return jsonDecode(finalRes.body);
+  }
+  // --- Economy Endpoints ---
+
+  static Future<Map<String, dynamic>> fetchEconomyBalance(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/economy/balance'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<List<dynamic>> fetchCoinTransactions(
+    String token, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/economy/transactions?page=$page&limit=$limit'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> recordCoinPurchase(
+    String token,
+    String packageId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/economy/purchase/$packageId'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /books (Submit Book - Gold Badge)
+  static Future<Map<String, dynamic>> submitBook(
+    String token,
+    String title,
+    String author,
+    String description,
+    String coverImageUrl,
+    String fileUrl,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/books'),
+        headers: _headers(token),
+        body: jsonEncode({
+          'title': title,
+          'author': author,
+          'description': description,
+          'coverImageUrl': coverImageUrl,
+          'fileUrl': fileUrl,
+        }),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /devotions/plans (Submit Devotion Plan - Gold Badge)
+  static Future<Map<String, dynamic>> submitDevotion(
+    String token,
+    String title,
+    String authorName,
+    String description,
+    String coverImageUrl,
+    List<Map<String, dynamic>> days,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/devotions/plans'),
+        headers: _headers(token),
+        body: jsonEncode({
+          'title': title,
+          'authorName': authorName,
+          'description': description,
+          'coverImageUrl': coverImageUrl,
+          'days': days,
+        }),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /economy/config
+  static Future<Map<String, dynamic>> fetchEconomyConfig(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/economy/config'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /economy/check-cost
+  static Future<Map<String, dynamic>> checkActionCost(
+    String token,
+    String action,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/economy/check-cost'),
+        headers: _headers(token),
+        body: jsonEncode({'action': action}),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // MY CONTENT API
+
+  static Future<List<dynamic>> fetchCreatedBooks(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/books/created'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> editBook(
+    String token,
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    final response = _handleResponse(
+      await http.put(
+        Uri.parse('$baseUrl/books/$id'),
+        headers: _headers(token),
+        body: jsonEncode(data),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> deleteBook(
+    String token,
+    String id,
+  ) async {
+    final response = _handleResponse(
+      await http.delete(
+        Uri.parse('$baseUrl/books/$id'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<List<dynamic>> fetchCreatedDevotions(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/devotions/created'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> editDevotionPlan(
+    String token,
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    final response = _handleResponse(
+      await http.put(
+        Uri.parse('$baseUrl/devotions/plans/$id'),
+        headers: _headers(token),
+        body: jsonEncode(data),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> deleteDevotionPlan(
+    String token,
+    String id,
+  ) async {
+    final response = _handleResponse(
+      await http.delete(
+        Uri.parse('$baseUrl/devotions/plans/$id'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<List<dynamic>> fetchCreatedUserMedia(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/media/user/created'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> editUserMedia(
+    String token,
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    final response = _handleResponse(
+      await http.put(
+        Uri.parse('$baseUrl/media/user/$id'),
+        headers: _headers(token),
+        body: jsonEncode(data),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> deleteUserMedia(
+    String token,
+    String id,
+  ) async {
+    final response = _handleResponse(
+      await http.delete(
+        Uri.parse('$baseUrl/media/user/$id'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<List<dynamic>> fetchCreatedPosts(String token) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/communities/posts/user/created'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
   }
 }
