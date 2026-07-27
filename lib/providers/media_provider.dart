@@ -187,14 +187,14 @@ class MediaProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> trackVideoPlayback(
+  Future<Map<String, dynamic>> trackVideoPlayback(
     String token,
     String videoId,
     int progressSeconds,
     bool completed,
   ) async {
     try {
-      await ApiService.trackVideoPlayback(
+      return await ApiService.trackVideoPlayback(
         token,
         videoId,
         progressSeconds,
@@ -202,6 +202,7 @@ class MediaProvider extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint("Failed to track video playback: $e");
+      return {};
     }
   }
 
@@ -218,14 +219,14 @@ class MediaProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> trackAudioPlayback(
+  Future<Map<String, dynamic>> trackAudioPlayback(
     String token,
     String audioId,
     int progressSeconds,
     bool completed,
   ) async {
     try {
-      await ApiService.trackAudioPlayback(
+      return await ApiService.trackAudioPlayback(
         token,
         audioId,
         progressSeconds,
@@ -233,6 +234,7 @@ class MediaProvider extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint("Failed to track audio playback: $e");
+      return {};
     }
   }
 }

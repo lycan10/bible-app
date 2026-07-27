@@ -9,6 +9,7 @@ import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/devotion_provider.dart';
+import 'package:quest/providers/economy_provider.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:video_player/video_player.dart';
@@ -101,7 +102,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
   void _videoListener() {
     final auth = context.read<AuthProvider>();
     final autoScroll = auth.user?['autoScroll'] ?? false;
-    
+
     if (autoScroll &&
         _videoPlayerController!.value.position >=
             _videoPlayerController!.value.duration) {
@@ -131,6 +132,11 @@ class _DevotionScreenState extends State<DevotionScreen> {
             _viewedDayNum,
           );
           if (mounted) {
+            if (result['coinBalance'] != null) {
+              context.read<EconomyProvider>().updateCoinBalance(
+                result['coinBalance'],
+              );
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -235,11 +241,20 @@ class _DevotionScreenState extends State<DevotionScreen> {
               onTap: () async {
                 HapticFeedback.lightImpact();
                 if (widget.planId != null) {
-                  final auth = Provider.of<AuthProvider>(context, listen: false);
-                  final dev = Provider.of<DevotionProvider>(context, listen: false);
+                  final auth = Provider.of<AuthProvider>(
+                    context,
+                    listen: false,
+                  );
+                  final dev = Provider.of<DevotionProvider>(
+                    context,
+                    listen: false,
+                  );
                   if (auth.token != null) {
                     try {
-                      await dev.unsubscribeFromPlan(auth.token!, widget.planId!);
+                      await dev.unsubscribeFromPlan(
+                        auth.token!,
+                        widget.planId!,
+                      );
                       if (context.mounted) {
                         Navigator.pop(context);
                         Navigator.pop(context);
@@ -273,10 +288,11 @@ class _DevotionScreenState extends State<DevotionScreen> {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => ReportBottomSheet(
-                    itemType: 'DEVOTION',
-                    itemId: _dayData?['id'] ?? widget.planId ?? '',
-                  ),
+                  builder:
+                      (context) => ReportBottomSheet(
+                        itemType: 'DEVOTION',
+                        itemId: _dayData?['id'] ?? widget.planId ?? '',
+                      ),
                 );
               },
               child: const SettingsRowItem(
@@ -321,9 +337,10 @@ class _DevotionScreenState extends State<DevotionScreen> {
     }
 
     final title = _dayData!['title'] ?? 'Devotion';
-    final durationDays = (_planData!['days'] != null && (_planData!['days'] as List).isNotEmpty)
-        ? (_planData!['days'] as List).length
-        : (_planData!['durationDays'] ?? 1);
+    final durationDays =
+        (_planData!['days'] != null && (_planData!['days'] as List).isNotEmpty)
+            ? (_planData!['days'] as List).length
+            : (_planData!['durationDays'] ?? 1);
     final planImage = _planData?['image'] ?? 'assets/images/user_test.jpg';
     final pointsEarned = _dayData?['pointsEarned'] ?? 20;
     final bodyText = _dayData?['bodyText'] ?? 'No content available.';
@@ -712,7 +729,6 @@ class _DevotionScreenState extends State<DevotionScreen> {
     );
   }
 }
-
 
 class DayPill extends StatelessWidget {
   final String label;

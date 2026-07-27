@@ -6,6 +6,7 @@ import 'package:quest/services/game_service.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/game_settings_provider.dart';
 import 'package:quest/screens/games/game_settings_sheet.dart';
+import 'package:quest/providers/economy_provider.dart';
 import '../../theme/theme.dart';
 
 class WordCrossScreen extends StatefulWidget {
@@ -285,7 +286,10 @@ class _WordCrossScreenState extends State<WordCrossScreen>
     _gameSettings?.playGameEndSound(won: foundWords.length == words.length);
 
     try {
-      await GameService.submitScore('WORD_CROSS', widget.difficulty, score);
+      final res = await GameService.submitScore('WORD_CROSS', widget.difficulty, score);
+      if (res['coinBalance'] != null && mounted) {
+        context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
+      }
     } catch (e) {
       debugPrint('Error saving score: $e');
     }

@@ -5,6 +5,7 @@ import 'package:quest/services/game_service.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/game_settings_provider.dart';
 import 'package:quest/screens/games/game_settings_sheet.dart';
+import 'package:quest/providers/economy_provider.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../theme/theme.dart';
 
@@ -212,7 +213,10 @@ class _WordMatchGameScreenState extends State<WordMatchGameScreen>
 
     // Submit score
     try {
-      await GameService.submitScore('WORD_MATCH', widget.difficulty, score);
+      final res = await GameService.submitScore('WORD_MATCH', widget.difficulty, score);
+      if (res['coinBalance'] != null && mounted) {
+        context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
+      }
     } catch (e) {
       debugPrint('Could not submit score: $e');
     }

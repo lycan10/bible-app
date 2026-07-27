@@ -98,6 +98,12 @@ class EconomyProvider with ChangeNotifier {
     }
   }
 
+  void updateCoinBalance(int newBalance) {
+    _coinBalance = newBalance;
+    authProvider.updateUserLocally({'coinBalance': newBalance});
+    notifyListeners();
+  }
+
   void buyProduct(ProductDetails productDetails) {
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
     _iap.buyConsumable(purchaseParam: purchaseParam, autoConsume: true);

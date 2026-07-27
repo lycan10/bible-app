@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/economy_provider.dart';
 import 'package:quest/main.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/report_bottom_sheet.dart';
@@ -219,15 +220,18 @@ class _VideoReelScreenState extends State<VideoReelScreen>
     }
   }
 
-  void _trackPlayback(dynamic videoData, int index, bool completed) {
+  void _trackPlayback(dynamic videoData, int index, bool completed) async {
     final auth = context.read<AuthProvider>();
     if (auth.token != null) {
-      context.read<MediaProvider>().trackVideoPlayback(
+      final res = await context.read<MediaProvider>().trackVideoPlayback(
         auth.token!,
         videoData['id'],
         _controllers[index]?.value.position.inSeconds ?? 0,
         completed,
       );
+      if (res['coinBalance'] != null && mounted) {
+        context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
+      }
     }
   }
 

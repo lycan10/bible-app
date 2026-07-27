@@ -85,8 +85,8 @@ class FeedProvider with ChangeNotifier {
     }
   }
 
-  Future<void> shareDailyVerse(String token) async {
-    if (_dailyVerse == null) return;
+  Future<Map<String, dynamic>> shareDailyVerse(String token) async {
+    if (_dailyVerse == null) return {};
 
     final verseText = _dailyVerse!['text'] ?? '';
     final reference = _dailyVerse!['reference'] ?? '';
@@ -104,7 +104,7 @@ class FeedProvider with ChangeNotifier {
       await Share.share(shareContent);
     } catch (e) {
       debugPrint("Error launching share sheet: $e");
-      return;
+      return {};
     }
 
     // Optimistic update
@@ -115,11 +115,13 @@ class FeedProvider with ChangeNotifier {
       final result = await ApiService.shareDailyVerse(token);
       _dailyVerse!['sharesCount'] = result['sharesCount'];
       notifyListeners();
+      return result;
     } catch (e) {
       // Revert optimistic update
       _dailyVerse!['sharesCount'] = (_dailyVerse!['sharesCount'] ?? 0) - 1;
       notifyListeners();
       debugPrint("Error sharing verse: $e");
+      return {};
     }
   }
 

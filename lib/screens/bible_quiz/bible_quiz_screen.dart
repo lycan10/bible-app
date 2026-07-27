@@ -8,6 +8,7 @@ import 'package:quest/providers/game_settings_provider.dart';
 import 'package:quest/screens/bible_quiz/quiz_finish_screen.dart';
 import 'package:quest/providers/game_settings_provider.dart';
 import 'package:quest/services/game_service.dart';
+import 'package:quest/providers/economy_provider.dart';
 
 class BibleQuizScreen extends StatefulWidget {
   final int level;
@@ -314,12 +315,17 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
       );
       earnedCoins = res['pointsEarned'] ?? 0;
       
+      
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       authProvider.updateUserLocally({
         'points': (authProvider.user?['points'] ?? 0) + earnedCoins,
         if (authProvider.user?['bibleQuizLevel'] <= widget.level)
           'bibleQuizLevel': widget.level + 1,
       });
+
+      if (res['coinBalance'] != null && mounted) {
+        context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
+      }
     } catch (e) {
       debugPrint('Failed to submit score: $e');
     }

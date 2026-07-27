@@ -29,17 +29,20 @@ class _MyContentScreenState extends State<MyContentScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text('My Content', style: AppTheme.headingStyle),
-        backgroundColor: AppTheme.surfaceColor,
+        title: Text('My Content', style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppTheme.primaryBlue,
-          unselectedLabelColor: AppTheme.secondaryTextColor,
-          indicatorColor: AppTheme.primaryBlue,
+          labelColor: colorScheme.primary,
+          unselectedLabelColor: colorScheme.onSurfaceVariant,
+          indicatorColor: colorScheme.primary,
           isScrollable: true,
           tabs: const [
             Tab(text: 'Devotions'),
@@ -79,7 +82,7 @@ class _MyContentScreenState extends State<MyContentScreen>
         final items = snapshot.data ?? [];
         if (items.isEmpty) {
           return Center(
-            child: Text('No $type found.', style: AppTheme.bodyStyle),
+            child: Text('No $type found.', style: Theme.of(context).textTheme.bodyLarge),
           );
         }
 
@@ -89,39 +92,66 @@ class _MyContentScreenState extends State<MyContentScreen>
           itemBuilder: (context, index) {
             final item = items[index];
             return Card(
-              color: AppTheme.surfaceColor,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
               margin: const EdgeInsets.only(bottom: 12),
+              elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                ),
               ),
-              child: ListTile(
-                title: Text(
-                  item['title'] ?? item['text'] ?? 'Untitled',
-                  style: AppTheme.bodyStyle.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  item['status'] ?? 'Active',
-                  style: TextStyle(
-                    color:
-                        item['status'] == 'PENDING_REVIEW'
-                            ? Colors.orange
-                            : Colors.green,
-                  ),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: AppTheme.primaryBlue),
-                      onPressed: () => _editItem(type, item),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: ListTile(
+                  title: Text(
+                    item['title'] ?? item['text'] ?? 'Untitled',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteItem(type, item['id']),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: item['status'] == 'PENDING_REVIEW'
+                                ? Colors.orange.withOpacity(0.1)
+                                : Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            item['status'] ?? 'Active',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: item['status'] == 'PENDING_REVIEW'
+                                  ? Colors.orange
+                                  : Colors.green,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary),
+                        onPressed: () => _editItem(type, item),
+                        tooltip: 'Edit',
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                        onPressed: () => _deleteItem(type, item['id']),
+                        tooltip: 'Delete',
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

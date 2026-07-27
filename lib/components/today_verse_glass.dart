@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/feed_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/community_provider.dart';
+import '../providers/economy_provider.dart';
 import '../services/api_service.dart';
 
 String _formatCount(int count) {
@@ -238,7 +239,10 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               if (widget.isCommunityVerse && widget.communityId != null) {
                                 await Provider.of<CommunityProvider>(context, listen: false).shareCommunityVerse(authProvider.token!, widget.communityId!);
                               } else {
-                                await Provider.of<FeedProvider>(context, listen: false).shareDailyVerse(authProvider.token!);
+                                final res = await Provider.of<FeedProvider>(context, listen: false).shareDailyVerse(authProvider.token!);
+                                if (res['coinBalance'] != null && context.mounted) {
+                                  context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
+                                }
                               }
                             }
                           },

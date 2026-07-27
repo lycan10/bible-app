@@ -4,6 +4,8 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SubmitDevotionScreen extends StatefulWidget {
@@ -17,8 +19,18 @@ class _SubmitDevotionScreenState extends State<SubmitDevotionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _coverUrlController = TextEditingController();
+  File? _coverImage;
+  final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _coverImage = File(pickedFile.path);
+      });
+    }
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -38,12 +50,18 @@ class _SubmitDevotionScreenState extends State<SubmitDevotionScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      String coverUrl = 'https://example.com/cover.jpg';
+      if (_coverImage != null) {
+        final uploadRes = await ApiService.uploadMedia(auth.token!, _coverImage!.path);
+        coverUrl = uploadRes['url'] ?? coverUrl;
+      }
+
       final res = await ApiService.submitDevotion(
         auth.token!,
         _titleController.text,
         auth.user?['firstName'] ?? 'Author',
         _descriptionController.text,
-        _coverUrlController.text.isNotEmpty ? _coverUrlController.text : 'https://example.com/cover.jpg',
+        coverUrl,
         [], // Empty days for now, could add UI to construct days
       );
 
@@ -124,9 +142,32 @@ class _SubmitDevotionScreenState extends State<SubmitDevotionScreen> {
                 validator: (val) => val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 15),
-              TextFormField(
-                controller: _coverUrlController,
-                decoration: const InputDecoration(labelText: 'Cover Image URL (Optional)'),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.textColor2.withOpacity(0.2)),
+                  ),
+                  child: _coverImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(_coverImage!, fit: BoxFit.cover, width: double.infinity),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            HugeIcon(icon: HugeIcons.strokeRoundedImage01, color: AppTheme.textColor2, size: 40.0),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Tap to select cover image',
+                              style: TextStyle(color: AppTheme.textColor2),
+                            ),
+                          ],
+                        ),
+                ),
               ),
               const SizedBox(height: 30),
               ElevatedButton(

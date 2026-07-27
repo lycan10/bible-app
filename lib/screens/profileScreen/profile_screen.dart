@@ -16,6 +16,7 @@ import 'package:quest/screens/profileScreen/profile_settings.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/feed_provider.dart';
+import 'package:quest/providers/economy_provider.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/main.dart';
 
@@ -71,6 +72,12 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
       _loadingBadges = true;
       _loadingGames = true;
     });
+
+    try {
+      Provider.of<EconomyProvider>(context, listen: false).fetchBalance();
+    } catch (e) {
+      debugPrint("Error fetching economy balance: $e");
+    }
 
     try {
       final friends = await ApiService.fetchFriends(token);
@@ -172,6 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final feedProvider = Provider.of<FeedProvider>(context);
+    final economyProvider = Provider.of<EconomyProvider>(context);
 
     final user = authProvider.user;
     final String fullName =
@@ -190,6 +198,9 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
         _badgesProgress.where((b) => b['isEarned'] == true).length;
     final int streakCount = user?['streakCount'] ?? 0;
     final int points = user?['points'] ?? 0;
+    final int coinBalance = economyProvider.coinBalance > 0
+        ? economyProvider.coinBalance
+        : (user?['coinBalance'] ?? 0);
 
     // Filter user posts
     final allPosts = feedProvider.feed?['posts'] as List<dynamic>? ?? [];
@@ -308,23 +319,30 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                   ),
                                 ),
                                 const SizedBox(height: 30),
-                                Row(
-                                  children: [
-                                    StatText(
-                                      value: "${_friends.length}",
-                                      label: "Friends",
-                                    ),
-                                    StatText(
-                                      value: "$earnedBadgesCount",
-                                      label: "Badges",
-                                    ),
-                                    StatText(
-                                      value:
-                                          "${user?['communities']?.length ?? 1}",
-                                      label: "Communities",
-                                    ),
-                                  ],
-                                ),
+                                 SingleChildScrollView(
+                                   scrollDirection: Axis.horizontal,
+                                   child: Row(
+                                     children: [
+                                       StatText(
+                                         value: "${_friends.length}",
+                                         label: "Friends",
+                                       ),
+                                       StatText(
+                                         value: "$earnedBadgesCount",
+                                         label: "Badges",
+                                       ),
+                                       StatText(
+                                         value:
+                                             "${user?['communities']?.length ?? 1}",
+                                         label: "Communities",
+                                       ),
+                                       StatText(
+                                         value: "$coinBalance",
+                                         label: "Coins",
+                                       ),
+                                     ],
+                                   ),
+                                 ),
                               ],
                             ),
                           ),

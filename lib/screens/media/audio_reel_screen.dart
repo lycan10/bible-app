@@ -6,6 +6,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/economy_provider.dart';
 import 'package:quest/main.dart';
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/report_bottom_sheet.dart';
@@ -394,12 +395,15 @@ class _AudioPageState extends State<_AudioPage> {
     final mediaProvider = context.read<MediaProvider>();
     if (auth.token != null && widget.player != null) {
       final position = await widget.player!.getCurrentPosition();
-      mediaProvider.trackAudioPlayback(
+      final res = await mediaProvider.trackAudioPlayback(
         auth.token!,
         widget.audioData['id'],
         position?.inSeconds ?? 0,
         _completed,
       );
+      if (res['coinBalance'] != null && mounted) {
+        context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
+      }
     }
   }
 
