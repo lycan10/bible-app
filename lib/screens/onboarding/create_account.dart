@@ -175,16 +175,29 @@ class _CreateAccountState extends State<CreateAccount> {
                           const SizedBox(height: 15),
                           DropdownButtonFormField<String>(
                             initialValue: _selectedGender,
+                            dropdownColor: Colors.white,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.black,
+                              fontSize: 16,
+                            ),
+                            hint: Text(
+                              "Select gender",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: const Color(0xFFF2F2F7),
                               hintText: "Select gender",
                               hintStyle: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 11,
-                                color: Colors.black,
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
                               ),
                               suffixIcon: const Icon(
                                 Icons.arrow_drop_down,
+                                color: Colors.black,
                               ), // Right side icon
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(25),
@@ -200,7 +213,7 @@ class _CreateAccountState extends State<CreateAccount> {
                               ),
                             ),
                             items:
-                                ["Male", "Female", "Other"]
+                                ["Male", "Female"]
                                     .map(
                                       (gender) => DropdownMenuItem(
                                         value: gender,
@@ -243,6 +256,10 @@ class _CreateAccountState extends State<CreateAccount> {
                               ),
                               decoration: InputDecoration(
                                 hintText: "Enter password",
+                                hintStyle: theme.textTheme.bodySmall?.copyWith(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 16,
+                                ),
                                 border: InputBorder.none,
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -308,6 +325,10 @@ class Input extends StatelessWidget {
         ),
         decoration: InputDecoration(
           hintText: hint ?? "Enter text",
+          hintStyle: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.grey.shade600,
+            fontSize: 16,
+          ),
           border: InputBorder.none,
         ),
       ),
