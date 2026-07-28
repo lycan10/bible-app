@@ -51,11 +51,14 @@ class ApiService {
   }
 
   // POST /auth/otp/send
-  static Future<Map<String, dynamic>> sendOtp(String contact) async {
+  static Future<Map<String, dynamic>> sendOtp(
+    String contact, {
+    String purpose = 'signup',
+  }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/otp/send'),
       headers: _headers(null),
-      body: jsonEncode({'contact': contact}),
+      body: jsonEncode({'contact': contact, 'purpose': purpose}),
     );
     return jsonDecode(response.body);
   }

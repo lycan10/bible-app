@@ -30,6 +30,7 @@ class GetStarted extends StatefulWidget {
 class _GetStartedState extends State<GetStarted> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
   // Fully comprehensive global country list matching ISO specifications
   final List<CountryModel> _allCountries = const [
@@ -290,22 +291,35 @@ class _GetStartedState extends State<GetStarted> {
   }
 
   Future<void> _handleContinue() async {
-    final phoneText = _phoneController.text.trim();
-    if (phoneText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid phone number.')),
-      );
-      return;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final isEmailMode = authProvider.otpMethod == 'smtp';
+
+    String contact;
+    if (isEmailMode) {
+      contact = _emailController.text.trim();
+      if (contact.isEmpty || !contact.contains('@')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid email address.')),
+        );
+        return;
+      }
+    } else {
+      final phoneText = _phoneController.text.trim();
+      if (phoneText.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid phone number.')),
+        );
+        return;
+      }
+      contact = '${_selectedCountry.code}$phoneText';
     }
 
-    final fullPhoneNumber = '${_selectedCountry.code}$phoneText';
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.sendOtp(fullPhoneNumber);
+    final result = await authProvider.sendOtp(contact, purpose: 'signup');
 
     if (mounted) {
-      if (success) {
-        if (!authProvider.isOtpEnabled) {
-          // Skip OTP Verification and stash empty code
+      if (result.success) {
+        if (result.mocked) {
+          // OTP disabled for signup — skip verification screen
           authProvider.stashPasswordAndCode(code: '', password: '');
           _navigateToCreateAccountScreen(context);
         } else {
@@ -473,6 +487,7 @@ class _GetStartedState extends State<GetStarted> {
   void dispose() {
     _phoneController.dispose();
     _searchController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -536,52 +551,93 @@ class _GetStartedState extends State<GetStarted> {
                       ),
                     ),
                     const SizedBox(height: 36),
-                    GestureDetector(
-                      onTap: _showCountryPicker,
-                      behavior: HitTestBehavior.opaque,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _selectedCountry.flag,
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '+ ${_selectedCountry.code.replaceAll('+', '')}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                    // --- Dynamic contact input: phone or email ---
+                    if (authProvider.otpMethod == 'smtp') ...[  
+                      // Email input for SMTP mode
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 4, bottom: 8),
+                          child: Text(
+                            'Email Address',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          IntrinsicWidth(
-                            child: TextField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
+                        ),
+                      ),
+                      TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'you@example.com',
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade300,
+                            fontWeight: FontWeight.w400,
+                            fontSize: 22,
+                          ),
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ] else ...[
+                      // Phone number input for Twilio mode
+                      GestureDetector(
+                        onTap: _showCountryPicker,
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _selectedCountry.flag,
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '+ ${_selectedCountry.code.replaceAll('+', '')}',
                               style: const TextStyle(
                                 fontSize: 24,
-                                fontWeight: FontWeight.w400,
+                                fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
-                              decoration: InputDecoration(
-                                hintText: '000-000-0000',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(width: 12),
+                            IntrinsicWidth(
+                              child: TextField(
+                                controller: _phoneController,
+                                keyboardType: TextInputType.phone,
+                                style: const TextStyle(
+                                  fontSize: 24,
                                   fontWeight: FontWeight.w400,
+                                  color: Colors.black,
                                 ),
-                                border: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
+                                decoration: InputDecoration(
+                                  hintText: '000-000-0000',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey.shade300,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                     const SizedBox(height: 15),
                     GestureDetector(
                       onTap: () {

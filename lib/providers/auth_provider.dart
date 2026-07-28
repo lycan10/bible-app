@@ -21,6 +21,7 @@ class AuthProvider with ChangeNotifier {
   String? _gender;
   
   bool _isOtpEnabled = true;
+  String _otpMethod = 'twilio'; // 'twilio' | 'smtp'
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
@@ -35,6 +36,7 @@ class AuthProvider with ChangeNotifier {
   String? get gender => _gender;
   
   bool get isOtpEnabled => _isOtpEnabled;
+  String get otpMethod => _otpMethod;
 
   bool get isAuthenticated => _token != null;
   bool get isOnboardingComplete {
@@ -74,10 +76,16 @@ class AuthProvider with ChangeNotifier {
         _syncFCMToken();
       }
       
-      // Fetch public settings for OTP requirement
+      // Fetch public settings for OTP requirement and method
       final settings = await ApiService.getPublicSettings();
-      if (settings['settings'] != null && settings['settings']['registrationOtpEnabled'] != null) {
-        _isOtpEnabled = settings['settings']['registrationOtpEnabled'];
+      if (settings['settings'] != null) {
+        final s = settings['settings'];
+        if (s['registrationOtpEnabled'] != null) {
+          _isOtpEnabled = s['registrationOtpEnabled'] as bool;
+        }
+        if (s['otpMethod'] != null) {
+          _otpMethod = s['otpMethod'] as String;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -87,31 +95,28 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Send OTP
-  Future<bool> sendOtp(String contact) async {
+  // Send OTP — returns a record with success bool and whether OTP was mocked (skipped)
+  Future<({bool success, bool mocked})> sendOtp(String contact, {String purpose = 'signup'}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       _contact = contact;
-      final res = await ApiService.sendOtp(contact);
+      final res = await ApiService.sendOtp(contact, purpose: purpose);
       if (res['error'] != null) {
         _errorMessage = res['error'];
-        return false;
+        return (success: false, mocked: false);
       }
-      if (res['mocked'] == true) {
-        _isOtpEnabled = false;
-      }
-      return true;
+      final isMocked = res['mocked'] == true;
+      return (success: true, mocked: isMocked);
     } catch (e) {
       _errorMessage = e.toString();
-      return false;
+      return (success: false, mocked: false);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-
   }
 
   // Stash details

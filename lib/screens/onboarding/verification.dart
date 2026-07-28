@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:animations/animations.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/screens/onboarding/create_account.dart';
+import 'dart:async';
 import 'package:pinput/pinput.dart';
 
 class Verification extends StatefulWidget {
@@ -14,6 +15,26 @@ class Verification extends StatefulWidget {
 
 class _VerificationState extends State<Verification> {
   final TextEditingController _pinController = TextEditingController();
+  int _remainingSeconds = 60;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    setState(() => _remainingSeconds = 60);
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() => _remainingSeconds--);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
 
   void _navigateToCreateAccountScreen(BuildContext context) {
     Navigator.of(context).push(
@@ -42,6 +63,8 @@ class _VerificationState extends State<Verification> {
   }
 
   Future<void> _handleResend() async {
+    if (_remainingSeconds > 0) return; // Prevent early resend
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.contact == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -51,10 +74,12 @@ class _VerificationState extends State<Verification> {
       );
       return;
     }
-    final success = await authProvider.sendOtp(authProvider.contact!);
+    final result = await authProvider.sendOtp(authProvider.contact!);
     if (mounted) {
-      if (success) {
+      if (result.success) {
+        _startTimer();
         ScaffoldMessenger.of(
+
           context,
         ).showSnackBar(const SnackBar(content: Text('OTP sent successfully.')));
       } else {
@@ -69,6 +94,7 @@ class _VerificationState extends State<Verification> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _pinController.dispose();
     super.dispose();
   }
@@ -130,15 +156,17 @@ class _VerificationState extends State<Verification> {
                           ),
                         )
                       else
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
+                            SizedBox(
+                              width: double.infinity,
                               child: Pinput(
                                 length: 4,
                                 controller: _pinController,
                                 showCursor: true,
                                 onCompleted: _handleOtpSubmit,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                                 // 👇 Placeholder
                                 preFilledWidget: Text(
@@ -150,8 +178,8 @@ class _VerificationState extends State<Verification> {
 
                                 // 👇 Default (Empty State)
                                 defaultPinTheme: PinTheme(
-                                  width: 45,
-                                  height: 55,
+                                  width: 60,
+                                  height: 70,
                                   textStyle: theme.textTheme.displaySmall
                                       ?.copyWith(color: Colors.black),
                                   decoration: BoxDecoration(
@@ -167,8 +195,8 @@ class _VerificationState extends State<Verification> {
 
                                 // 👇 Focused State
                                 focusedPinTheme: PinTheme(
-                                  width: 45,
-                                  height: 55,
+                                  width: 60,
+                                  height: 70,
                                   textStyle: theme.textTheme.displaySmall
                                       ?.copyWith(color: Colors.black),
                                   decoration: BoxDecoration(
@@ -184,8 +212,8 @@ class _VerificationState extends State<Verification> {
 
                                 // 👇 Submitted State
                                 submittedPinTheme: PinTheme(
-                                  width: 45,
-                                  height: 55,
+                                  width: 60,
+                                  height: 70,
                                   textStyle: theme.textTheme.displaySmall
                                       ?.copyWith(color: Colors.black),
                                   decoration: BoxDecoration(
@@ -200,67 +228,27 @@ class _VerificationState extends State<Verification> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 30),
+                            const SizedBox(height: 40),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 15,
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF2F2F7),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    '00:59',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                    ),
+                                Text(
+                                  "Didn't receive the code? ",
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey.shade600,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
                                 GestureDetector(
-                                  onTap: _handleResend,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          const WidgetSpan(
-                                            alignment:
-                                                PlaceholderAlignment.middle,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 6,
-                                              ),
-                                              child: Icon(
-                                                Icons.refresh,
-                                                size: 16,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: 'Resend',
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w400,
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
+                                  onTap: _remainingSeconds == 0 ? _handleResend : null,
+                                  child: Text(
+                                    _remainingSeconds == 0
+                                        ? 'Resend Code'
+                                        : 'Resend in 00:${_remainingSeconds.toString().padLeft(2, '0')}',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: _remainingSeconds == 0
+                                          ? Colors.black
+                                          : Colors.grey.shade400,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),

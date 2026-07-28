@@ -15,22 +15,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _contactController = TextEditingController();
 
   void _handleRequestOtp() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final isEmailMode = authProvider.otpMethod == 'smtp';
     final contact = _contactController.text.trim();
 
     if (contact.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your phone number or email.'),
+        SnackBar(
+          content: Text(isEmailMode
+              ? 'Please enter your email address.'
+              : 'Please enter your phone number or email.'),
         ),
       );
       return;
     }
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.sendOtp(contact);
+    // Password reset always requires OTP regardless of signup OTP setting
+    final result = await authProvider.sendOtp(contact, purpose: 'reset');
 
     if (mounted) {
-      if (success) {
+      if (result.success) {
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const ResetPasswordScreen()));
@@ -138,7 +142,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 4, bottom: 8),
                           child: Text(
-                            'Phone Number or Email',
+                            authProvider.otpMethod == 'smtp'
+                                ? 'Email Address'
+                                : 'Phone Number or Email',
                             style: theme.textTheme.titleSmall?.copyWith(
                               color: Colors.black87,
                               fontWeight: FontWeight.w600,
@@ -148,14 +154,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       TextFormField(
                         controller: _contactController,
-                        keyboardType: TextInputType.emailAddress,
+                        keyboardType: authProvider.otpMethod == 'smtp'
+                            ? TextInputType.emailAddress
+                            : TextInputType.text,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _handleRequestOtp(),
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: Colors.black87,
                         ),
                         decoration: inputDecoration.copyWith(
-                          hintText: "Enter contact info",
+                          hintText: authProvider.otpMethod == 'smtp'
+                              ? 'you@example.com'
+                              : 'Enter contact info',
                         ),
                       ),
                       const SizedBox(height: 30),
