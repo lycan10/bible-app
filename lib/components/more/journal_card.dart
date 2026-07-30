@@ -61,7 +61,7 @@ class JournalCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              color: theme.colorScheme.surface,
+              color: theme.colorScheme.surfaceContainer,
               border: Border.all(width: 0.15, color: AppTheme.textColor2),
             ),
             clipBehavior: Clip.hardEdge,
@@ -98,7 +98,7 @@ class JournalCard extends StatelessWidget {
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 fontSize: 15,
                                 height: 1.3,
-                                fontWeight: FontWeight.normal,
+                                fontWeight: FontWeight.bold,
                                 color: theme.textTheme.bodyMedium?.color,
                               ),
                             ),
@@ -114,7 +114,7 @@ class JournalCard extends StatelessWidget {
                                 fontSize: 12,
                                 height: 1.5,
                                 fontWeight: FontWeight.normal,
-                                color: AppTheme.textColor2,
+                                color: theme.colorScheme.onTertiary,
                               ),
                             ),
                           ),
@@ -194,7 +194,7 @@ class JournalCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 15),
         ],
       ),
     );

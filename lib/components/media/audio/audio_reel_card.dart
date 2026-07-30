@@ -32,9 +32,9 @@ class AudioReelCard extends StatelessWidget {
       child: Container(
         height: height ?? 275,
         width: width ?? 204,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -46,29 +46,29 @@ class AudioReelCard extends StatelessWidget {
                   : Container(color: Colors.grey.shade800),
 
               /// 🔹 Dark overlay for readability
-              Container(color: Colors.black.withValues(alpha: 0.5)),
+              Container(color: Colors.black.withValues(alpha: 0.55)),
 
               /// 🔹 Play Icon Overlay
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-              ),
+              // Center(
+              //   child: Container(
+              //     padding: const EdgeInsets.all(12),
+              //     decoration: BoxDecoration(
+              //       color: Colors.white.withValues(alpha: 0.3),
+              //       shape: BoxShape.circle,
+              //     ),
+              //     child: const Icon(
+              //       Icons.play_arrow_rounded,
+              //       color: Colors.white,
+              //       size: 32,
+              //     ),
+              //   ),
+              // ),
 
               /// 🔹 Bottom Content
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: 10,
-                  horizontal: 15,
+                  horizontal: 13,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,

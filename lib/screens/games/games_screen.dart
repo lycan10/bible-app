@@ -177,7 +177,7 @@ class _GamesScreenState extends State<GamesScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Play to test your knowledge!',
+                        'Grow closer to God, one question at a time.',
                         style: TextStyle(
                           fontSize: 14,
                           color: theme.colorScheme.onSurface.withValues(
@@ -251,7 +251,7 @@ class _GamesScreenState extends State<GamesScreen> {
 
             // Games Section
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -269,7 +269,8 @@ class _GamesScreenState extends State<GamesScreen> {
                       Expanded(
                         child: _GameCard(
                           title: 'Bible Quiz',
-                          subtitle: 'Play to test your\nknowledge!',
+                          subtitle:
+                              'Grow closer to God, one question at a time.',
                           iconAsset: 'assets/images/bible_game.png',
                           iconGradient: const [
                             Color(0xFFFF9A9E),
@@ -289,7 +290,7 @@ class _GamesScreenState extends State<GamesScreen> {
                       Expanded(
                         child: _GameCard(
                           title: 'Puzzle Bee',
-                          subtitle: 'Play to test your\nknowledge!',
+                          subtitle: 'Challenge your mind. Deepen your faith.',
                           iconAsset: 'assets/images/puzzle_game.png',
                           iconGradient: const [
                             Color(0xFF84FAB0),
@@ -325,37 +326,42 @@ class _GamesScreenState extends State<GamesScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _isLoadingBadges 
-                    ? const Center(child: CircularProgressIndicator())
-                    : _badges.isEmpty
+                  _isLoadingBadges
+                      ? const Center(child: CircularProgressIndicator())
+                      : _badges.isEmpty
                       ? Center(
-                          child: Text(
-                            "No badges available",
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        child: Text(
+                          "No badges available",
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
                             ),
                           ),
-                        )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: _badges.take(5).map((bp) {
-                              final badge = bp['badge'] ?? {};
-                              final String title = badge['name'] ?? 'Badge';
-                              final String asset = badge['imageUrl'] ?? 'assets/images/bronze.png';
-                              final bool isEarned = bp['isEarned'] ?? false;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 16.0),
-                                child: _BadgeItem(
-                                  title: title,
-                                  status: isEarned ? 'Owned' : 'Locked',
-                                  asset: asset,
-                                  isEarned: isEarned,
-                                ),
-                              );
-                            }).toList(),
-                          ),
                         ),
+                      )
+                      : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children:
+                              _badges.take(5).map((bp) {
+                                final badge = bp['badge'] ?? {};
+                                final String title = badge['name'] ?? 'Badge';
+                                final String asset =
+                                    badge['imageUrl'] ??
+                                    'assets/images/bronze.png';
+                                final bool isEarned = bp['isEarned'] ?? false;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 16.0),
+                                  child: _BadgeItem(
+                                    title: title,
+                                    status: isEarned ? 'Owned' : 'Locked',
+                                    asset: asset,
+                                    isEarned: isEarned,
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ),
                   const SizedBox(height: 32),
 
                   // Leaderboard Section
@@ -444,7 +450,7 @@ class _GameCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
@@ -463,9 +469,9 @@ class _GameCard extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
               ),
-              child: Center(child: Image.asset(iconAsset, width: 24)),
+              child: Center(child: Image.asset(iconAsset, width: 30)),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
               title,
               style: TextStyle(
@@ -479,11 +485,11 @@ class _GameCard extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 12,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                height: 1.2,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                height: 1.3,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
@@ -532,7 +538,8 @@ class _BadgeItem extends StatelessWidget {
     if (imagePath.contains('streak_builder')) {
       return const AssetImage('assets/images/gold.png');
     }
-    final cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    final cleanPath =
+        imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
     if (cleanPath.startsWith('assets/')) return AssetImage(cleanPath);
     return AssetImage('assets/images/$cleanPath');
   }
@@ -543,14 +550,34 @@ class _BadgeItem extends StatelessWidget {
     return Column(
       children: [
         ColorFiltered(
-          colorFilter: isEarned 
-            ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply) 
-            : const ColorFilter.matrix([
-                0.2126, 0.7152, 0.0722, 0, 0,
-                0.2126, 0.7152, 0.0722, 0, 0,
-                0.2126, 0.7152, 0.0722, 0, 0,
-                0,      0,      0,      1, 0,
-              ]),
+          colorFilter:
+              isEarned
+                  ? const ColorFilter.mode(
+                    Colors.transparent,
+                    BlendMode.multiply,
+                  )
+                  : const ColorFilter.matrix([
+                    0.2126,
+                    0.7152,
+                    0.0722,
+                    0,
+                    0,
+                    0.2126,
+                    0.7152,
+                    0.0722,
+                    0,
+                    0,
+                    0.2126,
+                    0.7152,
+                    0.0722,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                  ]),
           child: Container(
             width: 90,
             height: 90,

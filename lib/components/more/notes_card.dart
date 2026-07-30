@@ -61,7 +61,7 @@ class NotesCard extends StatelessWidget {
             width: width ?? double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              color: theme.colorScheme.surface,
+              color: theme.colorScheme.surfaceContainer,
               border: Border.all(width: 0.15, color: AppTheme.textColor2),
             ),
             clipBehavior: Clip.hardEdge,
@@ -84,12 +84,12 @@ class NotesCard extends StatelessWidget {
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontSize: 16,
                             height: 1,
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: theme.textTheme.bodyMedium?.color,
                           ),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 10),
                       SizedBox(
                         width: double.infinity,
                         child: InlineVerseText(
@@ -98,13 +98,13 @@ class NotesCard extends StatelessWidget {
                           maxLines: 2,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontSize: 13,
-                            height: 1.3,
+                            height: 1.5,
                             fontWeight: FontWeight.normal,
-                            color: AppTheme.textColor2,
+                            color: theme.colorScheme.onTertiary,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 10),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,10 +114,10 @@ class NotesCard extends StatelessWidget {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '',
+                                  text: '- ',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontSize: 14,
-                                    color: AppTheme.textColor2,
+                                    color: theme.textTheme.bodyMedium?.color,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -125,12 +125,7 @@ class NotesCard extends StatelessWidget {
                                   text: time,
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontSize: 12,
-                                    color: const Color.fromARGB(
-                                      255,
-                                      104,
-                                      104,
-                                      104,
-                                    ),
+                                    color: theme.textTheme.bodyMedium?.color,
                                     fontWeight: FontWeight.normal,
                                   ),
                                 ),

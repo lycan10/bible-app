@@ -496,7 +496,7 @@ class _GetStartedState extends State<GetStarted> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xffFbFCFB),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,17 +542,17 @@ class _GetStartedState extends State<GetStarted> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Login or create account to enjoy\nbetter experience on Quest',
+                      'Your journey toward faith, healing, and wholeness starts here. Log in or create an account.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.grey.shade400,
-                        fontSize: 15,
+                        color: const Color.fromARGB(255, 115, 115, 115),
+                        fontSize: 14,
                         height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 36),
                     // --- Dynamic contact input: phone or email ---
-                    if (authProvider.otpMethod == 'smtp') ...[  
+                    if (authProvider.otpMethod == 'smtp') ...[
                       // Email input for SMTP mode
                       Align(
                         alignment: Alignment.centerLeft,
@@ -639,6 +639,16 @@ class _GetStartedState extends State<GetStarted> {
                       ),
                     ],
                     const SizedBox(height: 15),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: OnboardingButton(
+                        title: 'Continue',
+                        isLoading: authProvider.isLoading,
+                        ontap: _handleContinue,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
@@ -656,23 +666,15 @@ class _GetStartedState extends State<GetStarted> {
                           ),
                           children: const [
                             TextSpan(
-                              text: 'Login',
+                              text: ' Login',
                               style: TextStyle(
                                 color: Colors.black,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OnboardingButton(
-                        title: 'Continue',
-                        isLoading: authProvider.isLoading,
-                        ontap: _handleContinue,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -758,7 +760,7 @@ class _SocialButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.grey.shade100, width: 1),
+          side: BorderSide(color: Colors.grey.shade300, width: 1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),

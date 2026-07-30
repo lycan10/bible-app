@@ -8,10 +8,10 @@ class AppTheme {
   static const Color primaryBlue = Color(0xFF1E3A8A);
   static const Color goldAccent = Color(0xFFF6DA00);
   static const Color textColor2 = Color.fromARGB(255, 73, 73, 73);
-  static const Color completedColor = Color(0xFF22C55E);
+  static const Color completedColor = Color(0xFFEBFF00);
   static const Color inCompletedColor = Color(0xFFFFB300);
   static const Color buttonColor = Color(0xFF4838fc);
-  static const Color backgroundColor = Color.fromARGB(255, 241, 241, 241);
+  static const Color backgroundColor = Color.fromARGB(255, 227, 227, 227);
   static const Color redColor = Color(0XFFFF383C);
   static const Color yellowColor = Color(0XFFFFCC00);
   static const Color greenColor = Color(0XFF34C759);
@@ -20,6 +20,7 @@ class AppTheme {
   static const Color buttonColor3 = Color(0xFF007aff);
   static const Color surfaceColor = Colors.white;
   static const Color secondaryTextColor = textColor2;
+  static const Color devotionalColor = Color.fromARGB(255, 0, 0, 0);
 
   static const TextStyle headingStyle = TextStyle(
     fontSize: 20,
@@ -37,10 +38,14 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: backgroundColor,
       primary: backgroundColor,
-      secondary: goldAccent,
+      secondary: devotionalColor,
       error: Colors.red,
       onPrimary: Colors.black,
       onSecondary: textColor2,
+      onSurface: Colors.black,
+      tertiaryFixed: Colors.white,
+      tertiary: Colors.black,
+      onTertiary: const Color.fromARGB(255, 101, 101, 101),
     ),
     scaffoldBackgroundColor: backgroundColor,
 
@@ -96,7 +101,12 @@ class AppTheme {
       brightness: Brightness.dark,
       primary: primaryBlue,
       onPrimary: Colors.white70,
-      secondary: goldAccent,
+      secondary: devotionalColor,
+      tertiary: Colors.white,
+      onTertiary: const Color.fromARGB(255, 140, 140, 140),
+      onSurface: Colors.white,
+      tertiaryFixed: Colors.white,
+      surface: const Color.fromARGB(255, 19, 18, 18),
     ),
     scaffoldBackgroundColor: const Color(0xFF0F172A),
     appBarTheme: const AppBarTheme(

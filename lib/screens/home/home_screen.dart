@@ -76,9 +76,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void _fetchData() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final feedProvider = Provider.of<FeedProvider>(context, listen: false);
-    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    final notifProvider = Provider.of<NotificationProvider>(
+      context,
+      listen: false,
+    );
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-    final devotionProvider = Provider.of<DevotionProvider>(context, listen: false);
+    final devotionProvider = Provider.of<DevotionProvider>(
+      context,
+      listen: false,
+    );
     final mediaProvider = Provider.of<MediaProvider>(context, listen: false);
 
     if (authProvider.token != null && authProvider.user?['id'] != null) {
@@ -159,7 +165,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         feedProvider.feed?['recommendedMedia'] as List<dynamic>? ?? [];
     final videos = recommendedMedia.where((m) => m['type'] == 'VIDEO').toList();
     final audios = recommendedMedia.where((m) => m['type'] == 'AUDIO').toList();
-    final communities = feedProvider.feed?['communities'] as List<dynamic>? ?? [];
+    final communities =
+        feedProvider.feed?['communities'] as List<dynamic>? ?? [];
 
     final latestJournal =
         feedProvider.feed?['latestJournal'] as Map<String, dynamic>?;
@@ -211,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(top: 15, left: 16, right: 16),
+          padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
 
           child: SingleChildScrollView(
             child: Column(
@@ -222,8 +229,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     Row(
                       children: [
                         SizedBox(width: 10),
+
                         Image.asset(
-                          'assets/images/logo.png',
+                          Theme.of(context).brightness == Brightness.dark
+                              ? 'assets/images/logo-dark.png'
+                              : 'assets/images/logo.png',
                           width: 40,
                           height: 40,
                         ),
@@ -277,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 20),
+                              const SizedBox(width: 13),
                             ],
                           ),
                         ),
@@ -290,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                 icon: HugeIcons.strokeRoundedNotification01,
                                 size: 20.0,
                                 color: Theme.of(context).iconTheme.color,
-                                strokeWidth: 1.5,
+                                strokeWidth: 2,
                               ),
                               Consumer<NotificationProvider>(
                                 builder: (context, notifProvider, child) {
@@ -321,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 20),
+                        const SizedBox(width: 13),
                         GestureDetector(
                           onTap: () => _navigateToProfile(context),
                           child: Container(
@@ -354,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     ),
                   ],
                 ),
-                SizedBox(height: 25),
+                SizedBox(height: 15),
                 SizedBox(
                   width: double.infinity,
                   child: Column(
@@ -364,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       Text(
                         '${DateFormatter.getGreeting()} ${authProvider.user?['firstName'] ?? 'User'}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           fontSize: 16,
                           height: 2,
                         ),
@@ -378,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                 context,
                               ).textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.greenColor,
+                                color: Color(0xff4A3AFF),
                                 fontSize: 16,
                               ),
                             ),
@@ -392,7 +402,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                     Theme.of(
                                       context,
                                     ).textTheme.bodyMedium?.color,
-                                fontSize: 16,
+                                fontSize: 14,
                               ),
                             ),
                           ],
@@ -401,26 +411,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     ],
                   ),
                 ),
-                SizedBox(height: 35),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Today',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                    ),
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowRight01,
-                      size: 18,
-                      color: Color(0xff8e8e93),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10),
+                SizedBox(height: 20),
+
                 TodayVerseGlass(verseData: feedProvider.dailyVerse),
                 FeatureGuard(
                   featureKey: 'journal',
@@ -513,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                   ),
                                 ),
 
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 10),
 
                                 /// 🔹 Text Content
                                 Expanded(
@@ -535,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                         ),
                                       ),
 
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 6),
 
                                       ConstrainedBox(
                                         constraints: const BoxConstraints(
@@ -551,12 +543,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                             context,
                                           ).textTheme.bodyMedium?.copyWith(
                                             fontSize: 12,
-                                            color: AppTheme.textColor2,
+                                            color: theme.colorScheme.onTertiary,
                                           ),
                                         ),
                                       ),
 
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 6),
 
                                       ConstrainedBox(
                                         constraints: const BoxConstraints(
@@ -577,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                                         ?.color,
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
+                                            const SizedBox(width: 6),
 
                                             if (parsedFeelings.isNotEmpty) ...[
                                               SizedBox(
@@ -621,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 13),
                 GestureDetector(
                   onTap: () {
                     DailyFeelingPopup.show(context);
@@ -654,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               ),
                             ),
 
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
 
                             /// 🔹 Text Content
                             Column(
@@ -673,7 +665,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                 ),
 
                                 if (feedProvider.currentFeeling != null) ...[
-                                  const SizedBox(height: 5),
+                                  const SizedBox(height: 4),
 
                                   Text(
                                     '- ${DateFormatter.formatTimeAgo(feedProvider.currentFeeling!['createdAt'])}',
@@ -715,12 +707,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         Builder(
                           builder: (context) {
                             final plan = devotionProvider.myPlans[0]['plan'];
-                            final currentDay = devotionProvider.myPlans[0]['currentDay'];
+                            final currentDay =
+                                devotionProvider.myPlans[0]['currentDay'];
                             return OngoingDevotionCard(
                               title: plan['title'] ?? "",
                               author: plan['authorName'] ?? "",
                               imagePath:
-                                  plan['image'] ?? "assets/images/user_test.jpg",
+                                  plan['image'] ??
+                                  "assets/images/user_test.jpg",
                               likes: "${plan['durationDays']} Days Plan",
                               planText: plan['tag'] ?? "",
                               day: currentDay ?? 1,
@@ -728,15 +722,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => DevotionScreen(
-                                      planId: plan['id'],
-                                      dayNum: currentDay ?? 1,
-                                    ),
+                                    builder:
+                                        (context) => DevotionScreen(
+                                          planId: plan['id'],
+                                          dayNum: currentDay ?? 1,
+                                        ),
                                   ),
                                 );
                               },
                             );
-                          }
+                          },
                         ),
                       ],
                       if (devotions.length > 1) ...[
@@ -982,42 +977,38 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                               )
                                               : 'assets/images/boy.png',
                                       onTap: () {
-                                          Navigator.of(context).push(
-                                            PageRouteBuilder(
-                                              transitionDuration:
-                                                  const Duration(
-                                                    milliseconds: 600,
-                                                  ),
-                                              pageBuilder:
-                                                  (
-                                                    context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                  ) =>
-                                                      CommunityIndividualScreen(
-                                                        communityId:
-                                                            community['id'],
-                                                        initialData:
-                                                            community,
-                                                      ),
-                                              transitionsBuilder: (
-                                                context,
-                                                animation,
-                                                secondaryAnimation,
-                                                child,
-                                              ) {
-                                                return SharedAxisTransition(
-                                                  animation: animation,
-                                                  secondaryAnimation:
-                                                      secondaryAnimation,
-                                                  transitionType:
-                                                      SharedAxisTransitionType
-                                                          .scaled,
-                                                  child: child,
-                                                );
-                                              },
+                                        Navigator.of(context).push(
+                                          PageRouteBuilder(
+                                            transitionDuration: const Duration(
+                                              milliseconds: 600,
                                             ),
-                                          );
+                                            pageBuilder:
+                                                (
+                                                  context,
+                                                  animation,
+                                                  secondaryAnimation,
+                                                ) => CommunityIndividualScreen(
+                                                  communityId: community['id'],
+                                                  initialData: community,
+                                                ),
+                                            transitionsBuilder: (
+                                              context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child,
+                                            ) {
+                                              return SharedAxisTransition(
+                                                animation: animation,
+                                                secondaryAnimation:
+                                                    secondaryAnimation,
+                                                transitionType:
+                                                    SharedAxisTransitionType
+                                                        .scaled,
+                                                child: child,
+                                              );
+                                            },
+                                          ),
+                                        );
                                       },
                                       width: 209,
                                       height: 180,
@@ -1049,13 +1040,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         crossAxisCount: 2,
                         crossAxisSpacing: 15,
                         mainAxisSpacing: 15,
-                        childAspectRatio: 0.8,
+                        childAspectRatio: 0.85,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
                           GamesReelCard(
                             title: 'Bible Quiz',
-                            description: "Play to test your knowledge!",
+                            description: "Test your knowledge!",
                             gameIcon: 'assets/images/bible_game.png',
                             onTap: () {
                               showModalBottomSheet(
@@ -1070,6 +1061,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             title: 'Word Cross',
                             description: "Find hidden words!",
                             gameIcon: 'assets/images/puzzle_game.png',
+
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -1102,8 +1094,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     children: [
                       Image.asset(
                         'assets/images/logo.png',
-                        width: 60,
-                        height: 60,
+                        width: 50,
+                        height: 50,
                       ),
                       const SizedBox(height: 25),
                       Text(
@@ -1153,7 +1145,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               Text(
                                 "Donate",
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 12,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
                               ),
@@ -1180,16 +1173,16 @@ class GamesReelCard extends StatelessWidget {
   final String description;
   final VoidCallback? onTap;
   final String gameIcon;
-  final double? width;
-  final double? height;
+  // final double? width;
+  // final double? height;
 
   const GamesReelCard({
     super.key,
     required this.title,
     required this.description,
     this.onTap,
-    this.width,
-    this.height,
+    // this.width,
+    // this.height = 30,
     required this.gameIcon,
   });
 
@@ -1205,65 +1198,63 @@ class GamesReelCard extends StatelessWidget {
               theme.brightness == Brightness.dark
                   ? Colors.white.withValues(alpha: 0.05)
                   : Colors.black.withValues(alpha: 0.05),
+
           borderRadius: BorderRadius.circular(30),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Stack(
-            fit: StackFit.expand,
+        child: Padding(
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 0,
+            bottom: 0,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// 🔹 Bottom Content
-              Padding(
-                padding: const EdgeInsets.all(15),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.asset(gameIcon, width: 50, height: 50),
-                    const SizedBox(height: 25),
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 16,
-                        color: theme.textTheme.bodyMedium?.color,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      description,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                        color: theme.textTheme.bodySmall?.color,
-                        fontWeight: FontWeight.w200,
-                      ),
-                    ),
+              Image.asset(gameIcon, width: 50, height: 50),
+              const SizedBox(height: 15),
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 16,
+                  color: theme.textTheme.bodyMedium?.color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 3),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 13,
+                  color: theme.textTheme.bodySmall?.color,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
 
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            theme.brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Text(
-                        'Play',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color:
-                              theme.brightness == Brightness.dark
-                                  ? Colors.black
-                                  : Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 15),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 25,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      theme.brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Text(
+                  'Play',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color:
+                        theme.brightness == Brightness.dark
+                            ? Colors.black
+                            : Colors.white,
+                  ),
                 ),
               ),
             ],

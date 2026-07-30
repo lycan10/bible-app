@@ -63,14 +63,17 @@ void main() async {
         ChangeNotifierProvider(create: (_) => DevotionProvider()),
         ChangeNotifierProvider(create: (_) => MediaProvider()),
         ChangeNotifierProxyProvider<AuthProvider, SubscriptionProvider>(
-          create: (context) => SubscriptionProvider(context.read<AuthProvider>()),
-          update: (_, authProvider, previous) =>
-              previous ?? SubscriptionProvider(authProvider),
+          create:
+              (context) => SubscriptionProvider(context.read<AuthProvider>()),
+          update:
+              (_, authProvider, previous) =>
+                  previous ?? SubscriptionProvider(authProvider),
         ),
         ChangeNotifierProxyProvider<AuthProvider, EconomyProvider>(
           create: (context) => EconomyProvider(context.read<AuthProvider>()),
-          update: (_, authProvider, previous) =>
-              previous ?? EconomyProvider(authProvider),
+          update:
+              (_, authProvider, previous) =>
+                  previous ?? EconomyProvider(authProvider),
         ),
       ],
       child: const MyApp(),

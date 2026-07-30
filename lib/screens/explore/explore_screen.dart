@@ -366,7 +366,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                       ),
                     ],
                   ),
-                  SizedBox(height: 30),
+                  SizedBox(height: 25),
                   SizedBox(
                     height: 32,
                     child: ListView(
@@ -433,7 +433,8 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                 () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AdminMessageListScreen(),
+                                    builder:
+                                        (context) => AdminMessageListScreen(),
                                   ),
                                 ),
                           ),
@@ -442,12 +443,13 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                           featureKey: 'games',
                           child: TagChip(
                             label: "Games",
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const GamesScreen(),
-                              ),
-                            ),
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const GamesScreen(),
+                                  ),
+                                ),
                           ),
                         ),
                         FeatureGuard(
@@ -466,7 +468,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                       ],
                     ),
                   ),
-
+                  SizedBox(height: 10),
                   FeatureGuard(
                     featureKey: 'devotion',
                     child: Column(
@@ -474,12 +476,13 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                         SectionHeader(
                           title: "Most Read Plans",
                           seeAllText: "See more",
-                          onSeeAllTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DevotionListScreen(),
-                            ),
-                          ),
+                          onSeeAllTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DevotionListScreen(),
+                                ),
+                              ),
                         ),
                         SizedBox(
                           height: 200,
@@ -712,12 +715,14 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                         SectionHeader(
                           title: "Discover communities",
                           seeAllText: 'see more',
-                          onSeeAllTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CommunityListScreen(),
-                            ),
-                          ),
+                          onSeeAllTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const CommunityListScreen(),
+                                ),
+                              ),
                         ),
                         SizedBox(
                           height: 175,
@@ -848,7 +853,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                     ...devotionPlans.take(2).map((plan) {
                       final image = plan['image'] ?? '';
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: 15),
                         child: GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -862,10 +867,14 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                           child: Container(
                             padding: const EdgeInsets.all(15),
                             decoration: BoxDecoration(
-                              border: Border.all(
-                                width: 0.5,
-                                color: AppTheme.buttonColor2,
-                              ),
+                              border:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Border.all(width: 0)
+                                      : Border.all(
+                                        width: 0.5,
+                                        color: AppTheme.buttonColor2,
+                                      ),
                               color: theme.colorScheme.surface,
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -926,7 +935,8 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                             ).textTheme.bodyMedium?.copyWith(
                                               fontWeight: FontWeight.normal,
                                               fontSize: 14,
-                                              color: AppTheme.textColor2,
+                                              color:
+                                                  theme.colorScheme.onTertiary,
                                             ),
                                           ),
                                           const SizedBox(height: 5),
@@ -942,7 +952,9 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                                       ?.copyWith(
                                                         fontSize: 12,
                                                         color:
-                                                            AppTheme.textColor2,
+                                                            theme
+                                                                .colorScheme
+                                                                .onTertiary,
                                                         fontStyle:
                                                             FontStyle.italic,
                                                       ),
@@ -968,50 +980,59 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
 
                                           const SizedBox(height: 5),
                                           Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              const HugeIcon(
-                                                icon:
-                                                    HugeIcons
-                                                        .strokeRoundedThumbsUp,
-                                                size: 16,
-                                                color: Color(0xff8e8e93),
+                                              Row(
+                                                children: [
+                                                  const HugeIcon(
+                                                    icon:
+                                                        HugeIcons
+                                                            .strokeRoundedThumbsUp,
+                                                    size: 16,
+                                                    color: Color(0xff8e8e93),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    "385",
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          fontSize: 11,
+                                                          color:
+                                                              theme
+                                                                  .colorScheme
+                                                                  .onTertiary,
+                                                        ),
+                                                  ),
+                                                  const SizedBox(height: 5),
+                                                  Text(
+                                                    ' - ${plan['durationDays'] ?? 0} Days Plan',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          fontSize: 12,
+                                                          color:
+                                                              theme
+                                                                  .colorScheme
+                                                                  .onSurface,
+                                                        ),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                "385",
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      fontSize: 11,
-                                                      color:
-                                                          AppTheme.textColor2,
-                                                    ),
-                                              ),
-                                              const SizedBox(height: 5),
-                                              Text(
-                                                ' - ${plan['durationDays'] ?? 0} Days Plan',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyMedium
-                                                    ?.copyWith(
-                                                      fontSize: 12,
-                                                      color:
-                                                          theme
-                                                              .colorScheme
-                                                              .onSurface,
-                                                    ),
-                                              ),
-                                              const SizedBox(width: 10),
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                      horizontal: 15,
-                                                      vertical: 7,
+                                                      horizontal: 17,
+                                                      vertical: 5,
                                                     ),
                                                 decoration: BoxDecoration(
                                                   color:
                                                       theme.colorScheme.surface,
                                                   border: Border.all(
-                                                    width: 1,
+                                                    width: 0.75,
                                                     color:
                                                         theme
                                                             .colorScheme
@@ -1049,7 +1070,6 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(width: 20),
                                   ],
                                 ),
                               ],
@@ -1059,7 +1079,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                       );
                     }),
 
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 0),
                   const SectionHeader(
                     title: "Recommended Messages",
                     seeAllText: "see more",
@@ -1177,7 +1197,9 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                       final auth = context.read<AuthProvider>();
                       final currentUserId = auth.user?['id'];
                       final attendees = List.from(eventMap['attendees'] ?? []);
-                      final isAttending = attendees.any((a) => a['userId'] == currentUserId);
+                      final isAttending = attendees.any(
+                        (a) => a['userId'] == currentUserId,
+                      );
 
                       return EventDottedCard(
                         event: eventMap,
@@ -1194,17 +1216,27 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                 onToggleAttend: () async {
                                   // We trigger the API call via communityProvider, then reload explore data
                                   // in the feedProvider to reflect the updated attendees list.
-                                  final provider = context.read<CommunityProvider>();
-                                  if (auth.token != null && eventMap['id'] != null) {
-                                      if (isAttending) {
-                                          await provider.unattendEvent(auth.token!, eventMap['id']);
-                                      } else {
-                                          await provider.attendEvent(auth.token!, eventMap['id']);
-                                      }
-                                      if (context.mounted) {
-                                        context.read<FeedProvider>().loadExploreData(auth.token!);
-                                        Navigator.pop(context);
-                                      }
+                                  final provider =
+                                      context.read<CommunityProvider>();
+                                  if (auth.token != null &&
+                                      eventMap['id'] != null) {
+                                    if (isAttending) {
+                                      await provider.unattendEvent(
+                                        auth.token!,
+                                        eventMap['id'],
+                                      );
+                                    } else {
+                                      await provider.attendEvent(
+                                        auth.token!,
+                                        eventMap['id'],
+                                      );
+                                    }
+                                    if (context.mounted) {
+                                      context
+                                          .read<FeedProvider>()
+                                          .loadExploreData(auth.token!);
+                                      Navigator.pop(context);
+                                    }
                                   }
                                 },
                               );
@@ -1213,7 +1245,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                         },
                       );
                     }),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
                 ],
               ),
             ],
@@ -1293,9 +1325,9 @@ class BooksReelCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 160,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -1306,10 +1338,11 @@ class BooksReelCard extends StatelessWidget {
                   : Container(color: Colors.grey.shade800),
 
               /// 🔹 Play Button (Centered)
+              Container(color: Colors.black.withValues(alpha: 0.55)),
 
               /// 🔹 Bottom Content
               Padding(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -1319,7 +1352,7 @@ class BooksReelCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
 
@@ -1384,7 +1417,10 @@ class BooksReelCard extends StatelessWidget {
                         if (status == 'PENDING_REVIEW') ...[
                           const SizedBox(height: 5),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.orange.withOpacity(0.8),
                               borderRadius: BorderRadius.circular(4),

@@ -29,9 +29,9 @@ class VideoCard extends StatelessWidget {
       child: Container(
         height: height ?? 275,
         width: width ?? 204,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -43,31 +43,31 @@ class VideoCard extends StatelessWidget {
                   : Container(color: Colors.grey.shade800),
 
               /// 🔹 Dark overlay for readability
-              Container(color: Colors.black.withValues(alpha: 0.5)),
+              Container(color: Colors.black.withValues(alpha: 0.55)),
 
               /// 🔹 Play Button (Centered)
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      width: 0.5,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
+              // Center(
+              //   child: Container(
+              //     padding: const EdgeInsets.all(8),
+              //     decoration: BoxDecoration(
+              //       border: Border.all(
+              //         width: 0.5,
+              //         color: Colors.white.withValues(alpha: 0.9),
+              //       ),
 
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              //       shape: BoxShape.circle,
+              //     ),
+              //     child: const Icon(
+              //       Icons.play_arrow_rounded,
+              //       size: 28,
+              //       color: Colors.white,
+              //     ),
+              //   ),
+              // ),
 
               /// 🔹 Bottom Content
               Padding(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +112,7 @@ class VideoCard extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.all(5),
+                          padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: Colors.white30,
                             borderRadius: BorderRadius.circular(20),

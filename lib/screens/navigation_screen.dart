@@ -95,13 +95,13 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   });
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(15),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.purpleColor,
                     borderRadius: BorderRadius.circular(50),
                   ),
                   child: Image.asset(
-                    "assets/images/cross.png",
+                    "assets/images/bible-2.png",
                     width: 28,
                     height: 28,
                   ),

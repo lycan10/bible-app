@@ -26,7 +26,7 @@ class SectionHeader extends StatelessWidget {
 
     return Column(
       children: [
-        SizedBox(height: 30),
+        SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -36,7 +36,10 @@ class SectionHeader extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: titleColor ?? theme.textTheme.bodyMedium?.color,
+                color:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : (titleColor ?? theme.textTheme.bodyMedium?.color),
               ),
             ),
 
@@ -52,7 +55,7 @@ class SectionHeader extends StatelessWidget {
                       seeAllText,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.normal,
-                        color: actionColor ?? AppTheme.textColor2,
+                        color: theme.colorScheme.onTertiary,
                         fontSize: 14,
                       ),
                     ),
@@ -60,7 +63,7 @@ class SectionHeader extends StatelessWidget {
                   HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowRight01,
                     size: 18,
-                    color: actionColor ?? const Color(0xff8e8e93),
+                    color: actionColor ?? theme.colorScheme.onTertiary,
                   ),
                 ],
               ),

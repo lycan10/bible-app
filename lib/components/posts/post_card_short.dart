@@ -58,17 +58,19 @@ class PostCardShort extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 45), // ~2 lines
+                            constraints: const BoxConstraints(
+                              maxHeight: 50,
+                            ), // ~2 lines
                             child: FormattedText(
                               postText,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: theme.colorScheme.onSurface,
                               ),
                             ),
                           ),
 
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
 
                           GestureDetector(
                             onTap: onAuthorTap,
@@ -76,10 +78,10 @@ class PostCardShort extends StatelessWidget {
                               text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: 'From: ',
+                                    text: 'From:  ',
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontSize: 12,
-                                      color: AppTheme.textColor2,
+                                      color: theme.colorScheme.onTertiary,
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
@@ -137,8 +139,8 @@ class PostCardShort extends StatelessWidget {
                             postImage!.startsWith('http')
                                 ? Image.network(
                                   postImage!,
-                                  width: 90,
-                                  height: 90,
+                                  width: 105,
+                                  height: 105,
                                   fit: BoxFit.cover,
                                   errorBuilder:
                                       (context, error, stackTrace) => Container(

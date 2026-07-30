@@ -23,9 +23,10 @@ class InlineVerseText extends StatelessWidget {
     final defaultStyle =
         style ?? const TextStyle(color: Colors.black, fontSize: 14);
     final linkStyle = defaultStyle.copyWith(
-      color: AppTheme.textColor2,
+      color: AppTheme.completedColor,
+      fontWeight: FontWeight.bold,
       decoration: TextDecoration.underline,
-      decorationColor: AppTheme.textColor2,
+      decorationColor: AppTheme.completedColor,
     );
 
     // Regex to match [Verse:John 3:16]

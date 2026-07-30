@@ -19,7 +19,12 @@ class TodayVerseGlass extends StatefulWidget {
   final bool isCommunityVerse;
   final String? communityId;
 
-  const TodayVerseGlass({super.key, this.verseData, this.isCommunityVerse = false, this.communityId});
+  const TodayVerseGlass({
+    super.key,
+    this.verseData,
+    this.isCommunityVerse = false,
+    this.communityId,
+  });
 
   @override
   State<TodayVerseGlass> createState() => _TodayVerseGlassState();
@@ -60,6 +65,8 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     const double cardHeight = 270;
 
     final String? text = widget.verseData?['text'];
@@ -82,7 +89,11 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
             transitionDuration: const Duration(milliseconds: 500),
             pageBuilder:
                 (context, animation, secondaryAnimation) =>
-                    FullScreenVerseScreen(verseData: widget.verseData, isCommunityVerse: widget.isCommunityVerse, communityId: widget.communityId),
+                    FullScreenVerseScreen(
+                      verseData: widget.verseData,
+                      isCommunityVerse: widget.isCommunityVerse,
+                      communityId: widget.communityId,
+                    ),
             transitionsBuilder: (
               context,
               animation,
@@ -103,15 +114,21 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
             children: [
               /// 🔹 Background Image
               Positioned.fill(
-                child: widget.verseData?['backgroundImageUrl'] != null && widget.verseData!['backgroundImageUrl'].toString().isNotEmpty
-                    ? Image.network(
-                        ApiService.getFullImageUrl(widget.verseData!['backgroundImageUrl']),
-                        fit: BoxFit.cover,
-                      )
-                    : Image.asset(
-                        "assets/images/nature.jpg",
-                        fit: BoxFit.cover,
-                      ),
+                child:
+                    widget.verseData?['backgroundImageUrl'] != null &&
+                            widget.verseData!['backgroundImageUrl']
+                                .toString()
+                                .isNotEmpty
+                        ? Image.network(
+                          ApiService.getFullImageUrl(
+                            widget.verseData!['backgroundImageUrl'],
+                          ),
+                          fit: BoxFit.cover,
+                        )
+                        : Image.asset(
+                          "assets/images/nature.jpg",
+                          fit: BoxFit.cover,
+                        ),
               ),
 
               /// 🔹 Dark gradient overlay for contrast
@@ -122,8 +139,8 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.35),
-                        Colors.black.withValues(alpha: 0.65),
+                        Colors.black.withValues(alpha: 0.15),
+                        Colors.black.withValues(alpha: 0.75),
                       ],
                     ),
                   ),
@@ -142,7 +159,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                         bottom: 0,
                         sigmaX: 15,
                         sigmaY: 15,
-                        tintAlpha: 0.05,
+                        tintAlpha: 0.07,
                       ),
                     ],
                   ),
@@ -156,30 +173,49 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          'Share and earn a badge',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.white,
-                            fontSize: 11,
+                        Container(
+                          padding: EdgeInsets.only(left: 5, right: 0),
+                          width: 210,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            color: Colors.white.withValues(alpha: 0.2),
                           ),
-                        ),
-                        Image.asset(
-                          "assets/images/bronze.png",
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Share and earn a badge',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Image.asset(
+                                "assets/images/bronze.png",
+                                width: 35,
+                                height: 35,
+                                fit: BoxFit.cover,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 7),
                     Text(
                       'Today\'s verse',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -187,10 +223,10 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                           "Every good and perfect gift comes from above, from the Father of Lights.",
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.playfairDisplay(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
                         height: 1.4,
                       ),
                     ),
@@ -198,12 +234,11 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                     Text(
                       reference != null ? '- $reference' : '- JAMES 1:17 KJV',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 14,
                       ),
                     ),
-                    const Spacer(),
                     const Spacer(),
                     Row(
                       children: [
@@ -217,15 +252,25 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               listen: false,
                             );
                             if (authProvider.token != null) {
-                              if (widget.isCommunityVerse && widget.communityId != null) {
-                                await Provider.of<CommunityProvider>(context, listen: false).toggleCommunityVerseLike(authProvider.token!, widget.communityId!);
+                              if (widget.isCommunityVerse &&
+                                  widget.communityId != null) {
+                                await Provider.of<CommunityProvider>(
+                                  context,
+                                  listen: false,
+                                ).toggleCommunityVerseLike(
+                                  authProvider.token!,
+                                  widget.communityId!,
+                                );
                               } else {
-                                await Provider.of<FeedProvider>(context, listen: false).toggleDailyVerseLike(authProvider.token!);
+                                await Provider.of<FeedProvider>(
+                                  context,
+                                  listen: false,
+                                ).toggleDailyVerseLike(authProvider.token!);
                               }
                             }
                           },
                         ),
-                        const SizedBox(width: 15),
+                        const SizedBox(width: 18),
                         _buildStatButton(
                           Icons.reply,
                           sharesCount,
@@ -236,12 +281,25 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               listen: false,
                             );
                             if (authProvider.token != null) {
-                              if (widget.isCommunityVerse && widget.communityId != null) {
-                                await Provider.of<CommunityProvider>(context, listen: false).shareCommunityVerse(authProvider.token!, widget.communityId!);
+                              if (widget.isCommunityVerse &&
+                                  widget.communityId != null) {
+                                await Provider.of<CommunityProvider>(
+                                  context,
+                                  listen: false,
+                                ).shareCommunityVerse(
+                                  authProvider.token!,
+                                  widget.communityId!,
+                                );
                               } else {
-                                final res = await Provider.of<FeedProvider>(context, listen: false).shareDailyVerse(authProvider.token!);
-                                if (res['coinBalance'] != null && context.mounted) {
-                                  context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
+                                final res = await Provider.of<FeedProvider>(
+                                  context,
+                                  listen: false,
+                                ).shareDailyVerse(authProvider.token!);
+                                if (res['coinBalance'] != null &&
+                                    context.mounted) {
+                                  context
+                                      .read<EconomyProvider>()
+                                      .updateCoinBalance(res['coinBalance']);
                                 }
                               }
                             }
@@ -260,15 +318,25 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               listen: false,
                             );
                             if (authProvider.token != null) {
-                              if (widget.isCommunityVerse && widget.communityId != null) {
-                                await Provider.of<CommunityProvider>(context, listen: false).shareCommunityVerse(authProvider.token!, widget.communityId!);
+                              if (widget.isCommunityVerse &&
+                                  widget.communityId != null) {
+                                await Provider.of<CommunityProvider>(
+                                  context,
+                                  listen: false,
+                                ).shareCommunityVerse(
+                                  authProvider.token!,
+                                  widget.communityId!,
+                                );
                               } else {
-                                await Provider.of<FeedProvider>(context, listen: false).shareDailyVerse(authProvider.token!);
+                                await Provider.of<FeedProvider>(
+                                  context,
+                                  listen: false,
+                                ).shareDailyVerse(authProvider.token!);
                               }
                             }
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(10),
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.blueAccent,
@@ -277,7 +345,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                               Icons.reply,
                               textDirection: TextDirection.rtl,
                               color: Colors.white,
-                              size: 20,
+                              size: 18,
                             ),
                           ),
                         ),
@@ -380,7 +448,12 @@ class FullScreenVerseScreen extends StatelessWidget {
   final bool isCommunityVerse;
   final String? communityId;
 
-  const FullScreenVerseScreen({super.key, this.verseData, this.isCommunityVerse = false, this.communityId});
+  const FullScreenVerseScreen({
+    super.key,
+    this.verseData,
+    this.isCommunityVerse = false,
+    this.communityId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -399,15 +472,19 @@ class FullScreenVerseScreen extends StatelessWidget {
         children: [
           // Background image
           Positioned.fill(
-            child: verseData?['backgroundImageUrl'] != null && verseData!['backgroundImageUrl'].toString().isNotEmpty
-                ? Image.network(
-                    ApiService.getFullImageUrl(verseData!['backgroundImageUrl']),
-                    fit: BoxFit.cover,
-                  )
-                : Image.asset(
-                    "assets/images/dailyverspop.jpeg",
-                    fit: BoxFit.cover,
-                  ),
+            child:
+                verseData?['backgroundImageUrl'] != null &&
+                        verseData!['backgroundImageUrl'].toString().isNotEmpty
+                    ? Image.network(
+                      ApiService.getFullImageUrl(
+                        verseData!['backgroundImageUrl'],
+                      ),
+                      fit: BoxFit.cover,
+                    )
+                    : Image.asset(
+                      "assets/images/dailyverspop.jpeg",
+                      fit: BoxFit.cover,
+                    ),
           ),
 
           // Darken overlay for the background instead of blur
@@ -542,7 +619,9 @@ class FullScreenVerseScreen extends StatelessWidget {
                   Consumer2<FeedProvider, CommunityProvider>(
                     builder: (context, feedProvider, communityProvider, child) {
                       final updatedVerseData =
-                          isCommunityVerse ? (communityProvider.currentVerse ?? verseData) : (feedProvider.dailyVerse ?? verseData);
+                          isCommunityVerse
+                              ? (communityProvider.currentVerse ?? verseData)
+                              : (feedProvider.dailyVerse ?? verseData);
                       final likesCount = _formatCount(
                         updatedVerseData?['likesCount'] ?? 0,
                       );
@@ -564,9 +643,15 @@ class FullScreenVerseScreen extends StatelessWidget {
                               );
                               if (authProvider.token != null) {
                                 if (isCommunityVerse && communityId != null) {
-                                  await communityProvider.toggleCommunityVerseLike(authProvider.token!, communityId!);
+                                  await communityProvider
+                                      .toggleCommunityVerseLike(
+                                        authProvider.token!,
+                                        communityId!,
+                                      );
                                 } else {
-                                  await feedProvider.toggleDailyVerseLike(authProvider.token!);
+                                  await feedProvider.toggleDailyVerseLike(
+                                    authProvider.token!,
+                                  );
                                 }
                               }
                             },
@@ -583,9 +668,14 @@ class FullScreenVerseScreen extends StatelessWidget {
                               );
                               if (authProvider.token != null) {
                                 if (isCommunityVerse && communityId != null) {
-                                  await communityProvider.shareCommunityVerse(authProvider.token!, communityId!);
+                                  await communityProvider.shareCommunityVerse(
+                                    authProvider.token!,
+                                    communityId!,
+                                  );
                                 } else {
-                                  await feedProvider.shareDailyVerse(authProvider.token!);
+                                  await feedProvider.shareDailyVerse(
+                                    authProvider.token!,
+                                  );
                                 }
                               }
                             },
@@ -602,9 +692,15 @@ class FullScreenVerseScreen extends StatelessWidget {
                               );
                               if (authProvider.token != null) {
                                 if (isCommunityVerse && communityId != null) {
-                                  await communityProvider.toggleCommunityVerseLike(authProvider.token!, communityId!);
+                                  await communityProvider
+                                      .toggleCommunityVerseLike(
+                                        authProvider.token!,
+                                        communityId!,
+                                      );
                                 } else {
-                                  await feedProvider.toggleDailyVerseLike(authProvider.token!);
+                                  await feedProvider.toggleDailyVerseLike(
+                                    authProvider.token!,
+                                  );
                                 }
                               }
                             },
@@ -618,9 +714,14 @@ class FullScreenVerseScreen extends StatelessWidget {
                               );
                               if (authProvider.token != null) {
                                 if (isCommunityVerse && communityId != null) {
-                                  await communityProvider.shareCommunityVerse(authProvider.token!, communityId!);
+                                  await communityProvider.shareCommunityVerse(
+                                    authProvider.token!,
+                                    communityId!,
+                                  );
                                 } else {
-                                  await feedProvider.shareDailyVerse(authProvider.token!);
+                                  await feedProvider.shareDailyVerse(
+                                    authProvider.token!,
+                                  );
                                 }
                               }
                             },

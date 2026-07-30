@@ -127,17 +127,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         'Welcome Back',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                           color: Colors.black87,
+                          fontSize: 27,
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       Text(
-                        'Log in to continue your journey on Quest',
+                        'Log in to continue your journey with SOZO.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
+                          color: const Color.fromARGB(255, 97, 97, 97),
+                          fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -230,7 +232,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Forgot Password?',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.primaryColor,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -254,6 +255,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         title: 'Login',
                         isLoading: authProvider.isLoading,
                         ontap: _handleLogin,
+                        // ontap: () {
+                        //   Navigator.of(context).pushAndRemoveUntil(
+                        //     MaterialPageRoute(
+                        //       builder: (_) => const NavigationScreen(),
+                        //     ),
+                        //     (Route<dynamic> route) => false,
+                        //   );
+                        // },
                       ),
                     ),
                   ],
