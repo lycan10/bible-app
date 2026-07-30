@@ -251,7 +251,7 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                           Text(
                             friendName.isNotEmpty
                                 ? friendName
-                                : '@${widget.friend['username'] ?? 'User'}',
+                                : widget.friend['username'] != null && widget.friend['username'].toString().isNotEmpty ? '@${widget.friend['username']}' : '',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,

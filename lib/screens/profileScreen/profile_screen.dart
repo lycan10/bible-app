@@ -185,22 +185,27 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     final String fullName =
         user != null
             ? '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim()
-            : 'Lenny Daniels';
+            : '';
     final String username =
-        user != null ? '@${user['username'] ?? ''}' : '@lenny123';
+        user != null &&
+                user['username'] != null &&
+                user['username'].toString().isNotEmpty
+            ? '@${user['username']}'
+            : '';
     final String avatarUrl = user?['avatarUrl'] ?? 'assets/images/boy.png';
     final String formattedAvatarUrl = ApiService.getFullImageUrl(avatarUrl);
 
-    final userFullName = fullName.isNotEmpty ? fullName : 'Anonymous';
+    final userFullName = fullName.isNotEmpty ? fullName : '';
 
     // Calculate dynamic values
     final earnedBadgesCount =
         _badgesProgress.where((b) => b['isEarned'] == true).length;
     final int streakCount = user?['streakCount'] ?? 0;
     final int points = user?['points'] ?? 0;
-    final int coinBalance = economyProvider.coinBalance > 0
-        ? economyProvider.coinBalance
-        : (user?['coinBalance'] ?? 0);
+    final int coinBalance =
+        economyProvider.coinBalance > 0
+            ? economyProvider.coinBalance
+            : (user?['coinBalance'] ?? 0);
 
     // Filter user posts
     final allPosts = feedProvider.feed?['posts'] as List<dynamic>? ?? [];
@@ -319,30 +324,30 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                   ),
                                 ),
                                 const SizedBox(height: 30),
-                                 SingleChildScrollView(
-                                   scrollDirection: Axis.horizontal,
-                                   child: Row(
-                                     children: [
-                                       StatText(
-                                         value: "${_friends.length}",
-                                         label: "Friends",
-                                       ),
-                                       StatText(
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      StatText(
+                                        value: "${_friends.length}",
+                                        label: "Friends",
+                                      ),
+                                      /*StatText(
                                          value: "$earnedBadgesCount",
                                          label: "Badges",
-                                       ),
-                                       StatText(
-                                         value:
-                                             "${user?['communities']?.length ?? 1}",
-                                         label: "Communities",
-                                       ),
-                                       StatText(
-                                         value: "$coinBalance",
-                                         label: "Coins",
-                                       ),
-                                     ],
-                                   ),
-                                 ),
+                                       ),*/
+                                      StatText(
+                                        value:
+                                            "${user?['communities']?.length ?? 1}",
+                                        label: "Communities",
+                                      ),
+                                      StatText(
+                                        value: "$coinBalance",
+                                        label: "Coins",
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -403,7 +408,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                 },
                               ),
                             ),
-                            ActionPillButton2(
+                            /*ActionPillButton2(
                               label: "Badges",
                               backgroundColor:
                                   selectedTab == "Badges"
@@ -422,7 +427,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                               onTap: () {
                                 setState(() => selectedTab = "Badges");
                               },
-                            ),
+                            ),*/
                             ActionPillButton2(
                               label: "Metric",
                               backgroundColor:
@@ -533,7 +538,12 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                               '${friend['firstName'] ?? ''} ${friend['lastName'] ?? ''}'
                                                   .trim();
                                           final fUsername =
-                                              '@${friend['username'] ?? 'anonymous'}';
+                                              friend['username'] != null &&
+                                                      friend['username']
+                                                          .toString()
+                                                          .isNotEmpty
+                                                  ? '@${friend['username']}'
+                                                  : '';
                                           final fAvatar =
                                               friend['avatarUrl'] != null
                                                   ? ApiService.getFullImageUrl(
@@ -544,9 +554,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                             userName: fUsername,
                                             userImage: fAvatar,
                                             fullName:
-                                                fName.isNotEmpty
-                                                    ? fName
-                                                    : "Anonymous",
+                                                fName.isNotEmpty ? fName : "",
                                           );
                                         }).toList(),
                                   ),
@@ -599,7 +607,8 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                     final double pct =
                                         (bp['percentage'] ?? 0) / 100.0;
                                     final String stat = "$current/$target";
-                                    final bool isEarned = bp['isEarned'] ?? false;
+                                    final bool isEarned =
+                                        bp['isEarned'] ?? false;
 
                                     return BadgeCard(
                                       title: badgeName,
@@ -688,59 +697,78 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
 
                       if (selectedTab == "Metric")
                         _loadingGames
-                            ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                            ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
                             : GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.75,
-                          children: [
-                            MetricCard(
-                              title: "Quiz",
-                              topLabel: "Lvl",
-                              levelStat: "${_gamesOverview?['quiz']?['level'] ?? 1}",
-                              bottomLabel: "Earned ${_gamesOverview?['quiz']?['points'] ?? 0} Points",
-                              progress: (_gamesOverview?['quiz']?['progress']?.toDouble() ?? 0.0),
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.75,
+                              children: [
+                                MetricCard(
+                                  title: "Quiz",
+                                  topLabel: "Lvl",
+                                  levelStat:
+                                      "${_gamesOverview?['quiz']?['level'] ?? 1}",
+                                  bottomLabel:
+                                      "Earned ${_gamesOverview?['quiz']?['points'] ?? 0} Points",
+                                  progress:
+                                      (_gamesOverview?['quiz']?['progress']
+                                              ?.toDouble() ??
+                                          0.0),
+                                ),
+                                MetricCard(
+                                  title: "Puzzle",
+                                  topLabel: "Streak",
+                                  levelStat:
+                                      "${_gamesOverview?['puzzle']?['streak'] ?? 0}/${_gamesOverview?['puzzle']?['nextMilestone'] ?? 7} Days",
+                                  bottomLabel:
+                                      "Solved ${_gamesOverview?['puzzle']?['solves'] ?? 0} Puzzles",
+                                  progress:
+                                      (_gamesOverview?['puzzle']?['progress']
+                                              ?.toDouble() ??
+                                          0.0),
+                                ),
+                                MetricCard(
+                                  title: "Devotion",
+                                  topLabel: "Points",
+                                  levelStat:
+                                      "${_gamesOverview?['devotion']?['points'] ?? 0}",
+                                  bottomLabel: "Earned from Devotions",
+                                  progress: 1.0,
+                                ),
+                                MetricCard(
+                                  title: "Daily Bread",
+                                  topLabel: "Points",
+                                  levelStat:
+                                      "${_gamesOverview?['dailyBread']?['points'] ?? 0}",
+                                  bottomLabel: "Earned from Sharing",
+                                  progress: 1.0,
+                                ),
+                                MetricCard(
+                                  title: "Audio Reels",
+                                  topLabel: "Points",
+                                  levelStat:
+                                      "${_gamesOverview?['audioReel']?['points'] ?? 0}",
+                                  bottomLabel: "Earned from Listening",
+                                  progress: 1.0,
+                                ),
+                                MetricCard(
+                                  title: "Video Reels",
+                                  topLabel: "Points",
+                                  levelStat:
+                                      "${_gamesOverview?['videoReel']?['points'] ?? 0}",
+                                  bottomLabel: "Earned from Watching",
+                                  progress: 1.0,
+                                ),
+                              ],
                             ),
-                            MetricCard(
-                              title: "Puzzle",
-                              topLabel: "Streak",
-                              levelStat: "${_gamesOverview?['puzzle']?['streak'] ?? 0}/${_gamesOverview?['puzzle']?['nextMilestone'] ?? 7} Days",
-                              bottomLabel: "Solved ${_gamesOverview?['puzzle']?['solves'] ?? 0} Puzzles",
-                              progress: (_gamesOverview?['puzzle']?['progress']?.toDouble() ?? 0.0),
-                            ),
-                            MetricCard(
-                              title: "Devotion",
-                              topLabel: "Points",
-                              levelStat: "${_gamesOverview?['devotion']?['points'] ?? 0}",
-                              bottomLabel: "Earned from Devotions",
-                              progress: 1.0,
-                            ),
-                            MetricCard(
-                              title: "Daily Bread",
-                              topLabel: "Points",
-                              levelStat: "${_gamesOverview?['dailyBread']?['points'] ?? 0}",
-                              bottomLabel: "Earned from Sharing",
-                              progress: 1.0,
-                            ),
-                            MetricCard(
-                              title: "Audio Reels",
-                              topLabel: "Points",
-                              levelStat: "${_gamesOverview?['audioReel']?['points'] ?? 0}",
-                              bottomLabel: "Earned from Listening",
-                              progress: 1.0,
-                            ),
-                            MetricCard(
-                              title: "Video Reels",
-                              topLabel: "Points",
-                              levelStat: "${_gamesOverview?['videoReel']?['points'] ?? 0}",
-                              bottomLabel: "Earned from Watching",
-                              progress: 1.0,
-                            ),
-                          ],
-                        ),
                     ],
                   ),
                 ),

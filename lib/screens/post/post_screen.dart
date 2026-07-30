@@ -130,7 +130,7 @@ class _PostScreenState extends State<PostScreen> {
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
     final displayName =
-        userName.isEmpty ? (user['username'] ?? 'User') : userName;
+        userName.isEmpty ? (user['username'] ?? '') : userName;
     final text = post['text'] ?? '';
     final imageUrl = post['image'];
     final reactionsCount = post['reactions']?.length ?? 0;
@@ -225,7 +225,7 @@ class _PostScreenState extends State<PostScreen> {
                                         ),
                                         const SizedBox(height: 3),
                                         Text(
-                                          "@${user['username'] ?? 'user'}",
+                                          user['username'] != null && user['username'].toString().isNotEmpty ? "@${user['username']}" : "",
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 fontSize: 12,
@@ -575,7 +575,7 @@ class _CommentItemState extends State<CommentItem> {
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
     final displayName =
-        userName.isEmpty ? (user['username'] ?? 'User') : userName;
+        userName.isEmpty ? (user['username'] ?? '') : userName;
     final replies = widget.comment['replies'] as List<dynamic>? ?? [];
 
     final reactions = widget.comment['reactions'] as List<dynamic>? ?? [];
@@ -645,7 +645,7 @@ class _CommentItemState extends State<CommentItem> {
                                     ),
                                   ),
                                   Text(
-                                    "@${user['username'] ?? 'user'}",
+                                    user['username'] != null && user['username'].toString().isNotEmpty ? "@${user['username']}" : "",
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontSize: 10,
                                       color: AppTheme.textColor2,
@@ -847,7 +847,7 @@ class _CommentItemState extends State<CommentItem> {
                       onTap:
                           () => widget.onReply(
                             widget.rootCommentId ?? widget.comment['id'],
-                            user['username'] ?? 'user',
+                            user['username'] ?? '',
                           ),
                       child: Text(
                         "Reply",

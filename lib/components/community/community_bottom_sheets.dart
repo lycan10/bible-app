@@ -207,7 +207,7 @@ class MembersBottomSheet extends StatelessWidget {
                     "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
                         .trim();
                 final displayName =
-                    name.isEmpty ? (user['username'] ?? 'User') : name;
+                    name.isEmpty ? (user['username'] ?? '') : name;
                 final avatar = user['avatarUrl'];
 
                 final isMe =
@@ -261,7 +261,7 @@ class MembersBottomSheet extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '@${user['username'] ?? 'user'}',
+                                user['username'] != null && user['username'].toString().isNotEmpty ? '@${user['username']}' : '',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade600,
@@ -405,7 +405,7 @@ class ProfileBottomSheet extends StatelessWidget {
     final friends = context.read<FeedProvider>().friends;
 
     final name = "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
-    final displayName = name.isEmpty ? (user['username'] ?? 'User') : name;
+    final displayName = name.isEmpty ? (user['username'] ?? '') : name;
     final avatar = user['avatarUrl'];
 
     final isMe = currentUser != null && currentUser['id'] == user['id'];
@@ -477,7 +477,7 @@ class ProfileBottomSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    '@${user['username'] ?? 'user'}',
+                    user['username'] != null && user['username'].toString().isNotEmpty ? '@${user['username']}' : '',
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 10),
@@ -521,7 +521,7 @@ class ProfileBottomSheet extends StatelessWidget {
           const SizedBox(height: 25),
           Center(
             child: Text(
-              "You and ${user['firstName'] ?? displayName} are in a community together",
+              "You and ${user['firstName'] ?? ''} are in a community together",
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             ),
           ),

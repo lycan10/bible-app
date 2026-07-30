@@ -372,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text(
-                        '${DateFormatter.getGreeting()} ${authProvider.user?['firstName'] ?? 'User'}',
+                        '${DateFormatter.getGreeting()} ${authProvider.user?['firstName'] ?? ''}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,

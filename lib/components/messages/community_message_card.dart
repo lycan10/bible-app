@@ -39,7 +39,7 @@ class CommunityMessageCard extends StatelessWidget {
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
     final authorName =
-        userName.isEmpty ? (user['username'] ?? 'Admin') : userName;
+        userName.isEmpty ? (user['username'] ?? '') : userName;
 
     final text = message['text'] ?? 'Message';
     final imageUrl = message['imageUrl'] ?? message['videoThumbnail'];

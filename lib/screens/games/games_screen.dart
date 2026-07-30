@@ -303,7 +303,7 @@ class _GamesScreenState extends State<GamesScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
+                  /*const SizedBox(height: 32),
 
                   // Badges Section
                   Row(
@@ -405,7 +405,7 @@ class _GamesScreenState extends State<GamesScreen> {
                         _LeaderboardAvatar('assets/images/boy.png', rank: 1),
                       ],
                     ),
-                  ),
+                  ),*/
                   const SizedBox(height: 40),
                 ],
               ),

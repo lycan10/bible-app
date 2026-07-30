@@ -67,9 +67,9 @@ class _UserProfileCardState extends State<UserProfileCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = widget.user ?? {};
-    final firstName = user['firstName'] ?? 'User';
+    final firstName = user['firstName'] ?? '';
     final lastName = user['lastName'] ?? '';
-    final username = user['username'] ?? 'unknown';
+    final username = user['username'] ?? '';
     final avatarUrl = user['avatarUrl'];
 
     final friendsCount = _stats?['friends'] ?? 0;
@@ -149,7 +149,7 @@ class _UserProfileCardState extends State<UserProfileCard> {
                               ),
                             TextSpan(text: '\n'),
                             TextSpan(
-                              text: '@$username',
+                              text: username.isNotEmpty ? '@$username' : '',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.textColor2,

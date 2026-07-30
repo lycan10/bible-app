@@ -155,7 +155,7 @@ class _PostListState extends State<PostList> with RouteAware {
                           final timeStr = timeago.format(createdAt);
 
                           return PostCardLong(
-                            userName: userName.isNotEmpty ? userName : user['username'] ?? 'User',
+                            userName: userName.isNotEmpty ? userName : user['username'] ?? '',
                             userImage: userImage,
                             verificationBadge: user['verificationBadge'] ?? 'NONE',
                             postText: post['text'] ?? '',

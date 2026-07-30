@@ -25,7 +25,7 @@ class AdminMessageCard extends StatelessWidget {
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
     final authorName =
-        userName.isEmpty ? (user['username'] ?? 'Admin') : userName;
+        userName.isEmpty ? (user['username'] ?? '') : userName;
     final avatarUrl = user['avatarUrl'];
 
     final text = message['text'] ?? '';

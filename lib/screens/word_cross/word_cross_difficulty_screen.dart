@@ -47,7 +47,7 @@ class WordCrossDifficultyScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.95,
+                  childAspectRatio: 0.75,
                   children: const [
                     _DifficultyCard(
                       title: 'Easy',
@@ -107,7 +107,7 @@ class _DifficultyCard extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
@@ -121,30 +121,37 @@ class _DifficultyCard extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color.withAlpha(40),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 36, color: color.shade600),
+              child: Icon(icon, size: 32, color: color.shade600),
             ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+            const SizedBox(height: 12),
+            Flexible(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            const SizedBox(height: 4),
+            Flexible(
+              child: Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ],
         ),

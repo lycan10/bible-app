@@ -213,7 +213,7 @@ class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
                                 title: Text(
                                   friendName.isNotEmpty
                                       ? friendName
-                                      : '@${friend['username'] ?? 'User'}',
+                                      : friend['username'] != null && friend['username'].toString().isNotEmpty ? '@${friend['username']}' : '',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,

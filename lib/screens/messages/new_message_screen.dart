@@ -245,7 +245,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
     final userName =
-        "${auth.user?['firstName'] ?? 'User'} ${auth.user?['lastName'] ?? ''}"
+        "${auth.user?['firstName'] ?? ''} ${auth.user?['lastName'] ?? ''}"
             .trim();
     final avatarUrl = auth.user?['avatarUrl'];
 

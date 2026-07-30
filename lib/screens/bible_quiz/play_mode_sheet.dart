@@ -179,7 +179,7 @@ class _PlayModeSheetState extends State<PlayModeSheet> {
               const SizedBox(height: 32),
 
               // Play with friends section
-              Row(
+              /*Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
@@ -214,7 +214,7 @@ class _PlayModeSheetState extends State<PlayModeSheet> {
                     imageAsset: 'assets/images/boy.png',
                   ),
                 ],
-              ),
+              ),*/
             ],
           ),
         ),

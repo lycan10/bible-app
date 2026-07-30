@@ -66,7 +66,7 @@ class CommunityProfileCard extends StatelessWidget {
                             TextSpan(text: 'Lekki Christian Youth\n'),
 
                             TextSpan(
-                              text: '@lenny123',
+                              text: '',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.textColor2,

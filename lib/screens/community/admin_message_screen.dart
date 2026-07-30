@@ -284,8 +284,8 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
     final authorName =
-        userName.isEmpty ? (user['username'] ?? 'Admin') : userName;
-    final authorHandle = "@${user['username'] ?? 'admin'}";
+        userName.isEmpty ? (user['username'] ?? '') : userName;
+    final authorHandle = user['username'] != null && user['username'].toString().isNotEmpty ? "@${user['username']}" : "";
     final avatarUrl = user['avatarUrl'];
 
     final title = activeMessage['title'] as String?;
@@ -731,8 +731,8 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
     final theme = Theme.of(context);
     final u = comment['user'] ?? {};
     final uname = "${u['firstName'] ?? ''} ${u['lastName'] ?? ''}".trim();
-    final name = uname.isEmpty ? (u['username'] ?? 'User') : uname;
-    final handle = "@${u['username'] ?? 'user'}";
+    final name = uname.isEmpty ? (u['username'] ?? '') : uname;
+    final handle = u['username'] != null && u['username'].toString().isNotEmpty ? "@${u['username']}" : "";
     final avatar = u['avatarUrl'];
     final time =
         comment['createdAt'] != null

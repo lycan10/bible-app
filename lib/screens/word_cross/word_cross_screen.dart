@@ -286,7 +286,11 @@ class _WordCrossScreenState extends State<WordCrossScreen>
     _gameSettings?.playGameEndSound(won: foundWords.length == words.length);
 
     try {
-      final res = await GameService.submitScore('WORD_CROSS', widget.difficulty, score);
+      final res = await GameService.submitScore(
+        'WORD_CROSS',
+        widget.difficulty,
+        score,
+      );
       if (res['coinBalance'] != null && mounted) {
         context.read<EconomyProvider>().updateCoinBalance(res['coinBalance']);
       }
@@ -338,10 +342,16 @@ class _WordCrossScreenState extends State<WordCrossScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                ),
                 child: const Text('Keep playing'),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
                 child: const Text('Quit'),
               ),
             ],

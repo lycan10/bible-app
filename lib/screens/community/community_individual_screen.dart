@@ -965,7 +965,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                               final displayName =
                                   fullName.isNotEmpty
                                       ? fullName
-                                      : (user['username'] ?? 'User').toString();
+                                      : (user['username'] ?? '').toString();
                               final avatarUrl = user['avatarUrl']?.toString();
 
                               String formattedTime = '';
@@ -1693,7 +1693,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                       return PostCardLong(
                                         userName:
                                             userName.isEmpty
-                                                ? (user['username'] ?? 'User')
+                                                ? (user['username'] ?? '')
                                                 : userName,
                                         userImage:
                                             user['avatarUrl'] ??

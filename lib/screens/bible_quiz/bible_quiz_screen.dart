@@ -105,7 +105,7 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
 
   void _showFailedLevelDialog(int cutoff) {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
-    final firstName = user?['firstName'] ?? 'Player';
+    final firstName = user?['firstName'] ?? '';
 
     showDialog(
       context: context,
@@ -397,7 +397,7 @@ class _BibleQuizScreenState extends State<BibleQuizScreen> {
     }
 
     final user = Provider.of<AuthProvider>(context).user;
-    final firstName = user?['firstName'] ?? 'Player';
+    final firstName = user?['firstName'] ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFF3C38C3),

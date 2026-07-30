@@ -43,7 +43,7 @@ class _PermissionState extends State<Permission> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
-    final firstName = authProvider.user?['firstName'] ?? 'User';
+    final firstName = authProvider.user?['firstName'] ?? '';
 
     return Scaffold(
       backgroundColor: Colors.white,

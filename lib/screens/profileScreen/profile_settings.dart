@@ -122,7 +122,7 @@ class ProfileSettings extends StatelessWidget {
     final user = Provider.of<AuthProvider>(context).user;
     final avatarUrl = user?['avatarUrl'] ?? 'assets/images/boy.png';
     final formattedAvatarUrl = ApiService.getFullImageUrl(avatarUrl);
-    final firstName = user?['firstName'] ?? 'User';
+    final firstName = user?['firstName'] ?? '';
     final lastName = user?['lastName'] ?? '';
     final username = user?['username'] ?? '';
     return Scaffold(

@@ -727,7 +727,7 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                                 },
                                 child: SavedMessagesCard(
                                   title: m['title'] ?? m['text'] ?? 'Message',
-                                  authorName: sender['fullName'] ?? sender['username'] ?? 'Unknown',
+                                  authorName: sender['fullName'] ?? sender['username'] ?? '',
                                   messageImage: m['imageUrl'] ?? sender['avatarUrl'],
                                   likesCount: m['likesCount'] ?? 0,
                                   time: timeStr,
