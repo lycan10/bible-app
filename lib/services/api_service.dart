@@ -15,6 +15,10 @@ class ApiService {
     return 'https://quest.vidarave.com/api/v1';
   }
 
+  static String get appUrl {
+    return 'https://quest.vidarave.com';
+  }
+
   static String getFullImageUrl(String url) {
     if (url.startsWith('http')) return url;
     if (url.startsWith('/api')) {

@@ -2,6 +2,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:quest/main.dart'; // To access navigatorKey
 import 'package:quest/screens/community/community_individual_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DeepLinkService {
   static final _appLinks = AppLinks();
@@ -18,6 +19,21 @@ class DeepLinkService {
     _appLinks.uriLinkStream.listen((uri) {
       _handleDeepLink(uri);
     });
+  }
+
+  static Future<void> handleUrl(String urlString) async {
+    try {
+      final uri = Uri.parse(urlString);
+      if (uri.host == 'quest.vidarave.com') {
+        _handleDeepLink(uri);
+      } else {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error handling URL: $e");
+    }
   }
 
   static void _handleDeepLink(Uri uri) {

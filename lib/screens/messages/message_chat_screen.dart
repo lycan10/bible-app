@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:quest/services/deeplink_service.dart';
+import 'package:quest/services/notification_service.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:quest/services/api_service.dart';
@@ -18,10 +21,15 @@ class MessageChatScreen extends StatefulWidget {
   final String chatId;
   final Map<String, dynamic> friend;
 
+  /// When true the screen will scroll to the first unread message after
+  /// messages are loaded. Set to true when navigating from a notification tap.
+  final bool scrollToFirstUnread;
+
   const MessageChatScreen({
     super.key,
     required this.chatId,
     required this.friend,
+    this.scrollToFirstUnread = false,
   });
 
   @override
@@ -33,6 +41,16 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
   final ScrollController _scrollController = ScrollController();
   Timer? _pollingTimer;
 
+  /// Key assigned to the first unread [ChatBubble] so we can scroll to it.
+  final GlobalKey _firstUnreadKey = GlobalKey();
+
+  /// Whether we have already scrolled to the first unread message.
+  /// Prevents re-scrolling on subsequent widget rebuilds.
+  bool _hasScrolledToUnread = false;
+
+  /// Cached provider reference for use in [dispose] where context is unavailable.
+  ChatProvider? _chatProvider;
+
   XFile? _pendingAttachment;
   bool _isVideo = false;
   final ImagePicker _imagePicker = ImagePicker();
@@ -43,14 +61,33 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
+      _chatProvider = context.read<ChatProvider>();
+
       if (auth.token != null) {
-        context.read<ChatProvider>().loadMessages(auth.token!, widget.chatId);
-        _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+        // Tell the provider (and NotificationService) which chat is active so
+        // that FCM messages for this conversation don't bump the badge and the
+        // foreground notification bubble is suppressed.
+        _chatProvider!.setActiveChatId(widget.chatId);
+        NotificationService.activeChatId = widget.chatId;
+
+        // Mark existing unread messages as read straight away.
+        _chatProvider!.markChatAsRead(auth.token!, widget.chatId);
+
+        // Load messages then scroll to the right position.
+        _chatProvider!.loadMessages(auth.token!, widget.chatId).then((_) {
+          if (!mounted) return;
+          if (widget.scrollToFirstUnread && !_hasScrolledToUnread) {
+            _hasScrolledToUnread = true;
+            _scrollToFirstUnread();
+          } else {
+            _scrollToBottom();
+          }
+        });
+
+        // Polling acts as a safety net when FCM delivery is delayed.
+        _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
           if (mounted) {
-            context.read<ChatProvider>().loadMessages(
-              auth.token!,
-              widget.chatId,
-            );
+            _chatProvider!.loadMessages(auth.token!, widget.chatId);
           }
         });
       }
@@ -60,6 +97,9 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    // Clear active-chat markers so FCM resumes normal badge/notification behaviour.
+    _chatProvider?.setActiveChatId(null);
+    NotificationService.activeChatId = null;
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -208,6 +248,26 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
     }
   }
 
+  /// Scrolls the list so that the first unread message is visible.
+  /// Falls back to [_scrollToBottom] when there are no unread messages.
+  void _scrollToFirstUnread() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = _firstUnreadKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+          // Place the unread divider roughly 30 % from the top.
+          alignment: 0.3,
+        );
+      } else {
+        _scrollToBottom();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -251,7 +311,12 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                           Text(
                             friendName.isNotEmpty
                                 ? friendName
-                                : widget.friend['username'] != null && widget.friend['username'].toString().isNotEmpty ? '@${widget.friend['username']}' : '',
+                                : widget.friend['username'] != null &&
+                                    widget.friend['username']
+                                        .toString()
+                                        .isNotEmpty
+                                ? '@${widget.friend['username']}'
+                                : '',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -273,7 +338,9 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                         },
                         child: CustomAvatar(
                           radius: 20,
-                          imageUrl: friendAvatar != null && friendAvatar.toString().isNotEmpty
+                          imageUrl:
+                              friendAvatar != null &&
+                                      friendAvatar.toString().isNotEmpty
                                   ? ApiService.getFullImageUrl(friendAvatar)
                                   : null,
                         ),
@@ -319,20 +386,45 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
 
             /// 🔹 Messages
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final msg = messages[index];
-                  final isMe = msg['senderId'] == currentUserId;
-                  return ChatBubble(
-                    message: msg['text'] ?? '',
-                    imageUrl: msg['image'],
-                    isMe: isMe,
+              child: Builder(
+                builder: (context) {
+                  final firstUnreadIdx =
+                      chatProvider.firstUnreadMessageIndex(
+                        widget.chatId,
+                        currentUserId ?? '',
+                      );
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[index];
+                      final isMe = msg['senderId'] == currentUserId;
+                      final isFirstUnread =
+                          firstUnreadIdx >= 0 && index == firstUnreadIdx;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Show the "unread messages" divider above the first
+                          // unread message whenever there are unread messages.
+                          if (isFirstUnread)
+                            const _UnreadMessagesDivider(),
+                          ChatBubble(
+                            // Assign the scroll key to the first unread bubble.
+                            key: isFirstUnread ? _firstUnreadKey : null,
+                            message: msg['text'] ?? '',
+                            imageUrl: msg['image'],
+                            isMe: isMe,
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -567,23 +659,31 @@ class _ChatMenuDialogBox extends StatelessWidget {
             SettingsRowItem(
               onTap: () {
                 Navigator.pop(context);
-                final recentMessages = chatProvider.getMessages(chatId).take(10).map((m) => {
-                  'id': m['id'],
-                  'text': m['text'],
-                  'senderId': m['senderId'],
-                  'createdAt': m['createdAt'],
-                }).toList();
-                
+                final recentMessages =
+                    chatProvider
+                        .getMessages(chatId)
+                        .take(10)
+                        .map(
+                          (m) => {
+                            'id': m['id'],
+                            'text': m['text'],
+                            'senderId': m['senderId'],
+                            'createdAt': m['createdAt'],
+                          },
+                        )
+                        .toList();
+
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => ReportBottomSheet(
-                    itemType: 'USER',
-                    itemId: friendId,
-                    reportedUserId: friendId,
-                    attachedMessages: recentMessages,
-                  ),
+                  builder:
+                      (context) => ReportBottomSheet(
+                        itemType: 'USER',
+                        itemId: friendId,
+                        reportedUserId: friendId,
+                        attachedMessages: recentMessages,
+                      ),
                 );
               },
               icon: HugeIcons.strokeRoundedAlertDiamond,
@@ -686,17 +786,80 @@ class ChatBubble extends StatelessWidget {
                 ),
               ),
             if (message.isNotEmpty)
-              Text(
-                message,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isMe ? Colors.white : theme.colorScheme.onSurface,
-                  fontSize: 14,
-                ),
-              ),
+              _buildMessageText(context, message, isMe, theme),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMessageText(
+    BuildContext context,
+    String text,
+    bool isMe,
+    ThemeData theme,
+  ) {
+    final urlRegExp = RegExp(r'(https?:\/\/[^\s]+)');
+    final matches = urlRegExp.allMatches(text);
+
+    if (matches.isEmpty) {
+      return Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: isMe ? Colors.white : theme.colorScheme.onSurface,
+          fontSize: 14,
+        ),
+      );
+    }
+
+    final List<TextSpan> spans = [];
+    int lastMatchEnd = 0;
+
+    for (final match in matches) {
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isMe ? Colors.white : theme.colorScheme.onSurface,
+              fontSize: 14,
+            ),
+          ),
+        );
+      }
+
+      final url = match.group(0)!;
+      spans.add(
+        TextSpan(
+          text: url,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: isMe ? Colors.white : theme.colorScheme.onPrimary,
+            fontSize: 14,
+            decoration: TextDecoration.underline,
+          ),
+          recognizer:
+              TapGestureRecognizer()
+                ..onTap = () {
+                  DeepLinkService.handleUrl(url);
+                },
+        ),
+      );
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: isMe ? Colors.white : theme.colorScheme.onSurface,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 }
 
@@ -738,3 +901,32 @@ class _AttachmentOption extends StatelessWidget {
     );
   }
 }
+
+class _UnreadMessagesDivider extends StatelessWidget {
+  const _UnreadMessagesDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: Colors.red.shade300, thickness: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              'Unread Messages',
+              style: TextStyle(
+                color: Colors.red.shade400,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: Colors.red.shade300, thickness: 1)),
+        ],
+      ),
+    );
+  }
+}
+

@@ -157,35 +157,6 @@ class QuizFinishScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 28),
-
-              // ── Restart button ────────────────────────────────────
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => BibleQuizScreen(level: level),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text(
-                    'Restart Quiz',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ── Next Level button ───────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -205,10 +176,38 @@ class QuizFinishScreen extends StatelessWidget {
                   ),
                   child: const Text(
                     'Next',
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
+              // ── Restart button ────────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => BibleQuizScreen(level: level + 1),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text(
+                    'Restart Quiz',
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // ── Next Level button ───────────────────────────────────────
             ],
           ),
         ),

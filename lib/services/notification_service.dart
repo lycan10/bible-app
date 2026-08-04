@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -60,6 +61,22 @@ class NotificationService {
 
   Stream<RemoteMessage> get onForegroundMessage =>
       _foregroundMessageController.stream;
+
+  /// The chatId of the conversation currently open in the foreground.
+  /// Set by [MessageChatScreen] to suppress redundant foreground notifications.
+  static String? activeChatId;
+
+  /// Navigation handler for CHAT_MESSAGE notifications, registered by
+  /// [main.dart] to avoid a circular import with [MessageChatScreen].
+  static Future<void> Function(String chatId)? _chatNavigationHandler;
+
+  /// Register the handler that opens a specific chat when a CHAT_MESSAGE
+  /// notification is tapped. Called once from [_MyAppState.initState].
+  static void setChatNavigationHandler(
+    Future<void> Function(String chatId) handler,
+  ) {
+    _chatNavigationHandler = handler;
+  }
 
   // -------------------------------------------------------------------------
   // initialize() — call once from main() in the main isolate.
@@ -173,6 +190,13 @@ class NotificationService {
 
     if (title == null && body == null) return;
 
+    // Suppress the foreground pop-up if the user is already in this chat.
+    if (message.data['type'] == 'CHAT_MESSAGE' &&
+        message.data['chatId'] != null &&
+        message.data['chatId'] == activeChatId) {
+      return;
+    }
+
     // Use a stable, unique ID derived from the message so duplicate suppression works.
     final int notifId =
         (message.messageId ?? message.hashCode.toString()).hashCode.abs() %
@@ -210,7 +234,8 @@ class NotificationService {
         android: androidDetails,
         iOS: iosDetails,
       ),
-      payload: message.data.isNotEmpty ? message.data.toString() : null,
+      // Use jsonEncode so the payload can be decoded with jsonDecode on tap.
+      payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
     );
   }
 
@@ -306,9 +331,12 @@ class NotificationService {
 void _onDidReceiveNotificationResponse(NotificationResponse details) {
   debugPrint('[NotificationService] Foreground tap: ${details.payload}');
   if (details.payload != null && details.payload!.isNotEmpty) {
-    // Basic parsing of payload if it's sent as a string representation of a map
-    // In a real scenario, consider using jsonDecode if the payload is JSON
-    navigateFromNotificationPayload({});
+    try {
+      final data = jsonDecode(details.payload!) as Map<String, dynamic>;
+      navigateFromNotificationPayload(data);
+    } catch (_) {
+      _navigateToNotificationScreen();
+    }
   } else {
     _navigateToNotificationScreen();
   }
@@ -324,14 +352,19 @@ void _navigateToNotificationScreen() {
 }
 
 void navigateFromNotificationPayload(Map<String, dynamic> data) {
-  final context = navigatorKey.currentContext;
-  if (context == null) return;
-
+  debugPrint('[FCM] Navigate for data: $data');
   final type = data['type'] ?? '';
-  // You can extend this to route to specific screens based on type
-  // e.g., if (type == 'CHAT_MESSAGE') Navigator.push(...)
-  
-  // Default fallback
+
+  if (type == 'CHAT_MESSAGE') {
+    final chatId = data['chatId'] as String?;
+    final handler = NotificationService._chatNavigationHandler;
+    if (chatId != null && handler != null) {
+      handler(chatId);
+      return;
+    }
+  }
+
+  // Default fallback for all other notification types.
   _navigateToNotificationScreen();
 }
 

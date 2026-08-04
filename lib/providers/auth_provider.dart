@@ -359,9 +359,6 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
 
-      _user = res['user'];
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_user', jsonEncode(_user));
       return true;
     } catch (e) {
       _errorMessage = e.toString();

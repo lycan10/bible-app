@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
@@ -8,10 +10,20 @@ class ChatProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  /// The chatId of the conversation currently open on screen.
+  /// Used to suppress the unread-badge increment when the user is already
+  /// reading that conversation and to suppress the foreground notification.
+  String? _activeChatId;
+
+  StreamSubscription<RemoteMessage>? _fcmSubscription;
+
+  // ─── Public getters ────────────────────────────────────────────────────────
+
   List<dynamic> get chats => _chats;
   List<dynamic> get pinnedChats => _pinnedChats;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get activeChatId => _activeChatId;
 
   int get totalUnreadCount {
     int count = 0;
@@ -22,6 +34,72 @@ class ChatProvider with ChangeNotifier {
   }
 
   List<dynamic> getMessages(String chatId) => _chatMessages[chatId] ?? [];
+
+  // ─── Active-chat tracking ──────────────────────────────────────────────────
+
+  /// Call when entering a chat screen; prevents the FCM handler from bumping
+  /// the unread badge while the user is already in that conversation.
+  void setActiveChatId(String? chatId) {
+    _activeChatId = chatId;
+  }
+
+  // ─── Unread message helpers ────────────────────────────────────────────────
+
+  /// Returns the list index of the **first** message in [chatId] whose sender
+  /// is not [currentUserId] and that has not yet been read.
+  /// Returns -1 when there are no unread messages.
+  int firstUnreadMessageIndex(String chatId, String currentUserId) {
+    final messages = _chatMessages[chatId] ?? [];
+    for (int i = 0; i < messages.length; i++) {
+      final msg = messages[i];
+      if (msg['senderId'] != currentUserId &&
+          (msg['isRead'] == false || msg['isRead'] == null)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  // ─── FCM foreground listener ───────────────────────────────────────────────
+
+  /// Subscribes to [stream] (the broadcast stream from [NotificationService]).
+  /// When a CHAT_MESSAGE event arrives the provider immediately refreshes that
+  /// chat's messages, making delivery feel instant for the receiver.
+  void startFCMListener(Stream<RemoteMessage> stream, String token) {
+    _fcmSubscription?.cancel();
+    _fcmSubscription = stream.listen((RemoteMessage message) {
+      final type = message.data['type'];
+      final chatId = message.data['chatId'] as String?;
+      if (type != 'CHAT_MESSAGE' || chatId == null) return;
+
+      // Refresh messages immediately — this is what makes delivery feel instant.
+      loadMessages(token, chatId);
+
+      // Only bump the unread badge when the user is NOT already in this chat.
+      if (_activeChatId != chatId) {
+        final idx = _chats.indexWhere((c) => c['id'] == chatId);
+        if (idx != -1) {
+          final updated = Map<String, dynamic>.from(
+            _chats[idx] as Map<String, dynamic>,
+          );
+          updated['unreadCount'] = (updated['unreadCount'] as int? ?? 0) + 1;
+          _chats[idx] = updated;
+          notifyListeners();
+        } else {
+          // This chat is not yet loaded — refresh the whole list.
+          loadChats(token);
+        }
+      }
+    });
+  }
+
+  /// Cancels the FCM foreground subscription (e.g. on logout).
+  void stopFCMListener() {
+    _fcmSubscription?.cancel();
+    _fcmSubscription = null;
+  }
+
+  // ─── REST API operations ───────────────────────────────────────────────────
 
   Future<void> loadChats(String token) async {
     _isLoading = true;
@@ -94,11 +172,11 @@ class ChatProvider with ChangeNotifier {
         _chatMessages[chatId] = [msg];
       }
 
-      // Update last message in chat list
+      // Update last message preview in the chat list
       final index = _chats.indexWhere((c) => c['id'] == chatId);
       if (index != -1) {
         _chats[index]['lastMessage'] = msg;
-        // Move chat to top
+        // Move chat to top of the list
         final chat = _chats.removeAt(index);
         _chats.insert(0, chat);
       }
@@ -114,7 +192,6 @@ class ChatProvider with ChangeNotifier {
   Future<bool> pinChat(String token, String chatId) async {
     try {
       await ApiService.pinChat(token, chatId);
-      // Reload pinned chats
       _pinnedChats = await ApiService.fetchPinnedChats(token);
       notifyListeners();
       return true;

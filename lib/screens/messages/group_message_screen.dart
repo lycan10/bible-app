@@ -1,8 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
+import 'package:quest/services/deeplink_service.dart';
 import 'package:quest/theme/theme.dart';
 
 class GroupMessageScreen extends StatelessWidget {
@@ -256,14 +258,66 @@ class ChatBubble extends StatelessWidget {
             bottomRight: isMe ? Radius.zero : const Radius.circular(20),
           ),
         ),
-        child: Text(
-          message,
+        child: _buildMessageText(context, message, isMe, theme),
+      ),
+    );
+  }
+
+  Widget _buildMessageText(
+      BuildContext context, String text, bool isMe, ThemeData theme) {
+    final urlRegExp = RegExp(r'(https?:\/\/[^\s]+)');
+    final matches = urlRegExp.allMatches(text);
+
+    if (matches.isEmpty) {
+      return Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: isMe ? Colors.white : Colors.black,
+          fontSize: 14,
+        ),
+      );
+    }
+
+    final List<TextSpan> spans = [];
+    int lastMatchEnd = 0;
+
+    for (final match in matches) {
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastMatchEnd, match.start),
           style: theme.textTheme.bodySmall?.copyWith(
             color: isMe ? Colors.white : Colors.black,
             fontSize: 14,
           ),
+        ));
+      }
+
+      final url = match.group(0)!;
+      spans.add(TextSpan(
+        text: url,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: isMe ? Colors.white : theme.colorScheme.primary,
+          fontSize: 14,
+          decoration: TextDecoration.underline,
         ),
-      ),
-    );
+        recognizer: TapGestureRecognizer()
+          ..onTap = () {
+            DeepLinkService.handleUrl(url);
+          },
+      ));
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastMatchEnd),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: isMe ? Colors.white : Colors.black,
+          fontSize: 14,
+        ),
+      ));
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 }

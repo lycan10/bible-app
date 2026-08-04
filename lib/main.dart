@@ -15,6 +15,7 @@ import 'package:quest/providers/devotion_provider.dart';
 import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/subscription_provider.dart';
 import 'package:quest/providers/economy_provider.dart';
+import 'package:quest/screens/messages/message_chat_screen.dart';
 import 'package:quest/screens/navigation_screen.dart';
 import 'package:quest/screens/onboarding/flash_screen.dart';
 import 'package:quest/theme/theme.dart';
@@ -89,10 +90,16 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  String? _lastToken;
+
   @override
   void initState() {
     super.initState();
     DeepLinkService.init();
+
+    // Register handler for chat notifications tap
+    NotificationService.setChatNavigationHandler(_navigateToChatFromNotification);
+
     // Wire up global 401 → auto-logout. We defer by one frame so the provider
     // tree is guaranteed to be mounted when the callback fires.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -106,10 +113,59 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  static Future<void> _navigateToChatFromNotification(String chatId) async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    final auth = context.read<AuthProvider>();
+    final chatProvider = context.read<ChatProvider>();
+    if (auth.token == null) return;
+
+    Map<String, dynamic>? chat;
+    final existingIndex = chatProvider.chats.indexWhere((c) => c['id'] == chatId);
+    if (existingIndex != -1) {
+      chat = chatProvider.chats[existingIndex];
+    } else {
+      await chatProvider.loadChats(auth.token!);
+      final idx = chatProvider.chats.indexWhere((c) => c['id'] == chatId);
+      if (idx != -1) {
+        chat = chatProvider.chats[idx];
+      }
+    }
+
+    final friend = chat != null ? (chat['friend'] ?? {}) : <String, dynamic>{};
+
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => MessageChatScreen(
+          chatId: chatId,
+          friend: friend,
+          scrollToFirstUnread: true,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final token = authProvider.token;
+
+    // Start/stop FCM listener when auth state changes
+    if (token != _lastToken) {
+      _lastToken = token;
+      final chatProvider = context.read<ChatProvider>();
+      if (token != null) {
+        chatProvider.startFCMListener(
+          NotificationService().onForegroundMessage,
+          token,
+        );
+      } else {
+        chatProvider.stopFCMListener();
+      }
+    }
+
     final appearance = authProvider.user?['appearance'] as String?;
+
 
     ThemeMode themeMode = ThemeMode.system;
     if (appearance == 'light') {
