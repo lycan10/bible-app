@@ -143,23 +143,25 @@ class _PlayModeSheetState extends State<PlayModeSheet> {
               const SizedBox(height: 40),
 
               // Buttons
-              ElevatedButton(
-                onPressed: () => _startGame(context, _currentLevel),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[100],
-                  foregroundColor: Colors.black,
-                  elevation: 0,
-                  minimumSize: const Size(double.infinity, 60),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              if (_currentLevel > 1) ...[
+                ElevatedButton(
+                  onPressed: () => _startGame(context, _currentLevel),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[100],
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    minimumSize: const Size(double.infinity, 60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Continue Playing',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-                child: const Text(
-                  'Continue Playing',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
               ElevatedButton(
                 onPressed: () => _startGame(context, 1),
                 style: ElevatedButton.styleFrom(
