@@ -782,6 +782,48 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  static Future<List<dynamic>> fetchCommunityJoinRequests(
+    String token,
+    String communityId,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/communities/$communityId/requests'),
+        headers: _headers(token),
+      ),
+    );
+    final data = jsonDecode(response.body);
+    return data['requests'] ?? [];
+  }
+
+  static Future<Map<String, dynamic>> approveCommunityJoinRequest(
+    String token,
+    String communityId,
+    String reqId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/requests/$reqId/approve'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> rejectCommunityJoinRequest(
+    String token,
+    String communityId,
+    String reqId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/$communityId/requests/$reqId/reject'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
   // POST /communities/:id/leave
   static Future<Map<String, dynamic>> leaveCommunity(
     String token,

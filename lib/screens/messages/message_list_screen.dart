@@ -33,7 +33,7 @@ class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
   void didPopNext() {
     final auth = context.read<AuthProvider>();
     if (auth.token != null) {
-      context.read<ChatProvider>().loadChats(auth.token!);
+      context.read<ChatProvider>().loadChats(auth.token!, showLoading: false);
     }
   }
 

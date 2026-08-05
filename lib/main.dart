@@ -16,6 +16,7 @@ import 'package:quest/providers/media_provider.dart';
 import 'package:quest/providers/subscription_provider.dart';
 import 'package:quest/providers/economy_provider.dart';
 import 'package:quest/screens/messages/message_chat_screen.dart';
+import 'package:quest/screens/community/community_individual_screen.dart';
 import 'package:quest/screens/navigation_screen.dart';
 import 'package:quest/screens/onboarding/flash_screen.dart';
 import 'package:quest/theme/theme.dart';
@@ -99,6 +100,7 @@ class _MyAppState extends State<MyApp> {
 
     // Register handler for chat notifications tap
     NotificationService.setChatNavigationHandler(_navigateToChatFromNotification);
+    NotificationService.setCommunityNavigationHandler(_navigateToCommunityFromNotification);
 
     // Wire up global 401 → auto-logout. We defer by one frame so the provider
     // tree is guaranteed to be mounted when the callback fires.
@@ -140,6 +142,20 @@ class _MyAppState extends State<MyApp> {
           chatId: chatId,
           friend: friend,
           scrollToFirstUnread: true,
+        ),
+      ),
+    );
+  }
+
+  static void _navigateToCommunityFromNotification(String communityId) {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    
+    // We import CommunityIndividualScreen at the top of the file
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => CommunityIndividualScreen(
+          communityId: communityId,
         ),
       ),
     );

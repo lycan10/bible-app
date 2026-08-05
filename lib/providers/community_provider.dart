@@ -157,10 +157,30 @@ class CommunityProvider with ChangeNotifier {
       }
       _hasMorePosts = true;
       _hasMoreEvents = true;
-      _currentPosts = await ApiService.fetchCommunityPosts(token, id);
-      _currentEvents = await ApiService.fetchCommunityEvents(token, id);
-      _currentMessages = await ApiService.fetchCommunityMessages(token, id);
-      _adminMessages = await ApiService.fetchAdminMessages(token, id);
+      
+      final results = await Future.wait([
+        ApiService.fetchCommunityPosts(token, id).catchError((e) {
+          debugPrint("Error loading posts: \$e");
+          return <dynamic>[];
+        }),
+        ApiService.fetchCommunityEvents(token, id).catchError((e) {
+          debugPrint("Error loading events: \$e");
+          return <dynamic>[];
+        }),
+        ApiService.fetchCommunityMessages(token, id).catchError((e) {
+          debugPrint("Error loading forum messages: \$e");
+          return <dynamic>[];
+        }),
+        ApiService.fetchAdminMessages(token, id).catchError((e) {
+          debugPrint("Error loading admin messages: \$e");
+          return <dynamic>[];
+        }),
+      ]);
+
+      _currentPosts = results[0];
+      _currentEvents = results[1];
+      _currentMessages = results[2];
+      _adminMessages = results[3];
     } catch (e) {
       debugPrint("Error loading community details: \$e");
     } finally {
@@ -178,6 +198,16 @@ class CommunityProvider with ChangeNotifier {
       debugPrint("Error loading admin messages: \$e");
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<void> refreshCommunityMessages(String token, String id) async {
+    try {
+      final messages = await ApiService.fetchCommunityMessages(token, id);
+      _currentMessages = messages;
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error refreshing community messages: \$e");
     }
   }
 

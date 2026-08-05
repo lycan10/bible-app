@@ -68,14 +68,23 @@ class NotificationService {
 
   /// Navigation handler for CHAT_MESSAGE notifications, registered by
   /// [main.dart] to avoid a circular import with [MessageChatScreen].
-  static Future<void> Function(String chatId)? _chatNavigationHandler;
+  static void Function(String)? _chatNavigationHandler;
+
+  /// Navigation handler for COMMUNITY_POST notifications.
+  static void Function(String)? _communityNavigationHandler;
 
   /// Register the handler that opens a specific chat when a CHAT_MESSAGE
   /// notification is tapped. Called once from [_MyAppState.initState].
   static void setChatNavigationHandler(
-    Future<void> Function(String chatId) handler,
+    void Function(String) handler,
   ) {
     _chatNavigationHandler = handler;
+  }
+
+  static void setCommunityNavigationHandler(
+    void Function(String) handler,
+  ) {
+    _communityNavigationHandler = handler;
   }
 
   // -------------------------------------------------------------------------
@@ -361,6 +370,20 @@ void navigateFromNotificationPayload(Map<String, dynamic> data) {
     if (chatId != null && handler != null) {
       handler(chatId);
       return;
+    }
+  } else if (type == 'COMMUNITY_FORUM') {
+    final communityId = data['communityId'] as String?;
+    if (communityId != null) {
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        // Need to import community_individual_screen if possible, but NotificationService 
+        // shouldn't depend on screens directly. We can use a registered handler like chat.
+        final handler = NotificationService._communityNavigationHandler;
+        if (handler != null) {
+          handler(communityId);
+          return;
+        }
+      }
     }
   }
 

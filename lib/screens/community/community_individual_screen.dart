@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +56,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
   XFile? _pendingAttachment;
   bool _isVideo = false;
   String _selectedEventFilter = "All";
+  Timer? _pollingTimer;
 
   @override
   void didChangeDependencies() {
@@ -106,11 +108,24 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
+      
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.token != null) {
+        _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+          if (mounted && selectedTab == "Forum") {
+            context.read<CommunityProvider>().refreshCommunityMessages(
+              authProvider.token!,
+              widget.communityId,
+            );
+          }
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     routeObserver.unsubscribe(this);
     _forumController.dispose();
     _forumScrollController.dispose();
@@ -590,6 +605,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
 
     if (!isMember) {
       final bool isPrivate = community['isPrivate'] ?? false;
+      final bool hasPendingRequest = community['hasPendingRequest'] == true;
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
@@ -704,10 +720,10 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                   children: [
                     Expanded(
                       child: ActionPillButton(
-                        backgroundColor: Colors.black,
-                        textColor: Colors.white,
-                        label: "Join Community",
-                        onTap: () async {
+                        backgroundColor: hasPendingRequest ? AppTheme.surfaceColor : Colors.black,
+                        textColor: hasPendingRequest ? AppTheme.textColor2 : Colors.white,
+                        label: hasPendingRequest ? "Requested" : "Join Community",
+                        onTap: hasPendingRequest ? null : () async {
                           final auth = context.read<AuthProvider>();
                           await communityProvider.joinCommunity(
                             auth.token!,

@@ -74,6 +74,9 @@ class ChatProvider with ChangeNotifier {
 
       // Refresh messages immediately — this is what makes delivery feel instant.
       loadMessages(token, chatId);
+      
+      // Always refresh the chat list so the preview and sorting are up to date.
+      loadChats(token, showLoading: false);
 
       // Only bump the unread badge when the user is NOT already in this chat.
       if (_activeChatId != chatId) {
@@ -85,9 +88,6 @@ class ChatProvider with ChangeNotifier {
           updated['unreadCount'] = (updated['unreadCount'] as int? ?? 0) + 1;
           _chats[idx] = updated;
           notifyListeners();
-        } else {
-          // This chat is not yet loaded — refresh the whole list.
-          loadChats(token);
         }
       }
     });
@@ -101,16 +101,20 @@ class ChatProvider with ChangeNotifier {
 
   // ─── REST API operations ───────────────────────────────────────────────────
 
-  Future<void> loadChats(String token) async {
-    _isLoading = true;
-    notifyListeners();
+  Future<void> loadChats(String token, {bool showLoading = true}) async {
+    if (showLoading) {
+      _isLoading = true;
+      notifyListeners();
+    }
     try {
       _chats = await ApiService.fetchChats(token);
       _pinnedChats = await ApiService.fetchPinnedChats(token);
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
-      _isLoading = false;
+      if (showLoading) {
+        _isLoading = false;
+      }
       notifyListeners();
     }
   }
