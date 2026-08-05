@@ -11,6 +11,7 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/community/community_verse_override_dialog.dart';
+import 'package:quest/screens/community/community_join_requests_screen.dart';
 
 class CommunityMenuDialogBox extends StatelessWidget {
   final Map<String, dynamic> community;
@@ -99,13 +100,35 @@ class CommunityMenuDialogBox extends StatelessWidget {
             ),
             Builder(builder: (context) {
               final authId = context.read<AuthProvider>().user?['id'];
-              final members = (community['members'] as List<dynamic>?) ?? [];
-              final isAdmin = members.any((m) => m['id'] == authId && m['role'] == 'ADMIN');
+              // Use the 'member' map returned by GET /communities/:id
+              final memberInfo = community['member'] as Map<String, dynamic>?;
+              final isOwner = community['ownerId'] == authId;
+              final isAdmin = isOwner || memberInfo?['role'] == 'ADMIN';
+              final isPrivate = community['isPrivate'] == true;
               final isForumDisabledGlobally = community['isForumDisabledGlobally'] == true;
 
               if (isAdmin) {
                 return Column(
                   children: [
+                    if (isPrivate)
+                      SettingsRowItem(
+                        icon: HugeIcons.strokeRoundedUserAdd01,
+                        iconBackgroundColor: Colors.transparent,
+                        title: 'Join Requests',
+                        iconColor: AppTheme.textColor2,
+                        secondIconColor: Colors.transparent,
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CommunityJoinRequestsScreen(
+                                communityId: community['id'],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     SettingsRowItem(
                       icon: isForumDisabledGlobally ? HugeIcons.strokeRoundedCheckmarkBadge01 : HugeIcons.strokeRoundedCancel01,
                       iconBackgroundColor: Colors.transparent,
