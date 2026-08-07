@@ -101,7 +101,7 @@ class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
                 title: 'Messages',
                 trailingIcon: HugeIcons.strokeRoundedMoreVertical,
                 leadingIconTap: () => Navigator.pop(context),
-                trailingIconTap: () => _openMenu(context),
+                //trailingIconTap: () => _openMenu(context),
               ),
               const SizedBox(height: 25),
               Row(
@@ -201,59 +201,79 @@ class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
                                 color: Colors.transparent,
                                 child: ListTile(
                                   contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 15,
-                                  vertical: 5,
-                                ),
-                                leading: CustomAvatar(
-                                  radius: 25,
-                                  imageUrl: avatarUrl != null && avatarUrl.toString().isNotEmpty
-                                          ? ApiService.getFullImageUrl(avatarUrl)
-                                          : null,
-                                ),
-                                title: Text(
-                                  friendName.isNotEmpty
-                                      ? friendName
-                                      : friend['username'] != null && friend['username'].toString().isNotEmpty ? '@${friend['username']}' : '',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    horizontal: 15,
+                                    vertical: 5,
                                   ),
+                                  leading: CustomAvatar(
+                                    radius: 25,
+                                    imageUrl:
+                                        avatarUrl != null &&
+                                                avatarUrl.toString().isNotEmpty
+                                            ? ApiService.getFullImageUrl(
+                                              avatarUrl,
+                                            )
+                                            : null,
+                                  ),
+                                  title: Text(
+                                    friendName.isNotEmpty
+                                        ? friendName
+                                        : friend['username'] != null &&
+                                            friend['username']
+                                                .toString()
+                                                .isNotEmpty
+                                        ? '@${friend['username']}'
+                                        : '',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    lastMsg != null
+                                        ? lastMsg['text'] ?? 'Sent an image'
+                                        : 'Start chatting!',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppTheme.textColor2,
+                                    ),
+                                  ),
+                                  trailing:
+                                      (chat['unreadCount'] != null &&
+                                              chat['unreadCount'] > 0)
+                                          ? Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Text(
+                                              '${chat['unreadCount']}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          )
+                                          : null,
+                                  onTap: () {
+                                    final auth = context.read<AuthProvider>();
+                                    if (auth.token != null) {
+                                      context
+                                          .read<ChatProvider>()
+                                          .markChatAsRead(
+                                            auth.token!,
+                                            chat['id'],
+                                          );
+                                    }
+                                    _navigateToChat(context, chat);
+                                  },
                                 ),
-                                subtitle: Text(
-                                  lastMsg != null
-                                      ? lastMsg['text'] ?? 'Sent an image'
-                                      : 'Start chatting!',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: (chat['unreadCount'] != null && chat['unreadCount'] > 0)
-                                    ? Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          '${chat['unreadCount']}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      )
-                                    : null,
-                                onTap: () {
-                                  final auth = context.read<AuthProvider>();
-                                  if (auth.token != null) {
-                                    context.read<ChatProvider>().markChatAsRead(auth.token!, chat['id']);
-                                  }
-                                  _navigateToChat(context, chat);
-                                },
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
                         ),
               ),
             ],

@@ -27,7 +27,7 @@ class SponsoredPostCard extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      "assets/images/user_test.jpg",
+                      "assets/images/boy.png",
                       fit: BoxFit.cover,
                     ),
                   ),

@@ -93,7 +93,7 @@ class SponsoredPostScreen extends StatelessWidget {
                                   50,
                                 ), // half of image width/height
                                 child: Image.asset(
-                                  'assets/images/user_test.jpg',
+                                  'assets/images/boy.png',
                                   width: 42,
                                   height: 42,
                                   fit: BoxFit.cover,
@@ -151,7 +151,7 @@ class SponsoredPostScreen extends StatelessWidget {
                               return ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.asset(
-                                  'assets/images/user_test.jpg',
+                                  'assets/images/boy.png',
                                   fit: BoxFit.cover,
                                 ),
                               );
@@ -162,7 +162,7 @@ class SponsoredPostScreen extends StatelessWidget {
                                   fit: StackFit.expand,
                                   children: [
                                     Image.asset(
-                                      'assets/images/user_test.jpg',
+                                      'assets/images/boy.png',
                                       fit: BoxFit.cover,
                                     ),
                                     Container(
@@ -414,7 +414,7 @@ class _CommentItemState extends State<CommentItem> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(50),
                     child: Image.asset(
-                      'assets/images/user_test.jpg',
+                      'assets/images/boy.png',
                       width: 30,
                       height: 30,
                       fit: BoxFit.cover,

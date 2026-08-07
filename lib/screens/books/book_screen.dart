@@ -251,7 +251,7 @@ class _BookScreenState extends State<BookScreen> {
                                           50,
                                         ), // half of image width/height
                                         child: Image.asset(
-                                          'assets/images/user_test.jpg', // Should be book author avatar if available
+                                          'assets/images/boy.png', // Should be book author avatar if available
                                           width: 42,
                                           height: 42,
                                           fit: BoxFit.cover,
@@ -622,7 +622,7 @@ class _CommentItemState extends State<CommentItem> {
                               fit: BoxFit.cover,
                             )
                             : Image.asset(
-                              'assets/images/user_test.jpg',
+                              'assets/images/boy.png',
                               width: 30,
                               height: 30,
                               fit: BoxFit.cover,

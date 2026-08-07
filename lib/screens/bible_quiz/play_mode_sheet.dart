@@ -198,7 +198,7 @@ class _PlayModeSheetState extends State<PlayModeSheet> {
                   _FriendAvatar(
                     name: 'Noarah',
                     location: 'City',
-                    imageAsset: 'assets/images/user_test.jpg',
+                    imageAsset: 'assets/images/boy.png',
                   ),
                   _FriendAvatar(
                     name: 'Elysia',
@@ -208,7 +208,7 @@ class _PlayModeSheetState extends State<PlayModeSheet> {
                   _FriendAvatar(
                     name: 'Kairo',
                     location: 'Village',
-                    imageAsset: 'assets/images/user_test.jpg',
+                    imageAsset: 'assets/images/boy.png',
                   ),
                   _FriendAvatar(
                     name: 'Zyra',

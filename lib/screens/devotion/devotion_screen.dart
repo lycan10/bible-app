@@ -341,7 +341,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
         (_planData!['days'] != null && (_planData!['days'] as List).isNotEmpty)
             ? (_planData!['days'] as List).length
             : (_planData!['durationDays'] ?? 1);
-    final planImage = _planData?['image'] ?? 'assets/images/user_test.jpg';
+    final planImage = _planData?['image'] ?? 'assets/images/boy.png';
     final pointsEarned = _dayData?['pointsEarned'] ?? 20;
     final bodyText = _dayData?['bodyText'] ?? 'No content available.';
     final authorName = _planData?['authorName'] ?? 'Author';

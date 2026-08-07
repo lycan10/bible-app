@@ -134,14 +134,14 @@ class SavedMessagesCard extends StatelessWidget {
                         height: 80,
                         errorBuilder: (context, error, stackTrace) =>
                             Image.asset(
-                          "assets/images/alucard.png",
+                          "assets/images/boy.png",
                           fit: BoxFit.cover,
                           width: 80,
                           height: 80,
                         ),
                       )
                     : Image.asset(
-                        "assets/images/alucard.png",
+                        "assets/images/boy.png",
                         fit: BoxFit.cover,
                         width: 80,
                         height: 80,

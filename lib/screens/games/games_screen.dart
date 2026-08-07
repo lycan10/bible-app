@@ -391,14 +391,14 @@ class _GamesScreenState extends State<GamesScreen> {
                       scrollDirection: Axis.horizontal,
                       children: [
                         _LeaderboardAvatar(
-                          'assets/images/user_test.jpg',
+                          'assets/images/boy.png',
                           rank: 1,
                         ),
                         const SizedBox(width: 16),
                         _LeaderboardAvatar('assets/images/boy.png', rank: 1),
                         const SizedBox(width: 16),
                         _LeaderboardAvatar(
-                          'assets/images/user_test.jpg',
+                          'assets/images/boy.png',
                           rank: 1,
                         ),
                         const SizedBox(width: 16),

@@ -7,6 +7,8 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:quest/main.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
+import 'package:quest/screens/connect/connect_screen.dart';
+import 'package:quest/screens/community/community_join_requests_screen.dart';
 
 // ---------------------------------------------------------------------------
 // Android notification channel definitions
@@ -299,6 +301,62 @@ class NotificationService {
 
   Future<void> cancelAllReminders() async => _plugin.cancelAll();
 
+  /// Re-schedules all saved reminders from the user's stored preferences.
+  /// Must be called after the user session is loaded (e.g. on app start).
+  Future<void> restoreScheduledReminders(Map<String, dynamic> user) async {
+    if (user['reminderMorning'] == true) {
+      await scheduleDailyReminder(
+        1,
+        'Good Morning! ☀️',
+        'Time for your morning devotion.',
+        const TimeOfDay(hour: 8, minute: 0),
+      );
+    } else {
+      await cancelReminder(1);
+    }
+
+    if (user['reminderAfternoon'] == true) {
+      await scheduleDailyReminder(
+        2,
+        'Good Afternoon! 📖',
+        'Take a break and read the word.',
+        const TimeOfDay(hour: 13, minute: 0),
+      );
+    } else {
+      await cancelReminder(2);
+    }
+
+    if (user['reminderEvening'] == true) {
+      await scheduleDailyReminder(
+        3,
+        'Good Evening! 🌙',
+        'Reflect on your day with the scripture.',
+        const TimeOfDay(hour: 18, minute: 0),
+      );
+    } else {
+      await cancelReminder(3);
+    }
+
+    final customTime = user['reminderCustomTime'] as String?;
+    if (customTime != null) {
+      final parts = customTime.split(':');
+      if (parts.length == 2) {
+        final time = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+        await scheduleDailyReminder(
+          4,
+          'Time to Study! 📚',
+          'Your custom reminder to read the word.',
+          time,
+        );
+      }
+    } else {
+      await cancelReminder(4);
+    }
+  }
+
   Future<String?> getFCMToken() async => _firebaseMessaging.getToken();
 
   // -------------------------------------------------------------------------
@@ -376,14 +434,34 @@ void navigateFromNotificationPayload(Map<String, dynamic> data) {
     if (communityId != null) {
       final context = navigatorKey.currentContext;
       if (context != null) {
-        // Need to import community_individual_screen if possible, but NotificationService 
-        // shouldn't depend on screens directly. We can use a registered handler like chat.
         final handler = NotificationService._communityNavigationHandler;
         if (handler != null) {
           handler(communityId);
           return;
         }
       }
+    }
+  } else if (type == 'COMMUNITY_JOIN_REQUEST') {
+    final communityId = data['communityId'] as String?;
+    if (communityId != null) {
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CommunityJoinRequestsScreen(communityId: communityId),
+          ),
+        );
+        return;
+      }
+    }
+  } else if (type == 'FRIEND_REQUEST' || type == 'FRIEND_ACCEPTED') {
+    // Navigate to the Connect screen so the user can accept/reject requests.
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const ConnectScreen()),
+      );
+      return;
     }
   }
 

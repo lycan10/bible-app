@@ -269,7 +269,7 @@ class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
                 title: 'Videos',
                 trailingIcon: HugeIcons.strokeRoundedMoreVertical,
                 leadingIconTap: () => Navigator.pop(context),
-                trailingIconTap: () => _openMenu(context),
+                //trailingIconTap: () => _openMenu(context),
               ),
 
               const SizedBox(height: 25),

@@ -25,7 +25,8 @@ class DevotionListScreen extends StatefulWidget {
   State<DevotionListScreen> createState() => _DevotionListScreenState();
 }
 
-class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware {
+class _DevotionListScreenState extends State<DevotionListScreen>
+    with RouteAware {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
@@ -124,9 +125,11 @@ class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware
   Widget _buildPlanCard(BuildContext context, dynamic plan) {
     final devProvider = Provider.of<DevotionProvider>(context, listen: false);
     final myPlans = devProvider.myPlans;
-    final int existingIndex = myPlans.indexWhere((p) => p['plan']['id'] == plan['id']);
+    final int existingIndex = myPlans.indexWhere(
+      (p) => p['plan']['id'] == plan['id'],
+    );
 
-    final image = plan['image'] ?? 'assets/images/user_test.jpg';
+    final image = plan['image'] ?? 'assets/images/boy.png';
     int totalLikes = 0;
     if (plan['days'] != null) {
       for (var day in plan['days']) {
@@ -148,7 +151,8 @@ class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware
             final myPlan = myPlans[existingIndex];
             final int currentDay = myPlan['currentDay'] ?? 1;
             final int durationDays = myPlan['plan']['durationDays'] ?? 1;
-            final int displayDay = (currentDay > durationDays) ? durationDays : currentDay;
+            final int displayDay =
+                (currentDay > durationDays) ? durationDays : currentDay;
             _navigateToDevotionScreen(context, plan['id'], displayDay);
           } else {
             showStartPlanModal(
@@ -198,22 +202,33 @@ class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware
     final allPlans = devotionProvider.allPlans;
 
     final auth = context.watch<AuthProvider>();
-    final canCreate = auth.user?['verificationBadge'] == 'GOLD' || auth.user?['isAdmin'] == true;
+    final canCreate =
+        auth.user?['verificationBadge'] == 'GOLD' ||
+        auth.user?['isAdmin'] == true;
 
     return Scaffold(
-      floatingActionButton: canCreate ? FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SubmitDevotionScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppTheme.buttonColor,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Create Devotion', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ) : null,
+      floatingActionButton:
+          canCreate
+              ? FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SubmitDevotionScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: AppTheme.buttonColor,
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text(
+                  'Create Devotion',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+              : null,
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child:
@@ -242,7 +257,7 @@ class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware
                         title: 'Devotions',
                         trailingIcon: HugeIcons.strokeRoundedMoreVertical,
                         leadingIconTap: () => Navigator.pop(context),
-                        trailingIconTap: () => _openMenu(context),
+                        //trailingIconTap: () => _openMenu(context),
                       ),
 
                       const SizedBox(height: 25),
@@ -371,29 +386,39 @@ class _DevotionListScreenState extends State<DevotionListScreen> with RouteAware
                             int myTotalLikes = 0;
                             if (myPlan['plan']['days'] != null) {
                               for (var day in myPlan['plan']['days']) {
-                                myTotalLikes += (day['likesCount'] as int? ?? 0);
+                                myTotalLikes +=
+                                    (day['likesCount'] as int? ?? 0);
                               }
                             }
                             final int currentDay = myPlan['currentDay'] ?? 1;
-                            final int durationDays = myPlan['plan']['durationDays'] ?? 1;
+                            final int durationDays =
+                                myPlan['plan']['durationDays'] ?? 1;
                             final bool isCompleted = currentDay > durationDays;
-                            final int displayDay = isCompleted ? durationDays : currentDay;
+                            final int displayDay =
+                                isCompleted ? durationDays : currentDay;
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 10),
                               child: OngoingDevotionCard(
                                 title: myPlan['plan']['title'] ?? '',
                                 author: myPlan['plan']['authorName'] ?? '',
-                                imagePath: myPlan['plan']['image'] ?? 'assets/images/user_test.jpg',
-                                likes: myTotalLikes > 0 ? myTotalLikes.toString() : "",
-                                planText: "- ${myPlan['plan']['durationDays']} Days Plan",
+                                imagePath:
+                                    myPlan['plan']['image'] ??
+                                    'assets/images/boy.png',
+                                likes:
+                                    myTotalLikes > 0
+                                        ? myTotalLikes.toString()
+                                        : "",
+                                planText:
+                                    "- ${myPlan['plan']['durationDays']} Days Plan",
                                 day: displayDay,
                                 isCompleted: isCompleted,
-                                onContinue: () => _navigateToDevotionScreen(
-                                  context,
-                                  myPlan['plan']['id'],
-                                  displayDay,
-                                ),
+                                onContinue:
+                                    () => _navigateToDevotionScreen(
+                                      context,
+                                      myPlan['plan']['id'],
+                                      displayDay,
+                                    ),
                               ),
                             );
                           }),
@@ -640,35 +665,44 @@ void showStartPlanModal({
             const SizedBox(height: 20),
             ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: planImagePath.trim().replaceAll('"', '').startsWith('http')
-                  ? Image.network(
-                      planImagePath.trim().replaceAll('"', ''),
-                      width: 62,
-                      height: 62,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 62,
-                          height: 62,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
-                        );
-                      },
-                    )
-                  : Image.asset(
-                      planImagePath.trim().replaceAll('"', ''),
-                      width: 62,
-                      height: 62,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 62,
-                          height: 62,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.broken_image, color: Colors.grey, size: 20),
-                        );
-                      },
-                    ),
+              child:
+                  planImagePath.trim().replaceAll('"', '').startsWith('http')
+                      ? Image.network(
+                        planImagePath.trim().replaceAll('"', ''),
+                        width: 62,
+                        height: 62,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 62,
+                            height: 62,
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                          );
+                        },
+                      )
+                      : Image.asset(
+                        planImagePath.trim().replaceAll('"', ''),
+                        width: 62,
+                        height: 62,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 62,
+                            height: 62,
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                          );
+                        },
+                      ),
             ),
             const SizedBox(height: 5),
             SizedBox(
@@ -699,7 +733,7 @@ void showStartPlanModal({
                 ClipRRect(
                   borderRadius: BorderRadius.circular(50),
                   child: Image.asset(
-                    'assets/images/user_test.jpg',
+                    'assets/images/boy.png',
                     width: 42,
                     height: 42,
                     fit: BoxFit.cover,

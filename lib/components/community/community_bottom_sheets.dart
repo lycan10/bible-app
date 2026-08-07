@@ -100,10 +100,9 @@ class CommunityMenuDialogBox extends StatelessWidget {
             ),
             Builder(builder: (context) {
               final authId = context.read<AuthProvider>().user?['id'];
-              // Use the 'member' map returned by GET /communities/:id
-              final memberInfo = community['member'] as Map<String, dynamic>?;
+              final members = (community['members'] as List<dynamic>?) ?? [];
               final isOwner = community['ownerId'] == authId;
-              final isAdmin = isOwner || memberInfo?['role'] == 'ADMIN';
+              final isAdmin = isOwner || members.any((m) => m['id'] == authId && m['role'] == 'ADMIN');
               final isPrivate = community['isPrivate'] == true;
               final isForumDisabledGlobally = community['isForumDisabledGlobally'] == true;
 
@@ -572,7 +571,7 @@ class ProfileBottomSheet extends StatelessWidget {
                             fit: BoxFit.cover,
                           )
                           : Image.asset(
-                            'assets/images/test.jpg',
+                            'assets/images/boy.png',
                             width: 50,
                             height: 50,
                             fit: BoxFit.cover,

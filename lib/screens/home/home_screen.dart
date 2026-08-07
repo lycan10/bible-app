@@ -714,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               author: plan['authorName'] ?? "",
                               imagePath:
                                   plan['image'] ??
-                                  "assets/images/user_test.jpg",
+                                  "assets/images/boy.png",
                               likes: "${plan['durationDays']} Days Plan",
                               planText: plan['tag'] ?? "",
                               day: currentDay ?? 1,
@@ -725,7 +725,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                     builder:
                                         (context) => DevotionScreen(
                                           planId: plan['id'],
-                                          dayNum: currentDay ?? 1,
+                                          dayNum: 1,
                                         ),
                                   ),
                                 );
@@ -754,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           author: devotions[1]['authorName'] ?? "",
                           imagePath:
                               devotions[1]['image'] ??
-                              "assets/images/user_test.jpg",
+                              "assets/images/boy.png",
                           likes: "${devotions[1]['durationDays']} Days",
                           tag: devotions[1]['tag'] ?? "",
                           onTap: () {

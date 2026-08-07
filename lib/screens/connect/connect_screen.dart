@@ -68,7 +68,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                     title: 'Connect',
                     trailingIcon: HugeIcons.strokeRoundedMoreVertical,
                     leadingIconTap: () => Navigator.pop(context),
-                    trailingIconTap: () => _openMenu(context),
+                    //trailingIconTap: () => _openMenu(context),
                   ),
 
                   SizedBox(height: 30),
@@ -158,8 +158,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                                   .trim(),
                           username: '@${user['username']}',
                           imagePath:
-                              user['avatarUrl'] ??
-                              'assets/images/user_test.jpg',
+                              user['avatarUrl'] ?? 'assets/images/boy.png',
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -236,8 +235,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                                   .trim(),
                           username: '@${user['username']}',
                           imagePath:
-                              user['avatarUrl'] ??
-                              'assets/images/user_test.jpg',
+                              user['avatarUrl'] ?? 'assets/images/boy.png',
                           trailing: IconButton(
                             icon: const Icon(Icons.message, color: Colors.blue),
                             onPressed: () async {
@@ -280,8 +278,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                                   .trim(),
                           username: '@${user['username']}',
                           imagePath:
-                              user['avatarUrl'] ??
-                              'assets/images/user_test.jpg',
+                              user['avatarUrl'] ?? 'assets/images/boy.png',
                           connectTap: () async {
                             final authProvider = Provider.of<AuthProvider>(
                               context,

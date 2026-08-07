@@ -42,7 +42,7 @@ class CommunityProfileCard extends StatelessWidget {
                     50,
                   ), // half of image width/height
                   child: Image.asset(
-                    "assets/images/user_test.jpg",
+                    "assets/images/boy.png",
                     width: 75,
                     height: 75,
                     fit: BoxFit.cover,

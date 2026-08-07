@@ -74,6 +74,11 @@ class AuthProvider with ChangeNotifier {
       }
       if (_token != null) {
         _syncFCMToken();
+        if (_user != null) {
+          // Re-schedule any saved reminders in case they were wiped
+          // by a device restart or app reinstall.
+          NotificationService().restoreScheduledReminders(_user!);
+        }
       }
       
       // Fetch public settings for OTP requirement and method

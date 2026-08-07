@@ -25,7 +25,8 @@ class CommunityListScreen extends StatefulWidget {
   State<CommunityListScreen> createState() => _CommunityListScreenState();
 }
 
-class _CommunityListScreenState extends State<CommunityListScreen> with RouteAware {
+class _CommunityListScreenState extends State<CommunityListScreen>
+    with RouteAware {
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
@@ -113,7 +114,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> with RouteAwa
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CreateCommunityScreen()),
+            MaterialPageRoute(
+              builder: (context) => const CreateCommunityScreen(),
+            ),
           );
         },
         backgroundColor: AppTheme.buttonColor,
@@ -124,255 +127,266 @@ class _CommunityListScreenState extends State<CommunityListScreen> with RouteAwa
           onRefresh: () async {
             final authProvider = context.read<AuthProvider>();
             if (authProvider.token != null) {
-              await context.read<CommunityProvider>().loadCommunities(authProvider.token!);
+              await context.read<CommunityProvider>().loadCommunities(
+                authProvider.token!,
+              );
             }
           },
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          children: [
-            /// TITLE BAR
-            TitleOne(
-              leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-              title: 'Communities',
-              trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-              leadingIconTap: () => Navigator.pop(context),
-              trailingIconTap: () => _openMenu(context),
-            ),
+            children: [
+              /// TITLE BAR
+              TitleOne(
+                leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                title: 'Communities',
+                trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                leadingIconTap: () => Navigator.pop(context),
+                //trailingIconTap: () => _openMenu(context),
+              ),
 
-            const SizedBox(height: 25),
+              const SizedBox(height: 25),
 
-            // SearchBar(
-            //   hintText: "Search communities",
-            //   onTap: () {
-            //     showModalBottomSheet(
-            //       context: context,
-            //       isScrollControlled: true,
-            //       backgroundColor: Colors.transparent,
-            //       builder: (context) {
-            //         return DiscoverMore();
-            //       },
-            //     );
-            //   },
-            //   onChanged: (value) {
-            //     print("Searching: $value");
-            //   },
-            // ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                /// Menu / List Icon Button
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return DiscoverMore();
-                      },
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedLeftToRightListBullet,
-                      size: 22,
-                      color: theme.colorScheme.onSurface,
-                      strokeWidth: 1,
+              // SearchBar(
+              //   hintText: "Search communities",
+              //   onTap: () {
+              //     showModalBottomSheet(
+              //       context: context,
+              //       isScrollControlled: true,
+              //       backgroundColor: Colors.transparent,
+              //       builder: (context) {
+              //         return DiscoverMore();
+              //       },
+              //     );
+              //   },
+              //   onChanged: (value) {
+              //     print("Searching: $value");
+              //   },
+              // ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  /// Menu / List Icon Button
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) {
+                          return DiscoverMore();
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedLeftToRightListBullet,
+                        size: 22,
+                        color: theme.colorScheme.onSurface,
+                        strokeWidth: 1,
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 10),
+                  const SizedBox(width: 10),
 
-                /// Search Bar
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedSearch01,
-                          size: 18,
-                          color: AppTheme.textColor2,
-                        ),
+                  /// Search Bar
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedSearch01,
+                            size: 18,
+                            color: AppTheme.textColor2,
+                          ),
 
-                        const SizedBox(width: 8),
+                          const SizedBox(width: 8),
 
-                        /// Search Input
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (value) {
-                              setState(() {
-                                _searchQuery = value;
-                              });
-                              if (_debounce?.isActive ?? false) _debounce!.cancel();
-                              _debounce = Timer(const Duration(milliseconds: 500), () {
-                                final authProvider = context.read<AuthProvider>();
-                                if (authProvider.token != null) {
-                                  if (value.isNotEmpty) {
-                                    context.read<CommunityProvider>().searchCommunities(
-                                          authProvider.token!,
-                                          value,
-                                        );
-                                  } else {
-                                    context.read<CommunityProvider>().loadCommunities(authProvider.token!);
-                                  }
-                                }
-                              });
-                            },
-                            decoration: const InputDecoration(
-                              hintText: "Search communities",
-                              border: InputBorder.none,
-                              isDense: true,
-                              hintStyle: TextStyle(fontSize: 12),
+                          /// Search Input
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                                if (_debounce?.isActive ?? false)
+                                  _debounce!.cancel();
+                                _debounce = Timer(
+                                  const Duration(milliseconds: 500),
+                                  () {
+                                    final authProvider =
+                                        context.read<AuthProvider>();
+                                    if (authProvider.token != null) {
+                                      if (value.isNotEmpty) {
+                                        context
+                                            .read<CommunityProvider>()
+                                            .searchCommunities(
+                                              authProvider.token!,
+                                              value,
+                                            );
+                                      } else {
+                                        context
+                                            .read<CommunityProvider>()
+                                            .loadCommunities(
+                                              authProvider.token!,
+                                            );
+                                      }
+                                    }
+                                  },
+                                );
+                              },
+                              decoration: const InputDecoration(
+                                hintText: "Search communities",
+                                border: InputBorder.none,
+                                isDense: true,
+                                hintStyle: TextStyle(fontSize: 12),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-
-            if (_searchQuery.isNotEmpty) ...[
-              const SectionHeader(
-                title: "Search Results",
-                seeAllText: '',
+                ],
               ),
-              const SizedBox(height: 15),
-              communityProvider.isLoading
-                  ? const Padding(
+
+              if (_searchQuery.isNotEmpty) ...[
+                const SectionHeader(title: "Search Results", seeAllText: ''),
+                const SizedBox(height: 15),
+                communityProvider.isLoading
+                    ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
                       child: Center(
                         child: CircularProgressIndicator(color: Colors.black),
                       ),
                     )
-                  : communityProvider.searchResults.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Text("No communities found."),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          separatorBuilder: (_, __) => const SizedBox(height: 10),
-                          itemCount: communityProvider.searchResults.length,
-                          itemBuilder: (context, index) {
-                            final com = communityProvider.searchResults[index];
-                            return CommunityImageTile(
-                              name: com['name'] ?? 'Community',
-                              message: com['description'] ?? '',
-                              imagePath: com['image'] ?? "assets/images/user_test.jpg",
-                              trailing: const Icon(
-                                Icons.chevron_right,
-                                color: Colors.grey,
-                                size: 20,
-                              ),
-                              onTap: () => _navigateToCommunityScreen(context, com),
-                            );
-                          },
-                        ),
-            ] else ...[
-              /// HEADER
-              const SectionHeader(
-                title: "Your communities",
-                seeAllText: 'see more',
-              ),
-
-              const SizedBox(height: 15),
-
-              /// COMMUNITY LIST
-              if (communityProvider.isLoading && myCommunities.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.black),
-                  ),
-                )
-              else if (myCommunities.isNotEmpty)
-                SizedBox(
-                  height: 160,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: myCommunities.length,
-                    itemBuilder: (context, index) {
-                      final com = myCommunities[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: CircleStuff(
+                    : communityProvider.searchResults.isEmpty
+                    ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Text("No communities found."),
+                    )
+                    : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemCount: communityProvider.searchResults.length,
+                      itemBuilder: (context, index) {
+                        final com = communityProvider.searchResults[index];
+                        return CommunityImageTile(
+                          name: com['name'] ?? 'Community',
+                          message: com['description'] ?? '',
+                          imagePath: com['image'] ?? "assets/images/boy.png",
+                          trailing: const Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
                           onTap: () => _navigateToCommunityScreen(context, com),
-                          width: 100,
-                          height: 100,
-                          title: com['name'] ?? 'Community',
-                          description:
-                              '${com['_count']?['members'] ?? 0} members',
-                          image: com['image'],
+                        );
+                      },
+                    ),
+              ] else ...[
+                /// HEADER
+                const SectionHeader(
+                  title: "Your communities",
+                  seeAllText: 'see more',
+                ),
+
+                const SizedBox(height: 15),
+
+                /// COMMUNITY LIST
+                if (communityProvider.isLoading && myCommunities.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(color: Colors.black),
+                    ),
+                  )
+                else if (myCommunities.isNotEmpty)
+                  SizedBox(
+                    height: 160,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: myCommunities.length,
+                      itemBuilder: (context, index) {
+                        final com = myCommunities[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: CircleStuff(
+                            onTap:
+                                () => _navigateToCommunityScreen(context, com),
+                            width: 100,
+                            height: 100,
+                            title: com['name'] ?? 'Community',
+                            description:
+                                '${com['_count']?['members'] ?? 0} members',
+                            image: com['image'],
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text("You haven't joined any communities yet."),
+                  ),
+
+                /// POSTS (Mocked or empty for local area)
+                // Removed static area communities list to focus on user's recommendations
+                const SectionHeader(
+                  title: "Suggested communities",
+                  seeAllText: 'see more',
+                ),
+
+                /// SUGGESTED COMMUNITIES
+                if (communityProvider.isLoading && recommended.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(color: Colors.black),
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemCount: recommended.length,
+                    itemBuilder: (context, index) {
+                      final com = recommended[index];
+                      return CommunityImageTile(
+                        name: com['name'] ?? 'Community',
+                        message: com['description'] ?? '',
+                        imagePath: com['image'] ?? "assets/images/boy.png",
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey,
+                          size: 20,
                         ),
+                        onTap: () => _navigateToCommunityScreen(context, com),
                       );
                     },
                   ),
-                )
-              else
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Text("You haven't joined any communities yet."),
-                ),
-
-              /// POSTS (Mocked or empty for local area)
-              // Removed static area communities list to focus on user's recommendations
-              const SectionHeader(
-                title: "Suggested communities",
-                seeAllText: 'see more',
-              ),
-
-              /// SUGGESTED COMMUNITIES
-              if (communityProvider.isLoading && recommended.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.black),
-                  ),
-                )
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemCount: recommended.length,
-                  itemBuilder: (context, index) {
-                  final com = recommended[index];
-                  return CommunityImageTile(
-                    name: com['name'] ?? 'Community',
-                    message: com['description'] ?? '',
-                    imagePath: com['image'] ?? "assets/images/user_test.jpg",
-                    trailing: const Icon(
-                      Icons.chevron_right,
-                      color: Colors.grey,
-                      size: 20,
-                    ),
-                    onTap: () => _navigateToCommunityScreen(context, com),
-                  );
-                },
-              ),
+              ],
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );

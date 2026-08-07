@@ -22,7 +22,7 @@ final List<Map<String, String>> posts = [
     "postText":
         "Christian fellowship is a beautiful expression of faith and unity.",
     "groupName": "Lekki Christian Youths",
-    "postImage": "assets/images/test.jpg",
+    "postImage": "assets/images/boy.png",
     "likes": "370k",
     "comments": "29",
     "time": "Today 3:25pm",
@@ -32,7 +32,7 @@ final List<Map<String, String>> posts = [
     "userImage": "assets/images/boy.png",
     "postText": "Sunday service was powerful today. Feeling blessed!",
     "groupName": "Faith Builders",
-    "postImage": "assets/images/test.jpg",
+    "postImage": "assets/images/boy.png",
     "likes": "120k",
     "comments": "15",
     "time": "Today 1:10pm",
@@ -42,7 +42,7 @@ final List<Map<String, String>> posts = [
     "userImage": "assets/images/boy.png",
     "postText": "Prayer changes everything. Never stop believing.",
     "groupName": "Prayer Warriors",
-    "postImage": "assets/images/test.jpg",
+    "postImage": "assets/images/boy.png",
     "likes": "92k",
     "comments": "8",
     "time": "Today 12:05pm",
@@ -52,7 +52,7 @@ final List<Map<String, String>> posts = [
     "userImage": "assets/images/boy.png",
     "postText": "Grateful for another day to serve God.",
     "groupName": "Global Fellowship",
-    "postImage": "assets/images/test.jpg",
+    "postImage": "assets/images/boy.png",
     "likes": "54k",
     "comments": "4",
     "time": "Today 10:40am",
@@ -149,22 +149,33 @@ class _BooksListScreenState extends State<BooksListScreen> with RouteAware {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
-    final canCreate = auth.user?['verificationBadge'] == 'GOLD' || auth.user?['isAdmin'] == true;
+    final canCreate =
+        auth.user?['verificationBadge'] == 'GOLD' ||
+        auth.user?['isAdmin'] == true;
 
     return Scaffold(
-      floatingActionButton: canCreate ? FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SubmitBookScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppTheme.buttonColor,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Upload Book', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ) : null,
+      floatingActionButton:
+          canCreate
+              ? FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SubmitBookScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: AppTheme.buttonColor,
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text(
+                  'Upload Book',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+              : null,
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
@@ -176,7 +187,7 @@ class _BooksListScreenState extends State<BooksListScreen> with RouteAware {
               title: 'Books',
               trailingIcon: HugeIcons.strokeRoundedMoreVertical,
               leadingIconTap: () => Navigator.pop(context),
-              trailingIconTap: () => _openMenu(context),
+              //trailingIconTap: () => _openMenu(context),
             ),
 
             const SizedBox(height: 25),

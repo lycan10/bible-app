@@ -263,7 +263,7 @@ class _PostScreenState extends State<PostScreen> {
                               fit: BoxFit.cover,
                               errorBuilder:
                                   (context, error, stackTrace) => Image.asset(
-                                    'assets/images/user_test.jpg',
+                                    'assets/images/boy.png',
                                     fit: BoxFit.cover,
                                   ),
                             ),
@@ -625,7 +625,7 @@ class _CommentItemState extends State<CommentItem> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(50),
                               child: Image.asset(
-                                'assets/images/user_test.jpg',
+                                'assets/images/boy.png',
                                 width: 30,
                                 height: 30,
                                 fit: BoxFit.cover,

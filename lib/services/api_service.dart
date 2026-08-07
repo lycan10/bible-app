@@ -11,7 +11,7 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    //return 'http://192.168.1.250:8787/api/v1';
+    //return 'http://192.168.1.124:8787/api/v1';
     return 'https://quest.vidarave.com/api/v1';
   }
 
@@ -28,8 +28,6 @@ class ApiService {
     return url;
   }
 
-  /// Register a callback to be invoked whenever any API call returns 401.
-  /// Set this once at app startup (e.g. in main.dart) to trigger auto-logout.
   static void Function()? onUnauthorized;
 
   static Map<String, String> _headers(String? token) {
@@ -2637,6 +2635,62 @@ class ApiService {
     final response = _handleResponse(
       await http.get(
         Uri.parse('$baseUrl/communities/posts/user/created'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /communities/posts/:id — fetch a single post by ID (for deep linking)
+  static Future<Map<String, dynamic>> fetchPostById(
+    String token,
+    String postId,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/communities/posts/$postId'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /media/videos/:id — fetch a single video by ID (for deep linking)
+  static Future<Map<String, dynamic>> fetchVideoById(
+    String token,
+    String videoId,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/media/videos/$videoId'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /media/audio/:id — fetch a single audio track by ID (for deep linking)
+  static Future<Map<String, dynamic>> fetchAudioById(
+    String token,
+    String audioId,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/media/audio/$audioId'),
+        headers: _headers(token),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // GET /books/:id — fetch a single book by ID (for deep linking)
+  static Future<Map<String, dynamic>> fetchBookById(
+    String token,
+    String bookId,
+  ) async {
+    final response = _handleResponse(
+      await http.get(
+        Uri.parse('$baseUrl/books/$bookId'),
         headers: _headers(token),
       ),
     );

@@ -19,7 +19,7 @@ class PostCard extends StatelessWidget {
     this.title = "The Mystery of the cross of Jesus Christ",
     this.author = "author",
     this.time = "Today • 2:49pm",
-    this.image = "assets/images/user_test.jpg",
+    this.image = "assets/images/boy.png",
     this.likes = "370k",
     this.comments = "29",
     this.shares = "5k",

@@ -54,11 +54,12 @@ class _UserProfileCardState extends State<UserProfileCard> {
 
   void _shareProfile(BuildContext context) {
     if (widget.user != null) {
-      final username = widget.user!['username'] ?? widget.user!['id'];
-      final link = 'https://quest.vidarave.com/profile/$username';
+      final userId = widget.user!['id'] ?? '';
+      final username = widget.user!['username'] ?? userId;
+      final link = 'https://quest.vidarave.com/user/$userId';
       showInAppShareSheet(
         context,
-        shareMessage: 'Check out this profile on Quest! $link',
+        shareMessage: 'Check out @$username\'s profile on Quest! $link',
       );
     }
   }
@@ -115,7 +116,7 @@ class _UserProfileCardState extends State<UserProfileCard> {
                             fit: BoxFit.cover,
                           )
                           : Image.asset(
-                            "assets/images/user_test.jpg",
+                            "assets/images/boy.png",
                             width: 75,
                             height: 75,
                             fit: BoxFit.cover,
@@ -317,7 +318,7 @@ class _UserProfileCardState extends State<UserProfileCard> {
                       description: comm['description'] ?? '',
                       communityImage:
                           comm['avatarUrl'] ??
-                          "assets/images/test.jpg", // can handle network image later
+                          "assets/images/boy.png", // can handle network image later
                     );
                   },
                 ),

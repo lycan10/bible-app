@@ -266,7 +266,7 @@ class _AudioListScreenState extends State<AudioListScreen> with RouteAware {
                 title: 'Audio Messages',
                 trailingIcon: HugeIcons.strokeRoundedMoreVertical,
                 leadingIconTap: () => Navigator.pop(context),
-                trailingIconTap: () => _openMenu(context),
+                //trailingIconTap: () => _openMenu(context),
               ),
 
               const SizedBox(height: 25),

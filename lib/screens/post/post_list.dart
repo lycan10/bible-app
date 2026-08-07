@@ -59,8 +59,11 @@ class _PostListState extends State<PostList> with RouteAware {
 
   Future<void> _loadPosts({bool refresh = false}) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    final communityProvider = Provider.of<CommunityProvider>(context, listen: false);
-    
+    final communityProvider = Provider.of<CommunityProvider>(
+      context,
+      listen: false,
+    );
+
     if (auth.token != null) {
       await communityProvider.loadGlobalPosts(auth.token!, refresh: refresh);
     }
@@ -100,7 +103,7 @@ class _PostListState extends State<PostList> with RouteAware {
                 leadingIconTap: () {
                   Navigator.pop(context);
                 },
-                trailingIconTap: () {
+                /*trailingIconTap: () {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -109,7 +112,7 @@ class _PostListState extends State<PostList> with RouteAware {
                       return const GlobalMoreMenu();
                     },
                   );
-                },
+                },*/
               ),
               const SizedBox(height: 25),
               Expanded(
@@ -120,16 +123,16 @@ class _PostListState extends State<PostList> with RouteAware {
                     }
 
                     if (provider.globalPosts.isEmpty) {
-                      return const Center(
-                        child: Text("No posts found."),
-                      );
+                      return const Center(child: Text("No posts found."));
                     }
 
                     return RefreshIndicator(
                       onRefresh: () => _loadPosts(refresh: true),
                       child: ListView.builder(
                         controller: _scrollController,
-                        itemCount: provider.globalPosts.length + (provider.hasMoreGlobalPosts ? 1 : 0),
+                        itemCount:
+                            provider.globalPosts.length +
+                            (provider.hasMoreGlobalPosts ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == provider.globalPosts.length) {
                             return const Padding(
@@ -141,23 +144,35 @@ class _PostListState extends State<PostList> with RouteAware {
                           final post = provider.globalPosts[index];
                           final user = post['user'] ?? {};
                           final community = post['community'] ?? {};
-                          
-                          final userName = "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
-                          final userImage = user['avatarUrl'] ?? "assets/images/boy.png";
+
+                          final userName =
+                              "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
+                                  .trim();
+                          final userImage =
+                              user['avatarUrl'] ?? "assets/images/boy.png";
                           final groupName = community['name'] ?? "Community";
-                          final likes = ((post['reactions'] as List?)?.length ?? 0).toString();
-                          final comments = (post['_count']?['comments'] ?? 0).toString();
-                          
+                          final likes =
+                              ((post['reactions'] as List?)?.length ?? 0)
+                                  .toString();
+                          final comments =
+                              (post['_count']?['comments'] ?? 0).toString();
+
                           DateTime createdAt = DateTime.now();
                           if (post['createdAt'] != null) {
-                            createdAt = DateTime.tryParse(post['createdAt']) ?? DateTime.now();
+                            createdAt =
+                                DateTime.tryParse(post['createdAt']) ??
+                                DateTime.now();
                           }
                           final timeStr = timeago.format(createdAt);
 
                           return PostCardLong(
-                            userName: userName.isNotEmpty ? userName : user['username'] ?? '',
+                            userName:
+                                userName.isNotEmpty
+                                    ? userName
+                                    : user['username'] ?? '',
                             userImage: userImage,
-                            verificationBadge: user['verificationBadge'] ?? 'NONE',
+                            verificationBadge:
+                                user['verificationBadge'] ?? 'NONE',
                             postText: post['text'] ?? '',
                             groupName: groupName,
                             postImage: post['image'] ?? '',

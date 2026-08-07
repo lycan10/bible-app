@@ -634,7 +634,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                 fit: BoxFit.cover,
                               )
                               : Image.asset(
-                                "assets/images/user_test.jpg",
+                                "assets/images/boy.png",
                                 width: 75,
                                 height: 75,
                                 fit: BoxFit.cover,
@@ -1401,7 +1401,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                   fit: BoxFit.cover,
                                 )
                                 : Image.asset(
-                                  "assets/images/user_test.jpg",
+                                  "assets/images/boy.png",
                                   width: 75,
                                   height: 75,
                                   fit: BoxFit.cover,
@@ -1718,7 +1718,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                         groupName: community['name'] ?? '',
                                         postImage:
                                             post["image"] ??
-                                            "assets/images/test.jpg",
+                                            "assets/images/boy.png",
                                         likes: "${post['reactions']?.length ?? 0}",
                                         comments:
                                             "${post['_count']?['comments'] ?? 0}",

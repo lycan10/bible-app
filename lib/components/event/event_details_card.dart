@@ -263,7 +263,7 @@ class EventDetailsCard extends StatelessWidget {
 
   Widget _defaultImage() {
     return Image.asset(
-      "assets/images/user_test.jpg",
+      "assets/images/boy.png",
       width: 75,
       height: 75,
       fit: BoxFit.cover,

@@ -44,7 +44,7 @@ class ImageRowTile extends StatelessWidget {
                       10,
                     ), // half of image width/height
                     child: Image.asset(
-                      'assets/images/user_test.jpg',
+                      'assets/images/boy.png',
                       width: 42,
                       height: 42,
                       fit: BoxFit.cover,

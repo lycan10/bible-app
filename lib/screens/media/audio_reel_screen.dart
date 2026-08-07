@@ -458,7 +458,7 @@ class _AudioPageState extends State<_AudioPage> {
     final data = widget.audioData;
     final title = data['title'] ?? 'Audio';
     final author = data['author'] ?? 'Author';
-    final bgImage = data['imageUrl'] ?? 'assets/images/alucard.png';
+    final bgImage = data['imageUrl'] ?? 'assets/images/boy.png';
 
     final int baseLikes = data['likes'] ?? 0;
     final bool baseHasLiked = data['hasLiked'] == true;
@@ -474,7 +474,7 @@ class _AudioPageState extends State<_AudioPage> {
             fit: BoxFit.cover,
             errorBuilder:
                 (_, __, ___) =>
-                    Image.asset('assets/images/alucard.png', fit: BoxFit.cover),
+                    Image.asset('assets/images/boy.png', fit: BoxFit.cover),
           )
         else
           Image.asset(bgImage, fit: BoxFit.cover),
@@ -562,7 +562,7 @@ class _AudioPageState extends State<_AudioPage> {
                               fit: BoxFit.cover,
                               errorBuilder:
                                   (_, __, ___) => Image.asset(
-                                    'assets/images/alucard.png',
+                                    'assets/images/boy.png',
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,
@@ -575,7 +575,7 @@ class _AudioPageState extends State<_AudioPage> {
                               fit: BoxFit.cover,
                               errorBuilder:
                                   (_, __, ___) => Image.asset(
-                                    'assets/images/alucard.png',
+                                    'assets/images/boy.png',
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,

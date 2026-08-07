@@ -1,5 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
@@ -13,6 +14,7 @@ import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/screens/profileScreen/edit_profile_screen.dart';
 import 'package:quest/screens/post/post_screen.dart';
 import 'package:quest/screens/profileScreen/profile_settings.dart';
+import 'package:quest/screens/connect/connect_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/feed_provider.dart';
@@ -36,6 +38,9 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
   bool _loadingFriends = false;
   bool _loadingBadges = false;
   bool _loadingGames = false;
+
+  List<dynamic> _userPosts = [];
+  bool _loadingPosts = false;
 
   @override
   void initState() {
@@ -71,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
       _loadingFriends = true;
       _loadingBadges = true;
       _loadingGames = true;
+      _loadingPosts = true;
     });
 
     try {
@@ -116,6 +122,19 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     } catch (e) {
       if (mounted) setState(() => _loadingGames = false);
       debugPrint("Error loading games overview: $e");
+    }
+
+    try {
+      final posts = await ApiService.fetchCreatedPosts(token);
+      if (mounted) {
+        setState(() {
+          _userPosts = posts;
+          _loadingPosts = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loadingPosts = false);
+      debugPrint("Error loading posts: $e");
     }
   }
 
@@ -207,13 +226,8 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
             ? economyProvider.coinBalance
             : (user?['coinBalance'] ?? 0);
 
-    // Filter user posts
-    final allPosts = feedProvider.feed?['posts'] as List<dynamic>? ?? [];
-    final userPosts =
-        allPosts.where((p) {
-          final postUser = p['user'] ?? {};
-          return postUser['username'] == user?['username'];
-        }).toList();
+    // Get user posts
+    final userPosts = _userPosts;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -318,7 +332,13 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                       ActionPillButton(
                                         icon: HugeIcons.strokeRoundedShare08,
                                         label: "Share",
-                                        onTap: () {},
+                                        onTap: () {
+                                          final rawUsername = user?['username'] ?? '';
+                                          final userId = user?['id'] ?? '';
+                                          Share.share(
+                                            'Connect with me on Sozo Tribe! My username is $username\nhttps://quest.vidarave.com/user/$userId',
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -457,7 +477,11 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                         FeatureGuard(
                           featureKey: 'community',
                           child:
-                              userPosts.isEmpty
+                              _loadingPosts
+                                  ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                  : userPosts.isEmpty
                                   ? Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 40,
@@ -511,29 +535,77 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                   ? const Center(
                                     child: CircularProgressIndicator(),
                                   )
-                                  : _friends.isEmpty
-                                  ? Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 40,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "No friends yet",
-                                        style: TextStyle(
-                                          color:
-                                              Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.color
-                                                  ?.withValues(alpha: 0.54) ??
-                                              Colors.black54,
+                                  : Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      // Find friends / Connect button
+                                      GestureDetector(
+                                        onTap: () => Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => const ConnectScreen(),
+                                          ),
+                                        ),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.purpleColor.withValues(alpha: 0.08),
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: AppTheme.purpleColor.withValues(alpha: 0.25),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.person_add_alt_1_rounded,
+                                                color: AppTheme.purpleColor,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Text(
+                                                'Find friends & manage requests',
+                                                style: TextStyle(
+                                                  color: AppTheme.purpleColor,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              Icon(
+                                                Icons.chevron_right_rounded,
+                                                color: AppTheme.purpleColor,
+                                                size: 20,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  )
-                                  : Column(
-                                    children:
-                                        _friends.map((friend) {
+                                      const SizedBox(height: 16),
+                                      if (_friends.isEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 30,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              "No friends yet",
+                                              style: TextStyle(
+                                                color:
+                                                    Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.color
+                                                        ?.withValues(alpha: 0.54) ??
+                                                    Colors.black54,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      else
+                                        ..._friends.map((friend) {
                                           final fName =
                                               '${friend['firstName'] ?? ''} ${friend['lastName'] ?? ''}'
                                                   .trim();
@@ -556,7 +628,8 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                             fullName:
                                                 fName.isNotEmpty ? fName : "",
                                           );
-                                        }).toList(),
+                                        }),
+                                    ],
                                   ),
                         ),
 
