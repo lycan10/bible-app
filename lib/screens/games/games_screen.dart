@@ -188,7 +188,7 @@ class _GamesScreenState extends State<GamesScreen> {
                       const SizedBox(height: 24),
 
                       // Continue Playing Button
-                      ElevatedButton(
+                      /*ElevatedButton(
                         onPressed: () {
                           showModalBottomSheet(
                             context: context,
@@ -213,7 +213,7 @@ class _GamesScreenState extends State<GamesScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
+                      ),*/
                       const SizedBox(height: 16),
                       // Carousel dots indicator fake
                       Row(
