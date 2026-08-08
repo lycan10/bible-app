@@ -7,6 +7,7 @@ class Stat extends StatelessWidget {
   final Color? textColor;
   final double? textSize; // ✅ use double, not int
   final double? iconSize; // ✅ use double, not int
+  final Color? iconColor;
 
   const Stat({
     super.key,
@@ -15,6 +16,7 @@ class Stat extends StatelessWidget {
     this.textColor,
     this.textSize,
     this.iconSize,
+    this.iconColor,
   });
 
   @override
@@ -27,7 +29,7 @@ class Stat extends StatelessWidget {
         HugeIcon(
           icon: icon,
           size: iconSize ?? 14,
-          color: const Color(0xff8e8e93),
+          color: iconColor ?? const Color(0xff8e8e93),
         ),
         const SizedBox(width: 5),
         Text(

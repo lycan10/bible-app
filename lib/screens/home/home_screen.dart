@@ -983,7 +983,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                               ? ApiService.getFullImageUrl(
                                                 community['image'],
                                               )
-                                              : 'assets/images/boy.png',
+                                              : 'assets/images/test.jpg',
                                       onTap: () {
                                         Navigator.of(context).push(
                                           PageRouteBuilder(

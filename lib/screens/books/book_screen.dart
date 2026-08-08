@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
+import 'package:quest/components/reaction_picker.dart';
 import 'package:quest/components/stats/stats.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
 import 'package:quest/components/titles/title_one.dart';
@@ -27,6 +30,8 @@ class _BookScreenState extends State<BookScreen> {
   List<dynamic> _comments = [];
   List<dynamic> _reactions = [];
   bool _isSaved = false;
+  int _likesCount = 0;
+  bool _hasLiked = false;
   final TextEditingController _commentController = TextEditingController();
 
   @override
@@ -65,13 +70,28 @@ class _BookScreenState extends State<BookScreen> {
       );
       final savedBooksRes = await ApiService.fetchSavedBooks(token);
       final savedBooksList = List<dynamic>.from(savedBooksRes['data'] ?? []);
-      final isSaved = savedBooksList.any((b) => b['bookId'] == widget.book!['id']);
+      final isSaved = savedBooksList.any(
+        (b) => b['bookId'] == widget.book!['id'],
+      );
+
+      // We can fetch updated book details to get hasLiked and likesCount
+      final response = await http.get(
+        Uri.parse('${ApiService.baseUrl}/books/${widget.book!['id']}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      Map<String, dynamic>? updatedBook;
+      if (response.statusCode == 200) {
+        updatedBook = jsonDecode(response.body);
+      }
 
       if (mounted) {
         setState(() {
           _comments = commentsRes;
           _reactions = reactionsRes;
           _isSaved = isSaved;
+          _likesCount =
+              updatedBook?['likesCount'] ?? widget.book?['likesCount'] ?? 0;
+          _hasLiked = updatedBook?['hasLiked'] ?? false;
           _isLoading = false;
         });
       }
@@ -109,7 +129,7 @@ class _BookScreenState extends State<BookScreen> {
     }
   }
 
-  Future<void> _toggleReaction() async {
+  Future<void> _toggleReaction(String emoji) async {
     if (widget.book == null || widget.book!['id'] == null) return;
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -118,14 +138,18 @@ class _BookScreenState extends State<BookScreen> {
     if (token == null || currentUser == null) return;
 
     try {
-      final res = await ApiService.reactToBook(token, widget.book!['id'], '🤩');
+      final res = await ApiService.reactToBook(
+        token,
+        widget.book!['id'],
+        emoji,
+      );
 
       setState(() {
         if (res['added'] == true) {
           _reactions.add(res['reaction']);
         } else {
           _reactions.removeWhere(
-            (r) => r['userId'] == currentUser['id'] && r['emoji'] == '🤩',
+            (r) => r['userId'] == currentUser['id'] && r['emoji'] == emoji,
           );
         }
       });
@@ -134,6 +158,33 @@ class _BookScreenState extends State<BookScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to react.")));
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    if (widget.book == null || widget.book!['id'] == null) return;
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final token = auth.token;
+    if (token == null) return;
+
+    try {
+      final res = await ApiService.likeBook(token, widget.book!['id']);
+
+      setState(() {
+        if (res['liked'] == true) {
+          _hasLiked = true;
+          _likesCount++;
+        } else {
+          _hasLiked = false;
+          _likesCount = _likesCount > 0 ? _likesCount - 1 : 0;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to like.")));
     }
   }
 
@@ -151,10 +202,7 @@ class _BookScreenState extends State<BookScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PdfViewerScreen(
-          title: title,
-          pdfUrl: url,
-        ),
+        builder: (context) => PdfViewerScreen(title: title, pdfUrl: url),
       ),
     );
   }
@@ -164,7 +212,7 @@ class _BookScreenState extends State<BookScreen> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final token = auth.token;
     if (token == null) return;
-    
+
     try {
       final res = await ApiService.toggleSaveBook(token, widget.book!['id']);
       setState(() {
@@ -173,19 +221,24 @@ class _BookScreenState extends State<BookScreen> {
       if (mounted) {
         Navigator.pop(context); // Close dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? (_isSaved ? "Saved" : "Unsaved"))),
+          SnackBar(
+            content: Text(res['message'] ?? (_isSaved ? "Saved" : "Unsaved")),
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save book.")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to save book.")));
     }
   }
 
   void _shareBook() {
     showInAppShareSheet(
       context,
-      shareMessage: "Check out this book on Quest! ${widget.book?['title'] ?? ''} - ${widget.book?['downloadUrl'] ?? ''}",
+      shareMessage:
+          "Check out this book on Quest! ${widget.book?['title'] ?? ''} - ${widget.book?['downloadUrl'] ?? ''}",
     );
   }
 
@@ -193,7 +246,14 @@ class _BookScreenState extends State<BookScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    int reactionCount = _reactions.where((r) => r['emoji'] == '🤩').length;
+    final Map<String, int> reactionCountsMap = {};
+    for (var r in _reactions) {
+      final emoji = r['emoji'] as String?;
+      if (emoji != null) {
+        reactionCountsMap[emoji] = (reactionCountsMap[emoji] ?? 0) + 1;
+      }
+    }
+    int reactionCount = _reactions.length;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -217,12 +277,14 @@ class _BookScreenState extends State<BookScreen> {
                     barrierColor: Colors.black.withValues(alpha: 0.4),
                     transitionDuration: const Duration(milliseconds: 250),
                     pageBuilder: (context, animation, secondaryAnimation) {
-                      return Center(child: _PostMenuDialogBox(
-                        onShare: _shareBook,
-                        onSave: _toggleSave,
-                        isSaved: _isSaved,
-                        book: widget.book,
-                      ));
+                      return Center(
+                        child: _PostMenuDialogBox(
+                          onShare: _shareBook,
+                          onSave: _toggleSave,
+                          isSaved: _isSaved,
+                          book: widget.book,
+                        ),
+                      );
                     },
                   );
                 },
@@ -295,19 +357,29 @@ class _BookScreenState extends State<BookScreen> {
                                 ],
                               ),
                               SizedBox(height: 10),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                runSpacing: 10,
                                 children: [
                                   Row(
                                     children: [
-                                      Stat(
-                                        icon: HugeIcons.strokeRoundedThumbsUp,
-                                        text: "$reactionCount",
-                                        iconSize: 18,
-                                        textColor: AppTheme.textColor2,
-                                        textSize: 12,
+                                      GestureDetector(
+                                        onTap: _toggleLike,
+                                        child: Stat(
+                                          icon: HugeIcons.strokeRoundedThumbsUp,
+                                          text: "$_likesCount",
+                                          iconSize: 18,
+                                          textColor:
+                                              _hasLiked
+                                                  ? AppTheme.primaryBlue
+                                                  : AppTheme.textColor2,
+                                          iconColor:
+                                              _hasLiked
+                                                  ? AppTheme.primaryBlue
+                                                  : null,
+                                          textSize: 12,
+                                        ),
                                       ),
                                       const SizedBox(width: 10),
                                       Stat(
@@ -319,7 +391,11 @@ class _BookScreenState extends State<BookScreen> {
                                       ),
                                     ],
                                   ),
-                                  Row(
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
                                     children: [
                                       ActionPillButton(
                                         icon: HugeIcons.strokeRoundedShare08,
@@ -327,57 +403,92 @@ class _BookScreenState extends State<BookScreen> {
                                         onTap: _shareBook,
                                       ),
                                       SizedBox(width: 10),
-                                      GestureDetector(
-                                        onTap: _toggleReaction,
-                                        child: Container(
-                                          height: 40,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 13,
-                                            vertical: 10,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Color(
-                                              0xff673aff,
-                                            ).withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
+                                      Builder(
+                                        builder: (context) {
+                                          return GestureDetector(
+                                            onTapDown: (details) {
+                                              showReactionPicker(
+                                                context,
+                                                details.globalPosition,
+                                                (emoji) {
+                                                  _toggleReaction(emoji);
+                                                },
+                                              );
+                                            },
+                                            child: Container(
+                                              height: 40,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 13,
+                                                    vertical: 10,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Color(
+                                                  0xff673aff,
+                                                ).withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    reactionCount > 0
+                                                        ? "React ($reactionCount)"
+                                                        : "React",
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Color(
+                                                            0xff673aff,
+                                                          ),
+                                                          fontSize: 12,
+                                                        ),
+                                                  ),
+                                                  if (reactionCountsMap
+                                                      .isNotEmpty) ...[
+                                                    const SizedBox(width: 5),
+                                                    const VerticalDivider(
+                                                      width: 4,
+                                                      thickness: 1.5,
+                                                      color: Color(0xff673aff),
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    ...reactionCountsMap.entries.map(
+                                                      (e) => Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              right: 4.0,
+                                                            ),
+                                                        child: Text(
+                                                          "${e.key} ${e.value}",
+                                                          style: theme
+                                                              .textTheme
+                                                              .bodySmall
+                                                              ?.copyWith(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: Color(
+                                                                  0xff673aff,
+                                                                ),
+                                                                fontSize: 13,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                "React ($reactionCount)",
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Color(0xff673aff),
-                                                      fontSize: 12,
-                                                    ),
-                                              ),
-                                              const SizedBox(width: 5),
-                                              const VerticalDivider(
-                                                width: 4,
-                                                thickness: 1.5,
-                                                color: Color(0xff673aff),
-                                              ),
-                                              const SizedBox(width: 5),
-                                              Text(
-                                                "🤩",
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Color(0xff673aff),
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -553,7 +664,7 @@ class _BookScreenState extends State<BookScreen> {
                                       child: Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.completedColor,
+                                          color: AppTheme.primaryBlue,
                                           shape: BoxShape.circle,
                                         ),
                                         child: const HugeIcon(
@@ -695,22 +806,22 @@ class _CommentItemState extends State<CommentItem> {
                 children: [
                   isExpanded
                       ? FormattedText(
+                        widget.comment['content'] ?? "",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          height: 1.6,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      )
+                      : ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 110),
+                        child: FormattedText(
                           widget.comment['content'] ?? "",
                           style: theme.textTheme.bodySmall?.copyWith(
                             height: 1.6,
                             color: theme.colorScheme.onSurface,
                           ),
-                        )
-                      : ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 110),
-                          child: FormattedText(
-                            widget.comment['content'] ?? "",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              height: 1.6,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
                         ),
+                      ),
                   if (isOverflowing && !isExpanded)
                     GestureDetector(
                       onTap: () {
@@ -809,7 +920,10 @@ class _PostMenuDialogBox extends StatelessWidget {
               },
             ),
             SettingsRowItem(
-              icon: isSaved ? HugeIcons.strokeRoundedBookmark02 : HugeIcons.strokeRoundedBookmark02,
+              icon:
+                  isSaved
+                      ? HugeIcons.strokeRoundedBookmark02
+                      : HugeIcons.strokeRoundedBookmark02,
               iconBackgroundColor: Colors.transparent,
               title: isSaved ? 'Remove from saved books' : 'Save this book',
               iconColor: AppTheme.textColor2,
@@ -828,10 +942,11 @@ class _PostMenuDialogBox extends StatelessWidget {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => ReportBottomSheet(
-                    itemType: 'BOOK',
-                    itemId: book['id'],
-                  ),
+                  builder:
+                      (context) => ReportBottomSheet(
+                        itemType: 'BOOK',
+                        itemId: book['id'],
+                      ),
                 );
               },
             ),

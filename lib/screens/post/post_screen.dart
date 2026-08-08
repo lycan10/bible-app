@@ -15,6 +15,7 @@ import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
 import 'package:quest/components/avatar.dart';
 import 'package:quest/components/formatted_text.dart';
+import 'package:quest/components/reaction_picker.dart';
 
 class PostScreen extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -27,6 +28,7 @@ class PostScreen extends StatefulWidget {
 class _PostScreenState extends State<PostScreen> {
   final TextEditingController _commentController = TextEditingController();
   List<dynamic> _comments = [];
+  List<dynamic> _reactions = [];
   bool _isLoadingComments = true;
   bool _isCommenting = false;
 
@@ -36,6 +38,7 @@ class _PostScreenState extends State<PostScreen> {
   @override
   void initState() {
     super.initState();
+    _reactions = List<dynamic>.from(widget.post['reactions'] ?? []);
     _loadComments();
   }
 
@@ -88,10 +91,26 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
-  Future<void> _toggleReaction() async {
+  Future<void> _toggleReaction(String emoji) async {
     final auth = context.read<AuthProvider>();
     final communityProvider = context.read<CommunityProvider>();
-    await communityProvider.reactToPost(auth.token!, widget.post['id'], '👍');
+    final res = await communityProvider.reactToPost(auth.token!, widget.post['id'], emoji);
+    if (mounted) {
+      setState(() {
+        if (res) {
+          // re-read from the provider's updated list
+          final updatedPost = communityProvider.currentPosts
+              .firstWhere((p) => p['id'] == widget.post['id'], orElse: () => widget.post);
+          _reactions = List<dynamic>.from(updatedPost['reactions'] ?? _reactions);
+        }
+      });
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    final auth = context.read<AuthProvider>();
+    final communityProvider = context.read<CommunityProvider>();
+    await communityProvider.likePost(auth.token!, widget.post['id']);
   }
 
   void _onReply(String commentId, String username) {
@@ -130,11 +149,25 @@ class _PostScreenState extends State<PostScreen> {
     final user = post['user'] ?? {};
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
-    final displayName =
-        userName.isEmpty ? (user['username'] ?? '') : userName;
+    final displayName = userName.isEmpty ? (user['username'] ?? '') : userName;
     final text = post['text'] ?? '';
     final imageUrl = post['image'];
-    final reactionsCount = post['reactions']?.length ?? 0;
+    final reactionsList = _reactions;
+    final Map<String, int> reactionCountsMap = {};
+    for (var r in reactionsList) {
+      final emoji = r['emoji'] as String?;
+      if (emoji != null) {
+        reactionCountsMap[emoji] = (reactionCountsMap[emoji] ?? 0) + 1;
+      }
+    }
+    final reactionsCount = reactionsList.length;
+    final likesCount = post['likesCount'] ?? 0;
+    final auth = context.read<AuthProvider>();
+    final hasLiked =
+        (post['postLikes'] as List?)?.any(
+          (l) => l['userId'] == auth.user?['id'],
+        ) ??
+        false;
     final commentsCount = post['_count']?['comments'] ?? 0;
 
     return Scaffold(
@@ -207,7 +240,12 @@ class _PostScreenState extends State<PostScreen> {
                                         ),
                                         const SizedBox(height: 3),
                                         Text(
-                                          user['username'] != null && user['username'].toString().isNotEmpty ? "@${user['username']}" : "",
+                                          user['username'] != null &&
+                                                  user['username']
+                                                      .toString()
+                                                      .isNotEmpty
+                                              ? "@${user['username']}"
+                                              : "",
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 fontSize: 12,
@@ -245,7 +283,7 @@ class _PostScreenState extends State<PostScreen> {
                               fit: BoxFit.cover,
                               errorBuilder:
                                   (context, error, stackTrace) => Image.asset(
-                                    'assets/images/boy.png',
+                                    'assets/images/test.png',
                                     fit: BoxFit.cover,
                                   ),
                             ),
@@ -259,12 +297,23 @@ class _PostScreenState extends State<PostScreen> {
                         children: [
                           Row(
                             children: [
-                              Stat(
-                                icon: HugeIcons.strokeRoundedThumbsUp,
-                                text: "$reactionsCount",
-                                iconSize: 18,
-                                textColor: AppTheme.textColor2,
-                                textSize: 12,
+                              GestureDetector(
+                                onTap: _toggleLike,
+                                child: Stat(
+                                  icon:
+                                      hasLiked
+                                          ? HugeIcons.strokeRoundedThumbsUp
+                                          : HugeIcons.strokeRoundedThumbsUp,
+                                  text: "$likesCount",
+                                  iconSize: 18,
+                                  textColor:
+                                      hasLiked
+                                          ? AppTheme.primaryBlue
+                                          : AppTheme.textColor2,
+                                  iconColor:
+                                      hasLiked ? AppTheme.primaryBlue : null,
+                                  textSize: 12,
+                                ),
                               ),
                               const SizedBox(width: 10),
                               Stat(
@@ -292,51 +341,79 @@ class _PostScreenState extends State<PostScreen> {
                                 },
                               ),
                               SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: _toggleReaction,
-                                child: Container(
-                                  height: 40,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 13,
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Color(
-                                      0xff673aff,
-                                    ).withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "React ($reactionsCount)",
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
+                              Builder(
+                                builder: (context) {
+                                  return GestureDetector(
+                                    onTapDown: (details) {
+                                      showReactionPicker(
+                                        context,
+                                        details.globalPosition,
+                                        (emoji) {
+                                          _toggleReaction(emoji);
+                                        },
+                                      );
+                                    },
+                                    child: Container(
+                                      height: 40,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 13,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Color(
+                                          0xff673aff,
+                                        ).withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            reactionsCount > 0
+                                                ? "React ($reactionsCount)"
+                                                : "React",
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xff673aff),
+                                                  fontSize: 12,
+                                                ),
+                                          ),
+                                          if (reactionCountsMap.isNotEmpty) ...[
+                                            const SizedBox(width: 5),
+                                            const VerticalDivider(
+                                              width: 4,
+                                              thickness: 1.5,
                                               color: Color(0xff673aff),
-                                              fontSize: 12,
                                             ),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      const VerticalDivider(
-                                        width: 4,
-                                        thickness: 1.5,
-                                        color: Color(0xff673aff),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        "👍",
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xff673aff),
-                                              fontSize: 13,
+                                            const SizedBox(width: 5),
+                                            ...reactionCountsMap.entries.map(
+                                              (e) => Padding(
+                                                padding: const EdgeInsets.only(
+                                                  right: 4.0,
+                                                ),
+                                                child: Text(
+                                                  "${e.key} ${e.value}",
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Color(
+                                                          0xff673aff,
+                                                        ),
+                                                        fontSize: 13,
+                                                      ),
+                                                ),
+                                              ),
                                             ),
+                                          ],
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ),
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -467,7 +544,7 @@ class _PostScreenState extends State<PostScreen> {
                           color:
                               _isCommenting
                                   ? Colors.grey
-                                  : AppTheme.completedColor,
+                                  : AppTheme.primaryBlue,
                           shape: BoxShape.circle,
                         ),
                         child:
@@ -556,8 +633,7 @@ class _CommentItemState extends State<CommentItem> {
     final user = widget.comment['user'] ?? {};
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
-    final displayName =
-        userName.isEmpty ? (user['username'] ?? '') : userName;
+    final displayName = userName.isEmpty ? (user['username'] ?? '') : userName;
     final replies = widget.comment['replies'] as List<dynamic>? ?? [];
 
     final reactions = widget.comment['reactions'] as List<dynamic>? ?? [];
@@ -618,7 +694,12 @@ class _CommentItemState extends State<CommentItem> {
                                     ),
                                   ),
                                   Text(
-                                    user['username'] != null && user['username'].toString().isNotEmpty ? "@${user['username']}" : "",
+                                    user['username'] != null &&
+                                            user['username']
+                                                .toString()
+                                                .isNotEmpty
+                                        ? "@${user['username']}"
+                                        : "",
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontSize: 10,
                                       color: AppTheme.textColor2,
@@ -646,74 +727,78 @@ class _CommentItemState extends State<CommentItem> {
                         ),
                         const SizedBox(width: 8),
                         GestureDetector(
-                            onTap: () {
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (context) {
-                                  return SafeArea(
-                                    child: Wrap(
-                                      children: [
-                                        if (canDelete)
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
-                                            ),
-                                            title: const Text(
-                                              'Delete Comment',
-                                              style: TextStyle(color: Colors.red),
-                                            ),
-                                            onTap: () async {
-                                              Navigator.pop(context);
-                                              final auth =
-                                                  context.read<AuthProvider>();
-                                              if (auth.token != null) {
-                                                await context
-                                                    .read<CommunityProvider>()
-                                                    .deleteCommunityComment(
-                                                      auth.token!,
-                                                      widget.comment['id'],
-                                                    );
-                                              }
-                                            },
-                                          ),
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                return SafeArea(
+                                  child: Wrap(
+                                    children: [
+                                      if (canDelete)
                                         ListTile(
                                           leading: const Icon(
-                                            Icons.report_problem,
-                                            color: AppTheme.textColor2,
+                                            Icons.delete,
+                                            color: Colors.red,
                                           ),
-                                          title: Text(
-                                            'Report Comment',
-                                            style: TextStyle(color: theme.colorScheme.onSurface),
+                                          title: const Text(
+                                            'Delete Comment',
+                                            style: TextStyle(color: Colors.red),
                                           ),
-                                          onTap: () {
+                                          onTap: () async {
                                             Navigator.pop(context);
-                                            showModalBottomSheet(
-                                              context: context,
-                                              isScrollControlled: true,
-                                              backgroundColor: Colors.transparent,
-                                              builder: (context) => ReportBottomSheet(
-                                                itemType: 'COMMENT',
-                                                itemId: widget.comment['id'],
-                                                reportedUserId: widget.comment['userId'],
-                                              ),
-                                            );
+                                            final auth =
+                                                context.read<AuthProvider>();
+                                            if (auth.token != null) {
+                                              await context
+                                                  .read<CommunityProvider>()
+                                                  .deleteCommunityComment(
+                                                    auth.token!,
+                                                    widget.comment['id'],
+                                                  );
+                                            }
                                           },
                                         ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                            child: Icon(
-                              Icons.more_vert,
-                              size: 16,
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.report_problem,
+                                          color: AppTheme.textColor2,
+                                        ),
+                                        title: Text(
+                                          'Report Comment',
+                                          style: TextStyle(
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            builder:
+                                                (context) => ReportBottomSheet(
+                                                  itemType: 'COMMENT',
+                                                  itemId: widget.comment['id'],
+                                                  reportedUserId:
+                                                      widget.comment['userId'],
+                                                ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: Icon(
+                            Icons.more_vert,
+                            size: 16,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ],
@@ -895,11 +980,12 @@ class _PostMenuDialogBox extends StatelessWidget {
                     context: context,
                     isScrollControlled: true,
                     backgroundColor: Colors.transparent,
-                    builder: (context) => ReportBottomSheet(
-                      itemType: 'POST',
-                      itemId: post['id'],
-                      reportedUserId: post['userId'],
-                    ),
+                    builder:
+                        (context) => ReportBottomSheet(
+                          itemType: 'POST',
+                          itemId: post['id'],
+                          reportedUserId: post['userId'],
+                        ),
                   );
                 },
                 child: SettingsRowItem(

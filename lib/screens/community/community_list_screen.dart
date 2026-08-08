@@ -374,7 +374,7 @@ class _CommunityListScreenState extends State<CommunityListScreen>
                       return CommunityImageTile(
                         name: com['name'] ?? 'Community',
                         message: com['description'] ?? '',
-                        imagePath: com['image'] ?? "assets/images/boy.png",
+                        imagePath: com['image'] ?? "assets/images/test.jpg",
                         trailing: const Icon(
                           Icons.chevron_right,
                           color: Colors.grey,

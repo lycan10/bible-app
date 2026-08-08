@@ -342,7 +342,7 @@ class SponsoredPostScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppTheme.completedColor,
+                                color: AppTheme.primaryBlue,
                                 shape: BoxShape.circle,
                               ),
                               child: const HugeIcon(
@@ -588,10 +588,9 @@ class _PostMenuDialogBox extends StatelessWidget {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => ReportBottomSheet(
-                    itemType: 'POST',
-                    itemId: '0',
-                  ),
+                  builder:
+                      (context) =>
+                          ReportBottomSheet(itemType: 'POST', itemId: '0'),
                 );
               },
             ),

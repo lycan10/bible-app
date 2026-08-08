@@ -74,12 +74,12 @@ class JournalCard extends StatelessWidget {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
-                        color: AppTheme.completedColor.withValues(alpha: 0.08),
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.08),
                       ),
                       child: HugeIcon(
                         icon: HugeIcons.strokeRoundedLeaf02,
                         size: 20,
-                        color: AppTheme.completedColor,
+                        color: AppTheme.primaryBlue,
                         strokeWidth: 1,
                       ),
                     ),

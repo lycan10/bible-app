@@ -11,8 +11,8 @@ class UnauthorizedException implements Exception {
 
 class ApiService {
   static String get baseUrl {
-    return 'http://192.168.1.124:8787/api/v1';
-    //return 'https://quest.vidarave.com/api/v1';
+    //return 'http://192.168.1.124:8787/api/v1';
+    return 'https://quest.vidarave.com/api/v1';
   }
 
   static String get appUrl {
@@ -454,22 +454,28 @@ class ApiService {
   }
 
   // GET /friends
-  static Future<List<dynamic>> fetchFriends(String token, {int page = 1, int limit = 20, String? query}) async {
+  static Future<List<dynamic>> fetchFriends(
+    String token, {
+    int page = 1,
+    int limit = 20,
+    String? query,
+  }) async {
     String url = '$baseUrl/friends?page=$page&limit=$limit';
     if (query != null && query.isNotEmpty) {
       url += '&q=${Uri.encodeComponent(query)}';
     }
     final response = _handleResponse(
-      await http.get(
-        Uri.parse(url),
-        headers: _headers(token),
-      ),
+      await http.get(Uri.parse(url), headers: _headers(token)),
     );
     return jsonDecode(response.body) as List<dynamic>;
   }
 
   // GET /friends/suggestions
-  static Future<List<dynamic>> fetchFriendSuggestions(String token, {int page = 1, int limit = 10}) async {
+  static Future<List<dynamic>> fetchFriendSuggestions(
+    String token, {
+    int page = 1,
+    int limit = 10,
+  }) async {
     final response = _handleResponse(
       await http.get(
         Uri.parse('$baseUrl/friends/suggestions?page=$page&limit=$limit'),
@@ -542,6 +548,20 @@ class ApiService {
         Uri.parse('$baseUrl/books/$bookId/react'),
         headers: _headers(token),
         body: jsonEncode({'emoji': emoji}),
+      ),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  // POST /books/:id/like
+  static Future<Map<String, dynamic>> likeBook(
+    String token,
+    String bookId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/books/$bookId/like'),
+        headers: _headers(token),
       ),
     );
     return jsonDecode(response.body) as Map<String, dynamic>;
@@ -626,7 +646,11 @@ class ApiService {
   }
 
   // GET /friends/requests/pending
-  static Future<List<dynamic>> fetchPendingFriendRequests(String token, {int page = 1, int limit = 20}) async {
+  static Future<List<dynamic>> fetchPendingFriendRequests(
+    String token, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     final response = _handleResponse(
       await http.get(
         Uri.parse('$baseUrl/friends/requests/pending?page=$page&limit=$limit'),
@@ -637,7 +661,11 @@ class ApiService {
   }
 
   // GET /friends/requests/sent
-  static Future<List<dynamic>> fetchSentFriendRequests(String token, {int page = 1, int limit = 20}) async {
+  static Future<List<dynamic>> fetchSentFriendRequests(
+    String token, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     final response = _handleResponse(
       await http.get(
         Uri.parse('$baseUrl/friends/requests/sent?page=$page&limit=$limit'),
@@ -1054,6 +1082,20 @@ class ApiService {
         Uri.parse('$baseUrl/communities/posts/$postId/react'),
         headers: _headers(token),
         body: jsonEncode({'emoji': emoji}),
+      ),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // POST /posts/:id/like
+  static Future<Map<String, dynamic>> likeCommunityPost(
+    String token,
+    String postId,
+  ) async {
+    final response = _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/communities/posts/$postId/like'),
+        headers: _headers(token),
       ),
     );
     return jsonDecode(response.body);

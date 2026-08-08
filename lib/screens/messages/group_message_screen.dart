@@ -151,7 +151,7 @@ class GroupMessageScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.completedColor,
+                      color: AppTheme.primaryBlue,
                       shape: BoxShape.circle,
                     ),
                     child: const HugeIcon(
@@ -250,7 +250,11 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget _buildMessageText(
-      BuildContext context, String text, bool isMe, ThemeData theme) {
+    BuildContext context,
+    String text,
+    bool isMe,
+    ThemeData theme,
+  ) {
     final urlRegExp = RegExp(r'(https?:\/\/[^\s]+)');
     final matches = urlRegExp.allMatches(text);
 
@@ -269,39 +273,46 @@ class ChatBubble extends StatelessWidget {
 
     for (final match in matches) {
       if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastMatchEnd, match.start),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: isMe ? Colors.white : Colors.black,
-            fontSize: 14,
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isMe ? Colors.white : Colors.black,
+              fontSize: 14,
+            ),
           ),
-        ));
+        );
       }
 
       final url = match.group(0)!;
-      spans.add(TextSpan(
-        text: url,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: isMe ? Colors.white : theme.colorScheme.primary,
-          fontSize: 14,
-          decoration: TextDecoration.underline,
+      spans.add(
+        TextSpan(
+          text: url,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: isMe ? Colors.white : theme.colorScheme.primary,
+            fontSize: 14,
+            decoration: TextDecoration.underline,
+          ),
+          recognizer:
+              TapGestureRecognizer()
+                ..onTap = () {
+                  DeepLinkService.handleUrl(url);
+                },
         ),
-        recognizer: TapGestureRecognizer()
-          ..onTap = () {
-            DeepLinkService.handleUrl(url);
-          },
-      ));
+      );
       lastMatchEnd = match.end;
     }
 
     if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastMatchEnd),
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: isMe ? Colors.white : Colors.black,
-          fontSize: 14,
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: isMe ? Colors.white : Colors.black,
+            fontSize: 14,
+          ),
         ),
-      ));
+      );
     }
 
     return RichText(text: TextSpan(children: spans));

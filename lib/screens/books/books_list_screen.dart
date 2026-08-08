@@ -315,7 +315,7 @@ class _BooksListScreenState extends State<BooksListScreen> with RouteAware {
                   return BooksReelCard(
                     title: book['title'] ?? '',
                     author: book['author'] ?? '',
-                    likes: book['_count']?['reactions']?.toString() ?? '0',
+                    likes: book['likesCount']?.toString() ?? '0',
                     backgroundImage:
                         book['imageUrl'] ?? 'assets/images/book.jpeg',
                     status: book['status'],

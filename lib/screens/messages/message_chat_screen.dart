@@ -381,11 +381,10 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
             Expanded(
               child: Builder(
                 builder: (context) {
-                  final firstUnreadIdx =
-                      chatProvider.firstUnreadMessageIndex(
-                        widget.chatId,
-                        currentUserId ?? '',
-                      );
+                  final firstUnreadIdx = chatProvider.firstUnreadMessageIndex(
+                    widget.chatId,
+                    currentUserId ?? '',
+                  );
 
                   return ListView.builder(
                     controller: _scrollController,
@@ -406,8 +405,7 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                         children: [
                           // Show the "unread messages" divider above the first
                           // unread message whenever there are unread messages.
-                          if (isFirstUnread)
-                            const _UnreadMessagesDivider(),
+                          if (isFirstUnread) const _UnreadMessagesDivider(),
                           ChatBubble(
                             // Assign the scroll key to the first unread bubble.
                             key: isFirstUnread ? _firstUnreadKey : null,
@@ -522,7 +520,7 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: const BoxDecoration(
-                            color: AppTheme.completedColor,
+                            color: AppTheme.primaryBlue,
                             shape: BoxShape.circle,
                           ),
                           child:
@@ -915,4 +913,3 @@ class _UnreadMessagesDivider extends StatelessWidget {
     );
   }
 }
-

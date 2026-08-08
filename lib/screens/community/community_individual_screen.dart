@@ -48,7 +48,8 @@ class CommunityIndividualScreen extends StatefulWidget {
       _CommunityIndividualScreenState();
 }
 
-class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> with RouteAware {
+class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
+    with RouteAware {
   String selectedTab = "Space";
   final TextEditingController _forumController = TextEditingController();
   final ScrollController _forumScrollController = ScrollController();
@@ -74,9 +75,9 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.token != null) {
       context.read<CommunityProvider>().loadCommunityDetails(
-            authProvider.token!,
-            widget.communityId,
-          );
+        authProvider.token!,
+        widget.communityId,
+      );
       context.read<CommunityProvider>().loadCommunityVerse(
         authProvider.token!,
         widget.communityId,
@@ -109,7 +110,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
-      
+
       final authProvider = context.read<AuthProvider>();
       if (authProvider.token != null) {
         _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
@@ -721,16 +722,26 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                   children: [
                     Expanded(
                       child: ActionPillButton(
-                        backgroundColor: hasPendingRequest ? AppTheme.surfaceColor : Colors.black,
-                        textColor: hasPendingRequest ? AppTheme.textColor2 : Colors.white,
-                        label: hasPendingRequest ? "Requested" : "Join Community",
-                        onTap: hasPendingRequest ? null : () async {
-                          final auth = context.read<AuthProvider>();
-                          await communityProvider.joinCommunity(
-                            auth.token!,
-                            community['id'],
-                          );
-                        },
+                        backgroundColor:
+                            hasPendingRequest
+                                ? AppTheme.surfaceColor
+                                : Colors.black,
+                        textColor:
+                            hasPendingRequest
+                                ? AppTheme.textColor2
+                                : Colors.white,
+                        label:
+                            hasPendingRequest ? "Requested" : "Join Community",
+                        onTap:
+                            hasPendingRequest
+                                ? null
+                                : () async {
+                                  final auth = context.read<AuthProvider>();
+                                  await communityProvider.joinCommunity(
+                                    auth.token!,
+                                    community['id'],
+                                  );
+                                },
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -896,7 +907,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                 : theme.colorScheme.onSurface.withValues(
                                   alpha: 0.7,
                                 ),
-                        onTap: () => setState(() => selectedTab = "Admin message"),
+                        onTap:
+                            () => setState(() => selectedTab = "Admin message"),
                       ),
                       const SizedBox(width: 10),
                       ActionPillButton2(
@@ -1417,7 +1429,9 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                       isScrollControlled: true,
                                       backgroundColor: Colors.transparent,
                                       builder:
-                                          (context) => MembersBottomSheet(community: community),
+                                          (context) => MembersBottomSheet(
+                                            community: community,
+                                          ),
                                     );
                                   },
                                   child: Text.rich(
@@ -1459,7 +1473,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
-                                              color: theme.colorScheme.onSurface,
+                                              color:
+                                                  theme.colorScheme.onSurface,
                                             ),
                                           ),
                                           TextSpan(
@@ -1693,7 +1708,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                 children: [
                                   ListView.builder(
                                     shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
                                     itemCount: communityPosts.length,
                                     itemBuilder: (context, index) {
                                       final post = communityPosts[index];
@@ -1715,14 +1731,17 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                         groupName: community['name'] ?? '',
                                         postImage:
                                             post["image"] ??
-                                            "assets/images/boy.png",
-                                        likes: "${post['reactions']?.length ?? 0}",
+                                            "assets/images/test.jpg",
+                                        likes:
+                                            "${post['postLikes']?.length ?? 0}",
                                         comments:
                                             "${post['_count']?['comments'] ?? 0}",
                                         time:
                                             post['createdAt'] != null
                                                 ? timeago.format(
-                                                  DateTime.parse(post['createdAt']),
+                                                  DateTime.parse(
+                                                    post['createdAt'],
+                                                  ),
                                                 )
                                                 : "Recently",
                                         onTap:
@@ -1743,14 +1762,20 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                                         child: Wrap(
                                                           children: [
                                                             ListTile(
-                                                              leading: const Icon(
-                                                                Icons.delete,
-                                                                color: Colors.red,
-                                                              ),
+                                                              leading:
+                                                                  const Icon(
+                                                                    Icons
+                                                                        .delete,
+                                                                    color:
+                                                                        Colors
+                                                                            .red,
+                                                                  ),
                                                               title: const Text(
                                                                 'Delete Post',
                                                                 style: TextStyle(
-                                                                  color: Colors.red,
+                                                                  color:
+                                                                      Colors
+                                                                          .red,
                                                                 ),
                                                               ),
                                                               onTap: () async {
@@ -1786,9 +1811,13 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                   ),
                                   if (communityProvider.isLoadingMorePosts)
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 20),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 20,
+                                      ),
                                       child: Center(
-                                        child: CircularProgressIndicator(color: Colors.black),
+                                        child: CircularProgressIndicator(
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -1918,13 +1947,16 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                               showModalBottomSheet(
                                                 context: context,
                                                 isScrollControlled: true,
-                                                backgroundColor: Colors.transparent,
+                                                backgroundColor:
+                                                    Colors.transparent,
                                                 builder:
-                                                    (context) => EditEventScreen(
-                                                      communityId:
-                                                          widget.communityId,
-                                                      event: event,
-                                                    ),
+                                                    (context) =>
+                                                        EditEventScreen(
+                                                          communityId:
+                                                              widget
+                                                                  .communityId,
+                                                          event: event,
+                                                        ),
                                               );
                                             },
                                             onDelete: () async {
@@ -1947,10 +1979,11 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                                       event['id'],
                                                     );
                                               } else {
-                                                await communityProvider.attendEvent(
-                                                  auth.token!,
-                                                  event['id'],
-                                                );
+                                                await communityProvider
+                                                    .attendEvent(
+                                                      auth.token!,
+                                                      event['id'],
+                                                    );
                                               }
                                               if (context.mounted) {
                                                 Navigator.pop(context);
@@ -1967,7 +2000,9 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                 const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 20),
                                   child: Center(
-                                    child: CircularProgressIndicator(color: Colors.black),
+                                    child: CircularProgressIndicator(
+                                      color: Colors.black,
+                                    ),
                                   ),
                                 ),
                             ],
@@ -1985,15 +2020,6 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
           ),
         ),
       ),
-    );
-  }
-
-  Widget _defaultAvatar() {
-    return Image.asset(
-      'assets/images/boy.png',
-      width: 36,
-      height: 36,
-      fit: BoxFit.cover,
     );
   }
 }

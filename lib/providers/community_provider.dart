@@ -394,7 +394,36 @@ class CommunityProvider with ChangeNotifier {
       }
       return true;
     } catch (e) {
-      debugPrint("Error reacting to post: \$e");
+      debugPrint("Error reacting to post: $e");
+      return false;
+    }
+  }
+
+  Future<bool> likePost(String token, String postId) async {
+    try {
+      final res = await ApiService.likeCommunityPost(token, postId);
+      final postIndex = _currentPosts.indexWhere((p) => p['id'] == postId);
+      if (postIndex != -1) {
+        final post = _currentPosts[postIndex];
+        
+        if (res['liked'] == true) {
+          post['likesCount'] = (post['likesCount'] ?? 0) + 1;
+          post['postLikes'] = [...(post['postLikes'] ?? []), res['like']];
+        } else {
+          post['likesCount'] = (post['likesCount'] ?? 1) - 1;
+          List likes = List.from(post['postLikes'] ?? []);
+          if (likes.isNotEmpty) {
+            likes.removeLast(); // naive removal, or filter by userId
+          }
+          post['postLikes'] = likes;
+        }
+        
+        _currentPosts[postIndex] = post;
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      debugPrint("Error liking post: $e");
       return false;
     }
   }
