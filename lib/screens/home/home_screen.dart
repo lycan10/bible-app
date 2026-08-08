@@ -170,7 +170,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     final latestJournal =
         feedProvider.feed?['latestJournal'] as Map<String, dynamic>?;
-
+    final user = authProvider.user;
+    final String avatarUrl = user?['avatarUrl'] ?? 'assets/images/boy.png';
+    final String formattedAvatarUrl = ApiService.getFullImageUrl(avatarUrl);
     String parsedFeelings = '';
     List<String> parsedFeelingsList = [];
     if (latestJournal != null && latestJournal['feelings'] != null) {
@@ -335,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         GestureDetector(
                           onTap: () => _navigateToProfile(context),
                           child: Container(
-                            padding: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
@@ -349,14 +351,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(
-                                25,
+                                15,
                               ), // half of image width/height
-                              child: Image.asset(
-                                'assets/images/boy.png',
-                                width: 25,
-                                height: 25,
-                                fit: BoxFit.cover,
-                              ),
+                              child:
+                                  formattedAvatarUrl.startsWith('http')
+                                      ? Image.network(
+                                        formattedAvatarUrl,
+                                        width: 35,
+                                        height: 35,
+                                        fit: BoxFit.cover,
+                                      )
+                                      : Image.asset(
+                                        formattedAvatarUrl,
+                                        width: 35,
+                                        height: 35,
+                                        fit: BoxFit.cover,
+                                      ),
                             ),
                           ),
                         ),
@@ -713,8 +723,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               title: plan['title'] ?? "",
                               author: plan['authorName'] ?? "",
                               imagePath:
-                                  plan['image'] ??
-                                  "assets/images/boy.png",
+                                  plan['image'] ?? "assets/images/boy.png",
                               likes: "${plan['durationDays']} Days Plan",
                               planText: plan['tag'] ?? "",
                               day: currentDay ?? 1,
@@ -753,8 +762,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           description: devotions[1]['description'] ?? "",
                           author: devotions[1]['authorName'] ?? "",
                           imagePath:
-                              devotions[1]['image'] ??
-                              "assets/images/boy.png",
+                              devotions[1]['image'] ?? "assets/images/boy.png",
                           likes: "${devotions[1]['durationDays']} Days",
                           tag: devotions[1]['tag'] ?? "",
                           onTap: () {

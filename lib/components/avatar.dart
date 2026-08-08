@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quest/services/api_service.dart';
 
 class CustomAvatar extends StatelessWidget {
   final String? imageUrl;
@@ -17,14 +18,15 @@ class CustomAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasValidImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
-    final isNetworkImage = hasValidImage && imageUrl!.startsWith('http');
+    final formattedAvatarUrl = hasValidImage ? ApiService.getFullImageUrl(imageUrl!) : '';
+    final isNetworkImage = hasValidImage && formattedAvatarUrl.startsWith('http');
 
     ImageProvider? imageProvider;
     if (hasValidImage) {
       if (isNetworkImage) {
-        imageProvider = NetworkImage(imageUrl!);
+        imageProvider = NetworkImage(formattedAvatarUrl);
       } else {
-        imageProvider = AssetImage(imageUrl!);
+        imageProvider = AssetImage(formattedAvatarUrl);
       }
     }
 

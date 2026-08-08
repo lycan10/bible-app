@@ -177,18 +177,18 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Container(
-                          padding: EdgeInsets.only(left: 5, right: 0),
-                          width: 210,
+                          padding: const EdgeInsets.only(left: 15, right: 5),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
                             color: Colors.white.withValues(alpha: 0.2),
                           ),
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Share and earn a badge',
+                                'Share and earn points',
                                 style: Theme.of(
                                   context,
                                 ).textTheme.bodySmall?.copyWith(
@@ -595,7 +595,7 @@ class FullScreenVerseScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Share and earn a badge',
+                              'Share and earn points',
                               style: Theme.of(
                                 context,
                               ).textTheme.bodySmall?.copyWith(

@@ -1153,17 +1153,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                           description:
                                               friend['location'] ?? 'Unknown',
                                           onTap: () {
-                                            showModalBottomSheet(
-                                              context: context,
-                                              isScrollControlled: true,
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              builder: (context) {
-                                                return UserProfileCard(
-                                                  user: friend,
-                                                );
-                                              },
-                                            );
+                                            UserProfileCard.show(context, friend);
                                           },
                                         ),
                                       );
@@ -1331,11 +1321,16 @@ class BooksReelCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              (backgroundImage.isNotEmpty)
-                  ? (backgroundImage.startsWith('http')
-                      ? Image.network(backgroundImage, fit: BoxFit.cover)
-                      : Image.asset(backgroundImage, fit: BoxFit.cover))
-                  : Container(color: Colors.grey.shade800),
+              Builder(
+                builder: (context) {
+                  final formattedImage = backgroundImage.isNotEmpty ? ApiService.getFullImageUrl(backgroundImage) : '';
+                  return formattedImage.isNotEmpty
+                      ? (formattedImage.startsWith('http')
+                          ? Image.network(formattedImage, fit: BoxFit.cover)
+                          : Image.asset(formattedImage, fit: BoxFit.cover))
+                      : Container(color: Colors.grey.shade800);
+                },
+              ),
 
               /// 🔹 Play Button (Centered)
               Container(color: Colors.black.withValues(alpha: 0.55)),
@@ -1485,7 +1480,16 @@ class CommunityReelCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               /// 🔹 Background Image
-              Image.asset(backgroundImage, fit: BoxFit.cover),
+              Builder(
+                builder: (context) {
+                  final formattedImage = backgroundImage.isNotEmpty ? ApiService.getFullImageUrl(backgroundImage) : '';
+                  return formattedImage.isNotEmpty
+                      ? (formattedImage.startsWith('http')
+                          ? Image.network(formattedImage, fit: BoxFit.cover)
+                          : Image.asset(formattedImage, fit: BoxFit.cover))
+                      : Container(color: Colors.grey.shade800);
+                },
+              ),
 
               /// 🔹 Dark overlay for readability
               Container(color: Colors.black.withValues(alpha: 0.5)),

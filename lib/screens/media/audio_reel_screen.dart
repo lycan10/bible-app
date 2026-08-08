@@ -1,4 +1,6 @@
+import 'package:quest/services/api_service.dart';
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
@@ -459,6 +461,7 @@ class _AudioPageState extends State<_AudioPage> {
     final title = data['title'] ?? 'Audio';
     final author = data['author'] ?? 'Author';
     final bgImage = data['imageUrl'] ?? 'assets/images/boy.png';
+    final formattedBgImage = ApiService.getFullImageUrl(bgImage);
 
     final int baseLikes = data['likes'] ?? 0;
     final bool baseHasLiked = data['hasLiked'] == true;
@@ -468,16 +471,16 @@ class _AudioPageState extends State<_AudioPage> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (bgImage.startsWith('http'))
+        if (formattedBgImage.startsWith('http'))
           Image.network(
-            bgImage,
+            formattedBgImage,
             fit: BoxFit.cover,
             errorBuilder:
                 (_, __, ___) =>
                     Image.asset('assets/images/boy.png', fit: BoxFit.cover),
           )
         else
-          Image.asset(bgImage, fit: BoxFit.cover),
+          Image.asset(formattedBgImage, fit: BoxFit.cover),
 
         Container(color: Colors.black.withValues(alpha: 0.4)),
 
@@ -554,9 +557,9 @@ class _AudioPageState extends State<_AudioPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(25),
                     child:
-                        bgImage.startsWith('http')
+                        formattedBgImage.startsWith('http')
                             ? Image.network(
-                              bgImage,
+                              formattedBgImage,
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
@@ -569,7 +572,7 @@ class _AudioPageState extends State<_AudioPage> {
                                   ),
                             )
                             : Image.asset(
-                              bgImage,
+                              formattedBgImage,
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,

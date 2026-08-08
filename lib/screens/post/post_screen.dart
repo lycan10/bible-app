@@ -13,6 +13,7 @@ import '../../components/report_bottom_sheet.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
+import 'package:quest/components/avatar.dart';
 import 'package:quest/components/formatted_text.dart';
 
 class PostScreen extends StatefulWidget {
@@ -177,34 +178,15 @@ class _PostScreenState extends State<PostScreen> {
                           Expanded(
                             child: GestureDetector(
                               onTap: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder:
-                                      (context) => UserProfileCard(user: user),
-                                );
+                                UserProfileCard.show(context, user);
                               },
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  CircleAvatar(
+                                  CustomAvatar(
+                                    imageUrl: user['avatarUrl'],
                                     radius: 21,
-                                    backgroundImage:
-                                        user['avatarUrl'] != null
-                                            ? NetworkImage(user['avatarUrl'])
-                                            : null,
-                                    backgroundColor: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.1),
-                                    child:
-                                        user['avatarUrl'] == null
-                                            ? HugeIcon(
-                                              icon: HugeIcons.strokeRoundedUser,
-                                              size: 20,
-                                              color:
-                                                  theme.colorScheme.onSurface,
-                                            )
-                                            : null,
+                                    hasBorder: false,
                                   ),
                                   SizedBox(width: 10),
                                   Expanded(
@@ -613,23 +595,14 @@ class _CommentItemState extends State<CommentItem> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => UserProfileCard(user: user),
-                          );
+                          UserProfileCard.show(context, user);
                         },
                         child: Row(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: Image.asset(
-                                'assets/images/boy.png',
-                                width: 30,
-                                height: 30,
-                                fit: BoxFit.cover,
-                              ),
+                            CustomAvatar(
+                              imageUrl: user['avatarUrl'],
+                              radius: 15,
+                              hasBorder: false,
                             ),
                             const SizedBox(width: 10),
                             Expanded(

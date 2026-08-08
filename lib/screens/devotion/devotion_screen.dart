@@ -144,7 +144,16 @@ class _DevotionScreenState extends State<DevotionScreen> {
                 ),
               ),
             );
-            Navigator.pop(context); // Go back after marking complete
+            
+            final durationDays = (_planData?['days'] != null && (_planData!['days'] as List).isNotEmpty)
+                ? (_planData!['days'] as List).length
+                : (_planData?['durationDays'] ?? 1);
+            
+            if (_viewedDayNum < durationDays) {
+              _showContinueDialog();
+            } else {
+              Navigator.pop(context); // Go back after marking complete
+            }
           }
         } catch (e) {
           if (mounted) {
@@ -155,6 +164,40 @@ class _DevotionScreenState extends State<DevotionScreen> {
         }
       }
     }
+  }
+
+  void _showContinueDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          title: const Text("Devotion Completed"),
+          content: const Text("Would you like to continue to the next day's devotion or exit?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Exit devotion screen
+              },
+              child: Text("Exit", style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                setState(() {
+                  _maxAllowedDay = _viewedDayNum + 1;
+                  _viewedDayNum = _viewedDayNum + 1;
+                  _isLoading = true;
+                });
+                _fetchData();
+              },
+              child: const Text("Next Day", style: TextStyle(color: AppTheme.purpleColor, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _reactToDay() async {

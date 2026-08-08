@@ -9,9 +9,28 @@ class FeedProvider with ChangeNotifier {
   List<dynamic> _friends = [];
   List<dynamic> _friendSuggestions = [];
   List<dynamic> _pendingRequests = [];
+  List<dynamic> _sentRequests = [];
   List<dynamic> _badgesProgress = [];
   List<dynamic> _feelingsMetadata = [];
   Map<String, dynamic>? _currentFeeling;
+
+  int _friendsPage = 1;
+  bool _hasMoreFriends = true;
+  bool _isLoadingMoreFriends = false;
+
+  int _suggestionsPage = 1;
+  bool _hasMoreSuggestions = true;
+  bool _isLoadingMoreSuggestions = false;
+
+  int _pendingPage = 1;
+  bool _hasMorePending = true;
+  bool _isLoadingMorePending = false;
+
+  int _sentPage = 1;
+  bool _hasMoreSent = true;
+  bool _isLoadingMoreSent = false;
+
+  String _friendSearchQuery = "";
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -23,9 +42,20 @@ class FeedProvider with ChangeNotifier {
   List<dynamic> get friends => _friends;
   List<dynamic> get friendSuggestions => _friendSuggestions;
   List<dynamic> get pendingRequests => _pendingRequests;
+  List<dynamic> get sentRequests => _sentRequests;
   List<dynamic> get badgesProgress => _badgesProgress;
   List<dynamic> get feelingsMetadata => _feelingsMetadata;
   Map<String, dynamic>? get currentFeeling => _currentFeeling;
+
+  bool get isLoadingMoreFriends => _isLoadingMoreFriends;
+  bool get hasMoreFriends => _hasMoreFriends;
+  bool get isLoadingMoreSuggestions => _isLoadingMoreSuggestions;
+  bool get hasMoreSuggestions => _hasMoreSuggestions;
+  bool get isLoadingMorePending => _isLoadingMorePending;
+  bool get hasMorePending => _hasMorePending;
+  bool get isLoadingMoreSent => _isLoadingMoreSent;
+  bool get hasMoreSent => _hasMoreSent;
+  String get friendSearchQuery => _friendSearchQuery;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -181,19 +211,37 @@ class FeedProvider with ChangeNotifier {
   Future<void> loadProfileDetails(String token) async {
     _isLoading = true;
     _errorMessage = null;
+
+    _friendsPage = 1;
+    _hasMoreFriends = true;
+    _suggestionsPage = 1;
+    _hasMoreSuggestions = true;
+    _pendingPage = 1;
+    _hasMorePending = true;
+    _sentPage = 1;
+    _hasMoreSent = true;
+    _friendSearchQuery = "";
+
     notifyListeners();
 
     try {
       final results = await Future.wait([
-        ApiService.fetchFriends(token),
+        ApiService.fetchFriends(token, page: 1, limit: 20),
         ApiService.fetchBadgesProgress(token),
-        ApiService.fetchFriendSuggestions(token),
-        ApiService.fetchPendingFriendRequests(token),
+        ApiService.fetchFriendSuggestions(token, page: 1, limit: 10),
+        ApiService.fetchPendingFriendRequests(token, page: 1, limit: 20),
+        ApiService.fetchSentFriendRequests(token, page: 1, limit: 20),
       ]);
       _friends = results[0];
       _badgesProgress = results[1];
       _friendSuggestions = results[2];
       _pendingRequests = results[3];
+      _sentRequests = results[4];
+
+      _hasMoreFriends = _friends.length == 20;
+      _hasMoreSuggestions = _friendSuggestions.length == 10;
+      _hasMorePending = _pendingRequests.length == 20;
+      _hasMoreSent = _sentRequests.length == 20;
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -206,12 +254,32 @@ class FeedProvider with ChangeNotifier {
   Future<bool> sendFriendRequest(String token, String targetUserId) async {
     try {
       await ApiService.sendFriendRequest(token, targetUserId);
-      // Remove from suggestions
-      _friendSuggestions.removeWhere((user) => user['id'] == targetUserId);
+      // Move from suggestions to sent requests (optimistic update if we have the user info)
+      final user = _friendSuggestions.firstWhere(
+        (u) => u['id'] == targetUserId,
+        orElse: () => null,
+      );
+      if (user != null) {
+        _sentRequests.add(user);
+        _friendSuggestions.removeWhere((u) => u['id'] == targetUserId);
+      }
       notifyListeners();
       return true;
     } catch (e) {
       debugPrint("Error sending friend request: $e");
+      return false;
+    }
+  }
+
+  // Cancel friend request
+  Future<bool> cancelFriendRequest(String token, String targetUserId) async {
+    try {
+      await ApiService.cancelFriendRequest(token, targetUserId);
+      _sentRequests.removeWhere((user) => user['id'] == targetUserId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint("Error cancelling friend request: $e");
       return false;
     }
   }
@@ -246,6 +314,116 @@ class FeedProvider with ChangeNotifier {
     } catch (e) {
       debugPrint("Error rejecting friend request: $e");
       return false;
+    }
+  }
+
+  // Search Friends
+  Future<void> searchFriends(String token, String query) async {
+    _friendSearchQuery = query;
+    _friendsPage = 1;
+    _isLoadingMoreFriends = true;
+    notifyListeners();
+    try {
+      final results = await ApiService.fetchFriends(token, page: 1, limit: 20, query: query);
+      _friends = results;
+      _hasMoreFriends = results.length == 20;
+    } catch (e) {
+      debugPrint("Error searching friends: $e");
+    } finally {
+      _isLoadingMoreFriends = false;
+      notifyListeners();
+    }
+  }
+
+  // Load More Friends
+  Future<void> loadMoreFriends(String token) async {
+    if (_isLoadingMoreFriends || !_hasMoreFriends) return;
+    _isLoadingMoreFriends = true;
+    notifyListeners();
+    try {
+      _friendsPage++;
+      final results = await ApiService.fetchFriends(token, page: _friendsPage, limit: 20, query: _friendSearchQuery);
+      if (results.isEmpty) {
+        _hasMoreFriends = false;
+      } else {
+        _friends.addAll(results);
+        _hasMoreFriends = results.length == 20;
+      }
+    } catch (e) {
+      debugPrint("Error loading more friends: $e");
+      _hasMoreFriends = false;
+    } finally {
+      _isLoadingMoreFriends = false;
+      notifyListeners();
+    }
+  }
+
+  // Load More Suggestions
+  Future<void> loadMoreSuggestions(String token) async {
+    if (_isLoadingMoreSuggestions || !_hasMoreSuggestions) return;
+    _isLoadingMoreSuggestions = true;
+    notifyListeners();
+    try {
+      _suggestionsPage++;
+      final results = await ApiService.fetchFriendSuggestions(token, page: _suggestionsPage, limit: 10);
+      if (results.isEmpty) {
+        _hasMoreSuggestions = false;
+      } else {
+        _friendSuggestions.addAll(results);
+        _hasMoreSuggestions = results.length == 10;
+      }
+    } catch (e) {
+      debugPrint("Error loading more suggestions: $e");
+      _hasMoreSuggestions = false;
+    } finally {
+      _isLoadingMoreSuggestions = false;
+      notifyListeners();
+    }
+  }
+
+  // Load More Pending
+  Future<void> loadMorePendingRequests(String token) async {
+    if (_isLoadingMorePending || !_hasMorePending) return;
+    _isLoadingMorePending = true;
+    notifyListeners();
+    try {
+      _pendingPage++;
+      final results = await ApiService.fetchPendingFriendRequests(token, page: _pendingPage, limit: 20);
+      if (results.isEmpty) {
+        _hasMorePending = false;
+      } else {
+        _pendingRequests.addAll(results);
+        _hasMorePending = results.length == 20;
+      }
+    } catch (e) {
+      debugPrint("Error loading more pending: $e");
+      _hasMorePending = false;
+    } finally {
+      _isLoadingMorePending = false;
+      notifyListeners();
+    }
+  }
+
+  // Load More Sent
+  Future<void> loadMoreSentRequests(String token) async {
+    if (_isLoadingMoreSent || !_hasMoreSent) return;
+    _isLoadingMoreSent = true;
+    notifyListeners();
+    try {
+      _sentPage++;
+      final results = await ApiService.fetchSentFriendRequests(token, page: _sentPage, limit: 20);
+      if (results.isEmpty) {
+        _hasMoreSent = false;
+      } else {
+        _sentRequests.addAll(results);
+        _hasMoreSent = results.length == 20;
+      }
+    } catch (e) {
+      debugPrint("Error loading more sent requests: $e");
+      _hasMoreSent = false;
+    } finally {
+      _isLoadingMoreSent = false;
+      notifyListeners();
     }
   }
 }

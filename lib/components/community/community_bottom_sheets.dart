@@ -242,12 +242,7 @@ class MembersBottomSheet extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 20),
                   child: GestureDetector(
                     onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => UserProfileCard(user: user),
-                      );
+                      UserProfileCard.show(context, user);
                     },
                     child: Row(
                       children: [

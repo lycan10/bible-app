@@ -24,14 +24,7 @@ class FriendCardSnippet extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) {
-                return UserProfileCard();
-              },
-            );
+            UserProfileCard.show(context);
           },
           child: Container(
             padding: const EdgeInsets.all(13),

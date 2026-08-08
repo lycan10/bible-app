@@ -327,14 +327,7 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return const UserProfileCard();
-                            },
-                          );
+                          UserProfileCard.show(context, widget.friend);
                         },
                         child: CustomAvatar(
                           radius: 20,
@@ -591,14 +584,7 @@ class _ChatMenuDialogBox extends StatelessWidget {
             SettingsRowItem(
               onTap: () {
                 Navigator.pop(context); // close menu
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    return UserProfileCard(user: friendData);
-                  },
-                );
+                UserProfileCard.show(context, friendData);
               },
               icon: HugeIcons.strokeRoundedUser,
               iconBackgroundColor: Colors.transparent,

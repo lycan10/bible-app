@@ -29,6 +29,7 @@ import 'package:quest/components/community/community_bottom_sheets.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
 import 'package:quest/components/user_details/user_profile_card.dart';
+import 'package:quest/components/avatar.dart';
 import 'package:quest/screens/community/create_event_screen.dart';
 import 'package:quest/screens/community/edit_event_screen.dart';
 import 'package:quest/components/formatted_text.dart';
@@ -1020,34 +1021,12 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                                   .read<CommunityProvider>()
                                                   .currentCommunity ??
                                               {};
-                                          showModalBottomSheet(
-                                            context: context,
-                                            isScrollControlled: true,
-                                            backgroundColor: Colors.transparent,
-                                            builder:
-                                                (context) =>
-                                                    UserProfileCard(user: user),
-                                          );
+                                          UserProfileCard.show(context, user);
                                         },
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          child:
-                                              avatarUrl != null &&
-                                                      avatarUrl.isNotEmpty
-                                                  ? Image.network(
-                                                    ApiService.getFullImageUrl(
-                                                      avatarUrl,
-                                                    ),
-                                                    width: 36,
-                                                    height: 36,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder:
-                                                        (_, __, ___) =>
-                                                            _defaultAvatar(),
-                                                  )
-                                                  : _defaultAvatar(),
+                                        child: CustomAvatar(
+                                          imageUrl: avatarUrl,
+                                          radius: 18,
+                                          hasBorder: false,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
@@ -1431,35 +1410,22 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text:
-                                            '${formatCount(community['_count']?['members'] ?? 0)} ',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: theme.colorScheme.onSurface,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: 'Members',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade500,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (isMember) ...[
-                                  const SizedBox(width: 15),
-                                  Text.rich(
+                                GestureDetector(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder:
+                                          (context) => MembersBottomSheet(community: community),
+                                    );
+                                  },
+                                  child: Text.rich(
                                     TextSpan(
                                       children: [
                                         TextSpan(
-                                          text: '${allEvents.length} ',
+                                          text:
+                                              '${formatCount(community['_count']?['members'] ?? 0)} ',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
@@ -1467,13 +1433,44 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                           ),
                                         ),
                                         TextSpan(
-                                          text: 'Events',
+                                          text: 'Members',
                                           style: TextStyle(
                                             color: Colors.grey.shade500,
                                             fontSize: 14,
                                           ),
                                         ),
                                       ],
+                                    ),
+                                  ),
+                                ),
+                                if (isMember) ...[
+                                  const SizedBox(width: 15),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedTab = "Event";
+                                      });
+                                    },
+                                    child: Text.rich(
+                                      TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: '${allEvents.length} ',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: theme.colorScheme.onSurface,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: 'Events',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade500,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1734,14 +1731,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen> w
                                               post,
                                             ),
                                         onAvatarTap: () {
-                                          showModalBottomSheet(
-                                            context: context,
-                                            isScrollControlled: true,
-                                            backgroundColor: Colors.transparent,
-                                            builder:
-                                                (context) =>
-                                                    UserProfileCard(user: user),
-                                          );
+                                          UserProfileCard.show(context, user);
                                         },
                                         onMoreTap:
                                             canDeletePost

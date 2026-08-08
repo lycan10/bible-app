@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
+import 'package:quest/services/api_service.dart';
 
 class OngoingDevotionCard extends StatelessWidget {
   final String title;
@@ -116,13 +117,16 @@ class OngoingDevotionCard extends StatelessWidget {
                 const SizedBox(width: 20),
 
                 /// IMAGE
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(25),
-                  child:
-                      imagePath.startsWith('http')
-                          ? Image.network(
-                            imagePath,
-                            width: 95,
+                Builder(
+                  builder: (context) {
+                    final formattedImagePath = ApiService.getFullImageUrl(imagePath);
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(25),
+                      child:
+                          formattedImagePath.startsWith('http')
+                              ? Image.network(
+                                formattedImagePath,
+                                width: 95,
                             height: 95,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
@@ -138,7 +142,7 @@ class OngoingDevotionCard extends StatelessWidget {
                             },
                           )
                           : Image.asset(
-                            imagePath,
+                            formattedImagePath,
                             width: 95,
                             height: 95,
                             fit: BoxFit.cover,
@@ -154,6 +158,8 @@ class OngoingDevotionCard extends StatelessWidget {
                               );
                             },
                           ),
+                    );
+                  },
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import 'package:quest/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -39,11 +40,16 @@ class AudioReelCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               /// 🔹 Background Image
-              (backgroundImage.isNotEmpty)
-                  ? (backgroundImage.startsWith('http')
-                      ? Image.network(backgroundImage, fit: BoxFit.cover)
-                      : Image.asset(backgroundImage, fit: BoxFit.cover))
-                  : Container(color: Colors.grey.shade800),
+              Builder(
+                builder: (context) {
+                  final formattedImage = backgroundImage.isNotEmpty ? ApiService.getFullImageUrl(backgroundImage) : '';
+                  return formattedImage.isNotEmpty
+                      ? (formattedImage.startsWith('http')
+                          ? Image.network(formattedImage, fit: BoxFit.cover)
+                          : Image.asset(formattedImage, fit: BoxFit.cover))
+                      : Container(color: Colors.grey.shade800);
+                },
+              ),
 
               /// 🔹 Dark overlay for readability
               Container(color: Colors.black.withValues(alpha: 0.55)),

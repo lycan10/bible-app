@@ -9,10 +9,32 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/screens/messages/message_chat_screen.dart';
+import 'package:quest/screens/profileScreen/profile_screen.dart';
 
 class UserProfileCard extends StatefulWidget {
   final Map<String, dynamic>? user;
   const UserProfileCard({super.key, this.user});
+
+  static void show(BuildContext context, [Map<String, dynamic>? user]) {
+    final auth = context.read<AuthProvider>();
+    final authId = auth.user?['id']?.toString() ?? auth.user?['_id']?.toString();
+    final targetId = user?['id']?.toString() ?? user?['_id']?.toString();
+
+    // No user passed, or the target is the current user → go to own profile
+    if (user == null || (authId != null && authId == targetId)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => UserProfileCard(user: user),
+      );
+    }
+  }
 
   @override
   State<UserProfileCard> createState() => _UserProfileCardState();
@@ -32,8 +54,12 @@ class _UserProfileCardState extends State<UserProfileCard> {
     final auth = context.read<AuthProvider>();
     if (auth.token != null && widget.user != null) {
       try {
-        final userId = widget.user!['id'];
-        final res = await ApiService.fetchProfileStats(auth.token!, userId);
+        final userId = widget.user!['id'] ?? widget.user!['_id'];
+        if (userId == null) {
+          if (mounted) setState(() => _isLoading = false);
+          return;
+        }
+        final res = await ApiService.fetchProfileStats(auth.token!, userId.toString());
         if (mounted) {
           setState(() {
             _stats = res;
@@ -73,12 +99,24 @@ class _UserProfileCardState extends State<UserProfileCard> {
     final username = user['username'] ?? '';
     final avatarUrl = user['avatarUrl'];
 
-    final friendsCount = _stats?['friends'] ?? 0;
-    final badgesCount = _stats?['badges'] ?? 0;
-    final communitiesCount = _stats?['communities'] ?? 0;
+    final friendsCount = _stats != null
+        ? ((_stats!['friendsCount'] as num?)?.toInt() ?? 0)
+        : (user['friends'] as List<dynamic>?)?.length ?? 0;
+    final badgesCount = _stats != null
+        ? ((_stats!['badgesCount'] as num?)?.toInt() ?? 0)
+        : 0;
+    final communitiesCount = _stats != null
+        ? ((_stats!['communitiesCount'] as num?)?.toInt() ?? 0)
+        : (user['communities'] as List<dynamic>?)?.length ?? 0;
     final mutualCommunities =
         _stats?['mutualCommunities'] as List<dynamic>? ?? [];
     final connectionStatus = _stats?['connectionStatus'];
+
+    final auth = context.read<AuthProvider>();
+    final authId = auth.user?['id']?.toString() ?? auth.user?['_id']?.toString();
+    final targetId = user['id']?.toString() ?? user['_id']?.toString();
+    // If we have no target user ID, treat as own profile so actions are hidden
+    final isMe = targetId == null || (authId != null && authId == targetId);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -164,7 +202,6 @@ class _UserProfileCardState extends State<UserProfileCard> {
                       Row(
                         children: [
                           _StatText(value: "$friendsCount", label: "Friends"),
-                          _StatText(value: "$badgesCount", label: "Badges"),
                           _StatText(
                             value: "$communitiesCount",
                             label: "Communities",
@@ -177,10 +214,11 @@ class _UserProfileCardState extends State<UserProfileCard> {
               ],
             ),
             const SizedBox(height: 25),
-            Row(
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
               children: [
-                if (connectionStatus == 'ACCEPTED' ||
-                    connectionStatus == null) ...[
+                if (!isMe && connectionStatus == 'ACCEPTED')
                   ActionPillButton(
                     icon: HugeIcons.strokeRoundedMessage01,
                     label: "Chat",
@@ -201,13 +239,12 @@ class _UserProfileCardState extends State<UserProfileCard> {
                       }
                     },
                   ),
-                  const SizedBox(width: 10),
-                  ActionPillButton(
-                    icon: HugeIcons.strokeRoundedShare08,
-                    label: "Share",
-                    onTap: () => _shareProfile(context),
-                  ),
-                  const SizedBox(width: 10),
+                ActionPillButton(
+                  icon: HugeIcons.strokeRoundedShare08,
+                  label: "Share",
+                  onTap: () => _shareProfile(context),
+                ),
+                if (!isMe)
                   ActionPillButton(
                     icon: HugeIcons.strokeRoundedAlertDiamond,
                     label: "Report",
@@ -225,7 +262,7 @@ class _UserProfileCardState extends State<UserProfileCard> {
                       );
                     },
                   ),
-                ] else ...[
+                if (!isMe && connectionStatus != 'ACCEPTED' && connectionStatus != null)
                   ActionPillButton(
                     icon:
                         connectionStatus == 'PENDING'
@@ -270,69 +307,70 @@ class _UserProfileCardState extends State<UserProfileCard> {
                       }
                     },
                   ),
-                ],
-                const SizedBox(width: 10),
-                ActionPillButton(
-                  backgroundColor: AppTheme.redColor,
-                  icon: HugeIcons.strokeRoundedSecurity,
-                  iconColor: Colors.white,
-                  textColor: Colors.white,
-                  label: "Block",
-                  onTap: () {
-                    if (widget.user != null) {
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: "Block",
-                        barrierColor: Colors.black.withValues(alpha: 0.4),
-                        transitionDuration: const Duration(milliseconds: 250),
-                        pageBuilder:
-                            (_, __, ___) => Center(
-                              child: _BlockUserDialog(user: widget.user!),
-                            ),
-                      );
-                    }
-                  },
-                ),
+                if (!isMe)
+                  ActionPillButton(
+                    backgroundColor: AppTheme.redColor,
+                    icon: HugeIcons.strokeRoundedSecurity,
+                    iconColor: Colors.white,
+                    textColor: Colors.white,
+                    label: "Block",
+                    onTap: () {
+                      if (widget.user != null) {
+                        showGeneralDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          barrierLabel: "Block",
+                          barrierColor: Colors.black.withValues(alpha: 0.4),
+                          transitionDuration: const Duration(milliseconds: 250),
+                          pageBuilder:
+                              (_, __, ___) => Center(
+                                child: _BlockUserDialog(user: widget.user!),
+                              ),
+                        );
+                      }
+                    },
+                  ),
               ],
             ),
             const SizedBox(height: 25),
-            if (mutualCommunities.isNotEmpty) ...[
-              Text(
-                "You and $firstName are in ${mutualCommunities.length} communities together",
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 13,
-                  color: AppTheme.textColor2,
+            if (!isMe) ...[
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (mutualCommunities.isNotEmpty) ...[
+                Text(
+                  "You and $firstName are in ${mutualCommunities.length} ${mutualCommunities.length == 1 ? 'community' : 'communities'} together",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: AppTheme.textColor2,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 150, // Constrain height if needed or use ListView
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: mutualCommunities.length,
-                  itemBuilder: (context, index) {
-                    final comm = mutualCommunities[index];
-                    return CommunityCardSnippet(
-                      communityName: comm['name'] ?? 'Unknown',
-                      description: comm['description'] ?? '',
-                      communityImage:
-                          comm['avatarUrl'] ??
-                          "assets/images/boy.png", // can handle network image later
-                    );
-                  },
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 150,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: mutualCommunities.length,
+                    itemBuilder: (context, index) {
+                      final comm = mutualCommunities[index];
+                      return CommunityCardSnippet(
+                        communityName: comm['name'] ?? 'Unknown',
+                        description: comm['description'] ?? '',
+                        communityImage:
+                            comm['avatarUrl'] ??
+                            "assets/images/boy.png",
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ] else if (_isLoading) ...[
-              const Center(child: CircularProgressIndicator()),
-            ] else ...[
-              Text(
-                "No mutual communities",
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 13,
-                  color: AppTheme.textColor2,
+              ] else ...[
+                Text(
+                  "No mutual communities",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: AppTheme.textColor2,
+                  ),
                 ),
-              ),
+              ],
             ],
           ],
         ),

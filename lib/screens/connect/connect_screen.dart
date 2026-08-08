@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:quest/components/connect/connect_card.dart';
 import 'package:quest/components/menu/discover_more.dart';
@@ -13,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import '../../components/global_more_menu.dart';
+import 'package:quest/screens/connect/sent_requests_screen.dart';
 
 class ConnectScreen extends StatefulWidget {
   const ConnectScreen({super.key});
@@ -22,6 +24,10 @@ class ConnectScreen extends StatefulWidget {
 }
 
 class _ConnectScreenState extends State<ConnectScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +36,40 @@ class _ConnectScreenState extends State<ConnectScreen> {
       final feedProvider = Provider.of<FeedProvider>(context, listen: false);
       if (authProvider.token != null) {
         feedProvider.loadProfileDetails(authProvider.token!);
+      }
+    });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+      if (authProvider.token != null) {
+        feedProvider.loadMoreFriends(authProvider.token!);
+        if (feedProvider.friendSearchQuery.isEmpty) {
+          feedProvider.loadMorePendingRequests(authProvider.token!);
+          feedProvider.loadMoreSuggestions(authProvider.token!);
+        }
+      }
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+      if (authProvider.token != null) {
+        feedProvider.searchFriends(authProvider.token!, query);
       }
     });
   }
@@ -52,23 +92,42 @@ class _ConnectScreenState extends State<ConnectScreen> {
     final suggestions = feedProvider.friendSuggestions;
     final friends = feedProvider.friends;
     final pendingRequests = feedProvider.pendingRequests;
+    final sentRequests = feedProvider.sentRequests;
+
+    final bool isSearching = feedProvider.friendSearchQuery.isNotEmpty;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(top: 15, left: 16, right: 16),
-
           child: ListView(
+            controller: _scrollController,
             children: [
               Column(
                 children: [
-                  TitleOne(
-                    leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-                    title: 'Connect',
-                    trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-                    leadingIconTap: () => Navigator.pop(context),
-                    //trailingIconTap: () => _openMenu(context),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TitleOne(
+                          leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                          title: 'Connect',
+                          leadingIconTap: () => Navigator.pop(context),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SentRequestsScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('Sent Requests'),
+                      ),
+                    ],
                   ),
 
                   SizedBox(height: 30),
@@ -128,8 +187,10 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               /// Search Input
                               Expanded(
                                 child: TextField(
+                                  controller: _searchController,
+                                  onChanged: _onSearchChanged,
                                   decoration: const InputDecoration(
-                                    hintText: "Search messages",
+                                    hintText: "Search Friends",
                                     border: InputBorder.none,
                                     isDense: true,
                                     hintStyle: TextStyle(fontSize: 12),
@@ -149,7 +210,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       feedProvider.isLoading)
                     const Center(child: CircularProgressIndicator())
                   else ...[
-                    if (pendingRequests.isNotEmpty) ...[
+                    if (pendingRequests.isNotEmpty && !isSearching) ...[
                       SectionHeader(title: "Friend Requests", seeAllText: ""),
                       ...pendingRequests.map((user) {
                         return ConnectCard(
@@ -226,6 +287,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       }),
                       SizedBox(height: 20),
                     ],
+
                     if (friends.isNotEmpty) ...[
                       SectionHeader(title: "Your Friends", seeAllText: ""),
                       ...friends.map((user) {
@@ -264,9 +326,14 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           ),
                         );
                       }),
+                      if (feedProvider.isLoadingMoreFriends)
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
                       SizedBox(height: 20),
                     ],
-                    if (suggestions.isNotEmpty) ...[
+                    if (suggestions.isNotEmpty && !isSearching) ...[
                       SectionHeader(
                         title: "Suggested Connections",
                         seeAllText: "",

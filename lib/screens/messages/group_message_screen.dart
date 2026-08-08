@@ -54,14 +54,7 @@ class GroupMessageScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return UserProfileCard();
-                            },
-                          );
+                          UserProfileCard.show(context);
                         },
                         child: const CustomAvatar(radius: 20, imageUrl: null),
                       ),
@@ -194,14 +187,7 @@ class _ChatMenuDialogBox extends StatelessWidget {
 
             SettingsRowItem(
               onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    return UserProfileCard();
-                  },
-                );
+                UserProfileCard.show(context);
               },
               icon: HugeIcons.strokeRoundedUser,
               iconBackgroundColor: Colors.transparent,
