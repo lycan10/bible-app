@@ -39,7 +39,10 @@ class VideoCard extends StatelessWidget {
               /// 🔹 Background Image
               Builder(
                 builder: (context) {
-                  final formattedImage = backgroundImage.isNotEmpty ? ApiService.getFullImageUrl(backgroundImage) : '';
+                  final formattedImage =
+                      backgroundImage.isNotEmpty
+                          ? ApiService.getFullImageUrl(backgroundImage)
+                          : '';
                   return formattedImage.isNotEmpty
                       ? (formattedImage.startsWith('http')
                           ? Image.network(formattedImage, fit: BoxFit.cover)
@@ -74,69 +77,82 @@ class VideoCard extends StatelessWidget {
               /// 🔹 Bottom Content
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    SizedBox(height: 15),
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 0),
-
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'From: ',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontSize: 12,
-                              color: Colors.white70,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                          TextSpan(
-                            text: author,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Row(
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.white30,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.favorite_border,
-                            size: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
+                        SizedBox(height: 15),
                         Text(
-                          likes,
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            fontSize: 12,
+                            fontSize: 13,
                             color: Colors.white,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
+                        const SizedBox(height: 0),
+
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              TextSpan(
+                                text: author,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: 12,
+                                  color: Colors.white70,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white30,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.favorite_border,
+                                size: 14,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              likes,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 11),
                       ],
                     ),
                   ],

@@ -113,7 +113,7 @@ class _DonateScreenState extends State<DonateScreen> {
             Image.asset('assets/images/logo.png', width: 80, height: 80),
             const SizedBox(height: 24),
             Text(
-              "Support Shalom App",
+              "Support Sozo App",
               textAlign: TextAlign.center,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
@@ -153,7 +153,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                backgroundColor: AppTheme.primaryBlue,
+                backgroundColor: Theme.of(context).colorScheme.tertiary,
                 foregroundColor: Colors.white,
               ),
               child: const Text(

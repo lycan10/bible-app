@@ -54,7 +54,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -97,7 +97,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.purpleColor,
+                    color: Theme.of(context).colorScheme.tertiary,
                     borderRadius: BorderRadius.circular(50),
                   ),
                   child: Image.asset(

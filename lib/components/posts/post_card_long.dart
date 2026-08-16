@@ -63,21 +63,34 @@ class PostCardLong extends StatelessWidget {
                       onTap: onAvatarTap,
                       child: Row(
                         children: [
-                          CustomAvatar(imageUrl: userImage, radius: 15.0, hasBorder: true),
+                          CustomAvatar(
+                            imageUrl: userImage,
+                            radius: 14.0,
+                            hasBorder: true,
+                          ),
                           const SizedBox(width: 10),
                           Text(
                             userName,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 14,
                               color: AppTheme.textColor2,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                           if (verificationBadge == 'BLUE') ...[
                             const SizedBox(width: 4),
-                            const Icon(Icons.verified, color: Colors.blue, size: 14),
+                            const Icon(
+                              Icons.verified,
+                              color: Colors.blue,
+                              size: 14,
+                            ),
                           ] else if (verificationBadge == 'GOLD') ...[
                             const SizedBox(width: 4),
-                            const Icon(Icons.verified, color: Colors.amber, size: 14),
+                            const Icon(
+                              Icons.verified,
+                              color: Colors.amber,
+                              size: 14,
+                            ),
                           ],
                         ],
                       ),
@@ -119,7 +132,7 @@ class PostCardLong extends StatelessWidget {
                               postText,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 14,
-                                color: theme.colorScheme.onSurface,
+                                color: theme.colorScheme.tertiary,
                                 height: 1.4,
                               ),
                             ),

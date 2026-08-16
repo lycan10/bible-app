@@ -357,14 +357,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                   formattedAvatarUrl.startsWith('http')
                                       ? Image.network(
                                         formattedAvatarUrl,
-                                        width: 35,
-                                        height: 35,
+                                        width: 30,
+                                        height: 30,
                                         fit: BoxFit.cover,
                                       )
                                       : Image.asset(
                                         formattedAvatarUrl,
-                                        width: 35,
-                                        height: 35,
+                                        width: 30,
+                                        height: 30,
                                         fit: BoxFit.cover,
                                       ),
                             ),
@@ -552,7 +552,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                           style: Theme.of(
                                             context,
                                           ).textTheme.bodyMedium?.copyWith(
-                                            fontSize: 12,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
                                             color: theme.colorScheme.onTertiary,
                                           ),
                                         ),
@@ -682,7 +683,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
-                                        ?.copyWith(fontSize: 12),
+                                        ?.copyWith(fontSize: 13),
                                   ),
                                 ],
                               ],
@@ -871,7 +872,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   child: Column(
                     children: [
                       SectionHeader(
-                        title: "Audio Messages",
+                        title: "Audio Sermon",
                         seeAllText: "See more",
                         onSeeAllTap: () {
                           Navigator.push(
@@ -1046,9 +1047,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       ),
                       GridView.count(
                         crossAxisCount: 2,
-                        crossAxisSpacing: 15,
+                        crossAxisSpacing: 14,
                         mainAxisSpacing: 15,
-                        childAspectRatio: 0.85,
+                        childAspectRatio: 0.815,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
@@ -1090,11 +1091,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 Container(
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      colors: [Color(0xff4a3aff), Color(0xff00aaff)],
-                    ),
+                    color: Colors.white70,
                     borderRadius: BorderRadius.circular(30),
                   ),
 
@@ -1102,29 +1099,29 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     children: [
                       Image.asset(
                         'assets/images/logo.png',
-                        width: 50,
-                        height: 50,
+                        width: 45,
+                        height: 45,
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 13),
                       Text(
-                        "Support Shalom App",
+                        "Support Sozo App",
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "To keep enjoying Shalom as a free app, you can donate any amount to help mentain Shalom and keep enjoying free ",
+                        "Help keep Sozo free. Every donation helps us maintain and improve the app for everyone.",
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: Colors.black.withValues(alpha: 0.5),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 27),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -1137,7 +1134,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         child: Container(
                           padding: EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: Theme.of(context).colorScheme.secondary,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(
@@ -1147,15 +1144,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               HugeIcon(
                                 icon: HugeIcons.strokeRoundedFavourite,
                                 size: 16,
-                                color: Theme.of(context).iconTheme.color,
+                                color:
+                                    Theme.of(context).colorScheme.tertiaryFixed,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               Text(
                                 "Donate",
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: theme.textTheme.bodySmall?.color,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.tertiaryFixed,
                                 ),
                               ),
                             ],
@@ -1213,15 +1214,15 @@ class GamesReelCard extends StatelessWidget {
           padding: const EdgeInsets.only(
             left: 20,
             right: 20,
-            top: 0,
+            top: 20,
             bottom: 0,
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.asset(gameIcon, width: 50, height: 50),
-              const SizedBox(height: 15),
+              const SizedBox(height: 13),
               Text(
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -1337,7 +1338,7 @@ class CommunityReelCard extends StatelessWidget {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: 'From: ',
+                            text: 'Author: ',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 12,
                               color: Colors.white70,
@@ -1378,7 +1379,7 @@ class CommunityReelCard extends StatelessWidget {
                         const SizedBox(width: 5),
                         Flexible(
                           child: Text(
-                            ' - Today 2:49pm',
+                            ' - Recently active',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(fontSize: 12, color: Colors.white),
                             overflow: TextOverflow.ellipsis,

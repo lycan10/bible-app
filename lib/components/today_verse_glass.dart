@@ -67,7 +67,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    const double cardHeight = 270;
+    const double cardHeight = 250;
 
     final String? text = widget.verseData?['text'];
     final String? reference = widget.verseData?['reference'];
@@ -111,6 +111,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
           child: Stack(
+            fit: StackFit.expand,
             children: [
               /// 🔹 Background Image
               Positioned.fill(
@@ -136,10 +137,10 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topCenter,
+                      begin: Alignment.topLeft,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.15),
+                        Colors.black.withValues(alpha: 0.35),
                         Colors.black.withValues(alpha: 0.75),
                       ],
                     ),
@@ -148,23 +149,6 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
               ),
 
               /// 🔹 Liquid Gradient Blur
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Stack(
-                    children: [
-                      _buildBlurLayer(
-                        top: 0,
-                        bottom: 0,
-                        sigmaX: 15,
-                        sigmaY: 15,
-                        tintAlpha: 0.07,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
               /// 🔹 Content
               Padding(
@@ -180,7 +164,12 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                           padding: const EdgeInsets.only(left: 15, right: 5),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: const Color.fromARGB(
+                              255,
+                              230,
+                              230,
+                              230,
+                            ).withValues(alpha: 0.3),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,

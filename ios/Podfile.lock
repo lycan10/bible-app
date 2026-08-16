@@ -1,29 +1,52 @@
 PODS:
-  - Flutter (1.0.0)
-  - path_provider_foundation (0.0.1):
+  - audio_waveforms (0.0.1):
     - Flutter
-    - FlutterMacOS
+  - Flutter (1.0.0)
+  - libwebp (1.6.0):
+    - libwebp/demux (= 1.6.0)
+    - libwebp/mux (= 1.6.0)
+    - libwebp/sharpyuv (= 1.6.0)
+    - libwebp/webp (= 1.6.0)
+  - libwebp/demux (1.6.0):
+    - libwebp/webp
+  - libwebp/mux (1.6.0):
+    - libwebp/demux
+  - libwebp/sharpyuv (1.6.0)
+  - libwebp/webp (1.6.0):
+    - libwebp/sharpyuv
   - simple_animation_progress_bar (0.0.1):
     - Flutter
+  - video_thumbnail (0.0.1):
+    - Flutter
+    - libwebp
 
 DEPENDENCIES:
+  - audio_waveforms (from `.symlinks/plugins/audio_waveforms/ios`)
   - Flutter (from `Flutter`)
-  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - simple_animation_progress_bar (from `.symlinks/plugins/simple_animation_progress_bar/ios`)
+  - video_thumbnail (from `.symlinks/plugins/video_thumbnail/ios`)
+
+SPEC REPOS:
+  trunk:
+    - libwebp
 
 EXTERNAL SOURCES:
+  audio_waveforms:
+    :path: ".symlinks/plugins/audio_waveforms/ios"
   Flutter:
     :path: Flutter
-  path_provider_foundation:
-    :path: ".symlinks/plugins/path_provider_foundation/darwin"
   simple_animation_progress_bar:
     :path: ".symlinks/plugins/simple_animation_progress_bar/ios"
+  video_thumbnail:
+    :path: ".symlinks/plugins/video_thumbnail/ios"
 
 SPEC CHECKSUMS:
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  audio_waveforms: cd736909ebc6b6a164eb74701d8c705ce3241e1c
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  libwebp: af5937a13536ef73f3784d69cc342b98961acf33
   simple_animation_progress_bar: 3f818acdbd78de0a8c48ddd7fdc88e1998a7b33f
+  video_thumbnail: c4e2a3c539e247d4de13cd545344fd2d26ffafd1
 
-PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
 
 COCOAPODS: 1.16.2

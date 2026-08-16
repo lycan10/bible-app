@@ -632,18 +632,34 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                                     onTap: () async {
                                       final verseRef = b['verseRef'];
                                       if (verseRef != null) {
-                                        final parsed = BibleService.parseReference(verseRef);
+                                        final parsed =
+                                            BibleService.parseReference(
+                                              verseRef,
+                                            );
                                         if (parsed != null) {
-                                          final bp = Provider.of<BibleProvider>(context, listen: false);
-                                          await bp.loadVerses(parsed['book']!, parsed['chapter']!);
+                                          final bp = Provider.of<BibleProvider>(
+                                            context,
+                                            listen: false,
+                                          );
+                                          await bp.loadVerses(
+                                            parsed['book']!,
+                                            parsed['chapter']!,
+                                          );
                                           if (context.mounted) {
-                                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BibleHomeScreen()));
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        const BibleHomeScreen(),
+                                              ),
+                                            );
                                           }
                                         }
                                       }
                                     },
                                     child: SavedCard(
-                                      title: b['verseRef'] ?? 'Unknown Reference',
+                                      title:
+                                          b['verseRef'] ?? 'Unknown Reference',
                                       subtitle: "Bookmarked verse",
                                       verse: b['verseRef'] ?? '',
                                       time: DateFormatter.formatTimeAgo(
@@ -664,17 +680,19 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                                                 );
                                             if (parsed != null) {
                                               final oldBook =
-                                                  bibleProvider.currentBookIndex;
+                                                  bibleProvider
+                                                      .currentBookIndex;
                                               final oldChapter =
                                                   bibleProvider.currentChapter;
                                               await bibleProvider.loadVerses(
                                                 parsed['book']!,
                                                 parsed['chapter']!,
                                               );
-                                              await bibleProvider.toggleBookmark(
-                                                authProvider.token!,
-                                                parsed['verse']!,
-                                              );
+                                              await bibleProvider
+                                                  .toggleBookmark(
+                                                    authProvider.token!,
+                                                    parsed['verse']!,
+                                                  );
                                               await bibleProvider.loadVerses(
                                                 oldBook,
                                                 oldChapter,
@@ -690,18 +708,20 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                             SectionHeader(
                               title: "Messages (${_savedMessagesList.length})",
                               seeAllText: "See all",
-                              onSeeAllTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const SavedMessagesScreen(),
-                                ),
-                              ),
+                              onSeeAllTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => const SavedMessagesScreen(),
+                                    ),
+                                  ),
                             ),
                             if (_savedMessagesList.isEmpty)
                               const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
                                 child: Text(
-                                  "No saved messages yet.",
+                                  "No saved sermon.",
                                   style: TextStyle(color: Colors.grey),
                                 ),
                               ),
@@ -719,16 +739,24 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => AdminMessageScreen(
-                                        message: {...m, 'hasBookmarked': true},
-                                      ),
+                                      builder:
+                                          (_) => AdminMessageScreen(
+                                            message: {
+                                              ...m,
+                                              'hasBookmarked': true,
+                                            },
+                                          ),
                                     ),
                                   );
                                 },
                                 child: SavedMessagesCard(
                                   title: m['title'] ?? m['text'] ?? 'Message',
-                                  authorName: sender['fullName'] ?? sender['username'] ?? '',
-                                  messageImage: m['imageUrl'] ?? sender['avatarUrl'],
+                                  authorName:
+                                      sender['fullName'] ??
+                                      sender['username'] ??
+                                      '',
+                                  messageImage:
+                                      m['imageUrl'] ?? sender['avatarUrl'],
                                   likesCount: m['likesCount'] ?? 0,
                                   time: timeStr,
                                 ),
@@ -737,12 +765,13 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
                             SectionHeader(
                               title: "Books (${_savedBooksList.length})",
                               seeAllText: "See all",
-                              onSeeAllTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const SavedBooksScreen(),
-                                ),
-                              ),
+                              onSeeAllTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const SavedBooksScreen(),
+                                    ),
+                                  ),
                             ),
                             if (_savedBooksList.isEmpty)
                               const Padding(

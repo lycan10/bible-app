@@ -99,8 +99,12 @@ class _MyAppState extends State<MyApp> {
     DeepLinkService.init();
 
     // Register handler for chat notifications tap
-    NotificationService.setChatNavigationHandler(_navigateToChatFromNotification);
-    NotificationService.setCommunityNavigationHandler(_navigateToCommunityFromNotification);
+    NotificationService.setChatNavigationHandler(
+      _navigateToChatFromNotification,
+    );
+    NotificationService.setCommunityNavigationHandler(
+      _navigateToCommunityFromNotification,
+    );
 
     // Wire up global 401 → auto-logout. We defer by one frame so the provider
     // tree is guaranteed to be mounted when the callback fires.
@@ -123,7 +127,9 @@ class _MyAppState extends State<MyApp> {
     if (auth.token == null) return;
 
     Map<String, dynamic>? chat;
-    final existingIndex = chatProvider.chats.indexWhere((c) => c['id'] == chatId);
+    final existingIndex = chatProvider.chats.indexWhere(
+      (c) => c['id'] == chatId,
+    );
     if (existingIndex != -1) {
       chat = chatProvider.chats[existingIndex];
     } else {
@@ -138,11 +144,12 @@ class _MyAppState extends State<MyApp> {
 
     navigatorKey.currentState?.push(
       MaterialPageRoute(
-        builder: (context) => MessageChatScreen(
-          chatId: chatId,
-          friend: friend,
-          scrollToFirstUnread: true,
-        ),
+        builder:
+            (context) => MessageChatScreen(
+              chatId: chatId,
+              friend: friend,
+              scrollToFirstUnread: true,
+            ),
       ),
     );
   }
@@ -150,13 +157,12 @@ class _MyAppState extends State<MyApp> {
   static void _navigateToCommunityFromNotification(String communityId) {
     final context = navigatorKey.currentContext;
     if (context == null) return;
-    
+
     // We import CommunityIndividualScreen at the top of the file
     navigatorKey.currentState?.push(
       MaterialPageRoute(
-        builder: (context) => CommunityIndividualScreen(
-          communityId: communityId,
-        ),
+        builder:
+            (context) => CommunityIndividualScreen(communityId: communityId),
       ),
     );
   }
@@ -181,7 +187,6 @@ class _MyAppState extends State<MyApp> {
     }
 
     final appearance = authProvider.user?['appearance'] as String?;
-
 
     ThemeMode themeMode = ThemeMode.system;
     if (appearance == 'light') {

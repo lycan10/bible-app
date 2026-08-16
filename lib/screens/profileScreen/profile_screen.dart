@@ -273,14 +273,14 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                   formattedAvatarUrl.startsWith('http')
                                       ? Image.network(
                                         formattedAvatarUrl,
-                                        width: 62,
-                                        height: 62,
+                                        width: 55,
+                                        height: 55,
                                         fit: BoxFit.cover,
                                       )
                                       : Image.asset(
                                         formattedAvatarUrl,
-                                        width: 62,
-                                        height: 62,
+                                        width: 55,
+                                        height: 55,
                                         fit: BoxFit.cover,
                                       ),
                             ),
@@ -300,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                           ).textTheme.bodyMedium?.color,
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      height: 2.5,
+                                      height: 1.7,
                                     ),
                                     children: [
                                       TextSpan(text: '$userFullName\n'),
@@ -316,7 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 13),
+                                const SizedBox(height: 17),
                                 SizedBox(
                                   width: double.infinity,
                                   child: Row(
@@ -333,7 +333,8 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                         icon: HugeIcons.strokeRoundedShare08,
                                         label: "Share",
                                         onTap: () {
-                                          final rawUsername = user?['username'] ?? '';
+                                          final rawUsername =
+                                              user?['username'] ?? '';
                                           final userId = user?['id'] ?? '';
                                           Share.share(
                                             'Connect with me on Sozo Tribe! My username is $username\nhttps://quest.vidarave.com/user/$userId',
@@ -536,25 +537,33 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                     child: CircularProgressIndicator(),
                                   )
                                   : Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
                                       // Find friends / Connect button
                                       GestureDetector(
-                                        onTap: () => Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => const ConnectScreen(),
-                                          ),
-                                        ),
+                                        onTap:
+                                            () => Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        const ConnectScreen(),
+                                              ),
+                                            ),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 16,
                                             vertical: 12,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: AppTheme.purpleColor.withValues(alpha: 0.08),
-                                            borderRadius: BorderRadius.circular(14),
+                                            color: AppTheme.purpleColor
+                                                .withValues(alpha: 0.08),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                             border: Border.all(
-                                              color: AppTheme.purpleColor.withValues(alpha: 0.25),
+                                              color: AppTheme.purpleColor
+                                                  .withValues(alpha: 0.25),
                                             ),
                                           ),
                                           child: Row(
@@ -598,7 +607,9 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                                         .textTheme
                                                         .bodyMedium
                                                         ?.color
-                                                        ?.withValues(alpha: 0.54) ??
+                                                        ?.withValues(
+                                                          alpha: 0.54,
+                                                        ) ??
                                                     Colors.black54,
                                               ),
                                             ),

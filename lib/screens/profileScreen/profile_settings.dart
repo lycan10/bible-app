@@ -142,7 +142,7 @@ class ProfileSettings extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -162,19 +162,19 @@ class ProfileSettings extends StatelessWidget {
                           formattedAvatarUrl.startsWith('http')
                               ? Image.network(
                                 formattedAvatarUrl,
-                                width: 52,
-                                height: 52,
+                                width: 40,
+                                height: 40,
                                 fit: BoxFit.cover,
                               )
                               : Image.asset(
                                 formattedAvatarUrl,
-                                width: 52,
-                                height: 52,
+                                width: 40,
+                                height: 40,
                                 fit: BoxFit.cover,
                               ),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -185,9 +185,9 @@ class ProfileSettings extends StatelessWidget {
                             style: theme.textTheme.bodySmall?.copyWith(
                               color:
                                   Theme.of(context).textTheme.bodyMedium?.color,
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              height: 2,
+                              height: 1.3,
                             ),
                             children: [
                               TextSpan(text: '$firstName $lastName\n'),
@@ -203,136 +203,137 @@ class ProfileSettings extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SizedBox(height: 10),
                       ],
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 30),
-              Column(
-                children: [
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedBookOpen01,
-                    iconBackgroundColor: AppTheme.primaryBlue,
-                    title: "My Content",
-                    subtitle: "Manage your created devotions, books, etc.",
-                    onTap: () {
-                      final token =
-                          Provider.of<AuthProvider>(
+              SizedBox(height: 25),
+              Expanded(
+                child: ListView(
+                  children: [
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedBookOpen01,
+                      iconBackgroundColor: AppTheme.primaryBlue,
+                      title: "My Content",
+                      subtitle: "Manage your created devotions, books, etc.",
+                      onTap: () {
+                        final token =
+                            Provider.of<AuthProvider>(
+                              context,
+                              listen: false,
+                            ).token;
+                        if (token != null) {
+                          Navigator.push(
                             context,
-                            listen: false,
-                          ).token;
-                      if (token != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MyContentScreen(token: token),
-                          ),
-                        );
-                      }
-                    },
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedLocation01,
-                    iconBackgroundColor: AppTheme.greenColor,
-                    title: "Location Settings",
-                    onTap: () => _showLocationDialog(context),
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedNotification01,
-                    iconBackgroundColor: AppTheme.redColor,
-                    title: "Notifications & Sounds",
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) {
-                          return NotificationOptionsSheet();
-                        },
-                      );
-                    },
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedArtboard,
-                    iconBackgroundColor: AppTheme.purpleColor,
-                    title: "App Appearance",
-                    subtitle: "System Default",
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) {
-                          return _AppearanceOptionsSheet();
-                        },
-                      );
-                    },
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedAlarmClock,
-                    iconBackgroundColor: Colors.blue,
-                    title: "Reminder",
-                    subtitle: "Set reminder to study",
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) {
-                          return _ReminderOptionsSheet();
-                        },
-                      );
-                    },
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedSecurityCheck,
-                    iconBackgroundColor: AppTheme.greenColor,
-                    title: "Privacy Policy",
-                    onTap: () {},
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedFile01,
-                    iconBackgroundColor: AppTheme.greenColor,
-                    title: "Terms of Service",
-                    onTap: () {},
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedGiveBlood,
-                    iconGradient: LinearGradient(
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      colors: [Color(0xffffe364), Color(0xffff00b7)],
+                            MaterialPageRoute(
+                              builder: (_) => MyContentScreen(token: token),
+                            ),
+                          );
+                        }
+                      },
+                      iconColor: Colors.white,
                     ),
-                    title: "Donate",
-                    subtitle: 'Give to support Shalom App',
-                    onTap: () {},
-                    iconColor: Colors.white,
-                    iconBackgroundColor: null,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedArrowRight03,
-                    iconBackgroundColor: AppTheme.yellowColor,
-                    title: "Sign Out",
-                    onTap: () => _signOut(context),
-                    iconColor: Colors.white,
-                  ),
-                  SettingsRowItem(
-                    icon: HugeIcons.strokeRoundedDelete01,
-                    iconBackgroundColor: AppTheme.redColor,
-                    title: "Delete Account",
-                    onTap: () => _deleteAccount(context),
-                    iconColor: Colors.white,
-                  ),
-                ],
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedLocation01,
+                      iconBackgroundColor: AppTheme.greenColor,
+                      title: "Location Settings",
+                      onTap: () => _showLocationDialog(context),
+                      iconColor: Colors.white,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedNotification01,
+                      iconBackgroundColor: AppTheme.redColor,
+                      title: "Notifications & Sounds",
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) {
+                            return NotificationOptionsSheet();
+                          },
+                        );
+                      },
+                      iconColor: Colors.white,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedArtboard,
+                      iconBackgroundColor: AppTheme.purpleColor,
+                      title: "App Appearance",
+                      subtitle: "System Default",
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) {
+                            return _AppearanceOptionsSheet();
+                          },
+                        );
+                      },
+                      iconColor: Colors.white,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedAlarmClock,
+                      iconBackgroundColor: Colors.blue,
+                      title: "Reminder",
+                      subtitle: "Set reminder to study",
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) {
+                            return _ReminderOptionsSheet();
+                          },
+                        );
+                      },
+                      iconColor: Colors.white,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedSecurityCheck,
+                      iconBackgroundColor: AppTheme.greenColor,
+                      title: "Privacy Policy",
+                      onTap: () {},
+                      iconColor: Colors.white,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedFile01,
+                      iconBackgroundColor: AppTheme.greenColor,
+                      title: "Terms of Service",
+                      onTap: () {},
+                      iconColor: Colors.white,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedGiveBlood,
+                      iconGradient: LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [Color(0xffffe364), Color(0xffff00b7)],
+                      ),
+                      title: "Donate",
+                      subtitle: 'Give to support Shalom App',
+                      onTap: () {},
+                      iconColor: Colors.white,
+                      iconBackgroundColor: null,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedArrowRight03,
+                      iconBackgroundColor: AppTheme.yellowColor,
+                      title: "Sign Out",
+                      onTap: () => _signOut(context),
+                      iconColor: Colors.white,
+                    ),
+                    SettingsRowItem(
+                      icon: HugeIcons.strokeRoundedDelete01,
+                      iconBackgroundColor: AppTheme.redColor,
+                      title: "Delete Account",
+                      onTap: () => _deleteAccount(context),
+                      iconColor: Colors.white,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

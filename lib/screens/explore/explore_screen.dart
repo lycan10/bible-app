@@ -439,19 +439,19 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                 ),
                           ),
                         ),
-                        FeatureGuard(
-                          featureKey: 'games',
-                          child: TagChip(
-                            label: "Games",
-                            onTap:
-                                () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const GamesScreen(),
-                                  ),
-                                ),
-                          ),
-                        ),
+                        // FeatureGuard(
+                        //   featureKey: 'games',
+                        //   child: TagChip(
+                        //     label: "Games",
+                        //     onTap:
+                        //         () => Navigator.push(
+                        //           context,
+                        //           MaterialPageRoute(
+                        //             builder: (context) => const GamesScreen(),
+                        //           ),
+                        //         ),
+                        //   ),
+                        // ),
                         FeatureGuard(
                           featureKey: 'connect',
                           child: TagChip(
@@ -474,7 +474,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                     child: Column(
                       children: [
                         SectionHeader(
-                          title: "Most Read Plans",
+                          title: "Recommended Books",
                           seeAllText: "See more",
                           onSeeAllTap:
                               () => Navigator.push(
@@ -625,7 +625,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                     child: Column(
                       children: [
                         SectionHeader(
-                          title: "Audio Messages",
+                          title: "Audio Sermon",
                           seeAllText: "See more",
                           onSeeAllTap: () {
                             Navigator.push(
@@ -725,7 +725,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                               ),
                         ),
                         SizedBox(
-                          height: 175,
+                          height: 155,
                           child:
                               communities.isEmpty
                                   ? Center(
@@ -1081,7 +1081,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
 
                   const SizedBox(height: 0),
                   const SectionHeader(
-                    title: "Recommended Messages",
+                    title: "Recommended Sermon",
                     seeAllText: "see more",
                   ),
                   if (posts.isEmpty)
@@ -1089,7 +1089,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 20.0),
                         child: Text(
-                          "No recommended messages",
+                          "No recommended sermon",
                           style: TextStyle(
                             color: theme.colorScheme.onSurface.withValues(
                               alpha: 0.54,
@@ -1153,7 +1153,10 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                           description:
                                               friend['location'] ?? 'Unknown',
                                           onTap: () {
-                                            UserProfileCard.show(context, friend);
+                                            UserProfileCard.show(
+                                              context,
+                                              friend,
+                                            );
                                           },
                                         ),
                                       );
@@ -1323,7 +1326,10 @@ class BooksReelCard extends StatelessWidget {
             children: [
               Builder(
                 builder: (context) {
-                  final formattedImage = backgroundImage.isNotEmpty ? ApiService.getFullImageUrl(backgroundImage) : '';
+                  final formattedImage =
+                      backgroundImage.isNotEmpty
+                          ? ApiService.getFullImageUrl(backgroundImage)
+                          : '';
                   return formattedImage.isNotEmpty
                       ? (formattedImage.startsWith('http')
                           ? Image.network(formattedImage, fit: BoxFit.cover)
@@ -1482,7 +1488,10 @@ class CommunityReelCard extends StatelessWidget {
               /// 🔹 Background Image
               Builder(
                 builder: (context) {
-                  final formattedImage = backgroundImage.isNotEmpty ? ApiService.getFullImageUrl(backgroundImage) : '';
+                  final formattedImage =
+                      backgroundImage.isNotEmpty
+                          ? ApiService.getFullImageUrl(backgroundImage)
+                          : '';
                   return formattedImage.isNotEmpty
                       ? (formattedImage.startsWith('http')
                           ? Image.network(formattedImage, fit: BoxFit.cover)
