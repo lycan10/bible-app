@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -120,8 +121,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                             widget.verseData!['backgroundImageUrl']
                                 .toString()
                                 .isNotEmpty
-                        ? Image.network(
-                          ApiService.getFullImageUrl(
+                        ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(
                             widget.verseData!['backgroundImageUrl'],
                           ),
                           fit: BoxFit.cover,
@@ -464,8 +464,7 @@ class FullScreenVerseScreen extends StatelessWidget {
             child:
                 verseData?['backgroundImageUrl'] != null &&
                         verseData!['backgroundImageUrl'].toString().isNotEmpty
-                    ? Image.network(
-                      ApiService.getFullImageUrl(
+                    ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(
                         verseData!['backgroundImageUrl'],
                       ),
                       fit: BoxFit.cover,

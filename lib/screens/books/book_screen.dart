@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:quest/components/share/in_app_share_sheet.dart';
 import 'package:quest/components/report_bottom_sheet.dart';
 import 'package:quest/screens/books/pdf_viewer_screen.dart';
 import 'package:quest/components/formatted_text.dart';
+import 'package:quest/utils/date_formatter.dart';
 
 class BookScreen extends StatefulWidget {
   final Map<String, dynamic>? book;
@@ -343,12 +345,7 @@ class _BookScreenState extends State<BookScreen> {
                                     ],
                                   ),
                                   Text(
-                                    widget.book != null &&
-                                            widget.book!['createdAt'] != null
-                                        ? widget.book!['createdAt']
-                                            .toString()
-                                            .substring(0, 10)
-                                        : "Today",
+                                    DateFormatter.formatTimeAgo(widget.book?['createdAt']),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontSize: 12,
                                       color: AppTheme.textColor2,
@@ -508,8 +505,7 @@ class _BookScreenState extends State<BookScreen> {
                                           widget.book != null &&
                                                   widget.book!['imageUrl'] !=
                                                       null
-                                              ? Image.network(
-                                                widget.book!['imageUrl'],
+                                              ? CachedNetworkImage(imageUrl: widget.book!['imageUrl'],
                                                 fit: BoxFit.cover,
                                               )
                                               : Image.asset(
@@ -726,8 +722,7 @@ class _CommentItemState extends State<CommentItem> {
                     borderRadius: BorderRadius.circular(50),
                     child:
                         user['avatarUrl'] != null
-                            ? Image.network(
-                              user['avatarUrl'],
+                            ? CachedNetworkImage(imageUrl: user['avatarUrl'],
                               width: 30,
                               height: 30,
                               fit: BoxFit.cover,

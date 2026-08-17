@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/game_settings_provider.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:quest/theme/theme.dart';
 
 class GameSettingsSheet extends StatelessWidget {
   const GameSettingsSheet({super.key});
@@ -23,7 +24,7 @@ class GameSettingsSheet extends StatelessWidget {
                 // ── Header ────────────────────────────────────────────────
                 Row(
                   children: [
-                    Icon(Icons.tune_rounded, color: colorScheme.primary),
+                    Icon(Icons.tune_rounded, color: AppTheme.primaryBlue),
                     const SizedBox(width: 10),
                     Text(
                       "Game Settings",
@@ -137,7 +138,7 @@ class GameSettingsSheet extends StatelessWidget {
       secondary: secondary,
       value: value,
       onChanged: onChanged,
-      activeThumbColor: Theme.of(context).colorScheme.primary,
+      activeThumbColor: AppTheme.primaryBlue,
     );
   }
 
@@ -168,8 +169,8 @@ class GameSettingsSheet extends StatelessWidget {
                 min: 0,
                 max: 1,
                 divisions: 10,
-                activeColor: colorScheme.primary,
-                inactiveColor: colorScheme.primary.withAlpha(50),
+                activeColor: AppTheme.primaryBlue,
+                inactiveColor: AppTheme.primaryBlue.withAlpha(50),
                 onChanged: onChanged,
               ),
             ),

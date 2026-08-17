@@ -1,3 +1,4 @@
+import 'package:quest/components/page_loader.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -177,156 +178,157 @@ class _BooksListScreenState extends State<BooksListScreen> with RouteAware {
               )
               : null,
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          children: [
-            /// TITLE BAR
-            TitleOne(
-              leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-              title: 'Books',
-              trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-              leadingIconTap: () => Navigator.pop(context),
-              //trailingIconTap: () => _openMenu(context),
-            ),
-
-            const SizedBox(height: 25),
-
-            // SearchBar(
-            //   hintText: "Search communities",
-            //   onTap: () {
-            //     showModalBottomSheet(
-            //       context: context,
-            //       isScrollControlled: true,
-            //       backgroundColor: Colors.transparent,
-            //       builder: (context) {
-            //         return DiscoverMore();
-            //       },
-            //     );
-            //   },
-            //   onChanged: (value) {
-            //     print("Searching: $value");
-            //   },
-            // ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      body: PageLoader(
+        isLoading: _isLoading,
+        hasData: _books.isNotEmpty,
+        child: SafeArea(
+          child: RefreshIndicator(
+            color: AppTheme.purpleColor,
+            backgroundColor: theme.colorScheme.surface,
+            onRefresh: _fetchBooks,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               children: [
-                /// Menu / List Icon Button
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return DiscoverMore();
+                /// TITLE BAR
+                TitleOne(
+                  leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                  title: 'Books',
+                  trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                  leadingIconTap: () => Navigator.pop(context),
+                  //trailingIconTap: () => _openMenu(context),
+                ),
+
+                const SizedBox(height: 25),
+
+                // SearchBar(
+                //   hintText: "Search communities",
+                //   onTap: () {
+                //     showModalBottomSheet(
+                //       context: context,
+                //       isScrollControlled: true,
+                //       backgroundColor: Colors.transparent,
+                //       builder: (context) {
+                //         return DiscoverMore();
+                //       },
+                //     );
+                //   },
+                //   onChanged: (value) {
+                //     print("Searching: $value");
+                //   },
+                // ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    /// Menu / List Icon Button
+                    GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) {
+                            return DiscoverMore();
+                          },
+                        );
                       },
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedLeftToRightListBullet,
-                      size: 22,
-                      color: theme.colorScheme.onSurface,
-                      strokeWidth: 1,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 10),
-
-                /// Search Bar
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedSearch01,
-                          size: 18,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedLeftToRightListBullet,
+                          size: 22,
                           color: theme.colorScheme.onSurface,
+                          strokeWidth: 1,
                         ),
-
-                        const SizedBox(width: 8),
-
-                        /// Search Input
-                        Expanded(
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: "Search for books",
-                              border: InputBorder.none,
-                              isDense: true,
-                              hintStyle: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+
+                    const SizedBox(width: 10),
+
+                    /// Search Bar
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedSearch01,
+                              size: 18,
+                              color: theme.colorScheme.onSurface,
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            /// Search Input
+                            Expanded(
+                              child: TextField(
+                                decoration: const InputDecoration(
+                                  hintText: "Search for books",
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  hintStyle: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                if (_books.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text(
+                        "No books found",
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  )
+                else ...[
+                  SectionHeader(title: "All Books", seeAllText: ""),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _books.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemBuilder: (context, index) {
+                      final book = _books[index];
+                      return BooksReelCard(
+                        title: book['title'] ?? '',
+                        author: book['author'] ?? '',
+                        likes: book['likesCount']?.toString() ?? '0',
+                        backgroundImage:
+                            book['imageUrl'] ?? 'assets/images/book.jpeg',
+                        status: book['status'],
+                        onTap: () {
+                          _navigateToBookScreen(context, book);
+                        },
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
-
-            if (_isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (_books.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Text(
-                    "No books found",
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ),
-              )
-            else ...[
-              SectionHeader(title: "All Books", seeAllText: ""),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _books.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 0.85,
-                ),
-                itemBuilder: (context, index) {
-                  final book = _books[index];
-                  return BooksReelCard(
-                    title: book['title'] ?? '',
-                    author: book['author'] ?? '',
-                    likes: book['likesCount']?.toString() ?? '0',
-                    backgroundImage:
-                        book['imageUrl'] ?? 'assets/images/book.jpeg',
-                    status: book['status'],
-                    onTap: () {
-                      _navigateToBookScreen(context, book);
-                    },
-                  );
-                },
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

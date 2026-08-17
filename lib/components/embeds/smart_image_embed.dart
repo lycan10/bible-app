@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -27,27 +28,22 @@ class SmartImageEmbedBuilder extends EmbedBuilder {
       borderRadius: BorderRadius.circular(12),
       child:
           isRemote
-              ? Image.network(
-                // Resolve relative /api paths to a full URL
-                path.startsWith('/api')
+              ? CachedNetworkImage(
+                imageUrl: path.startsWith('/api')
                     ? ApiService.getFullImageUrl(path)
                     : path,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return Container(
-                    height: 200,
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: const Center(child: CircularProgressIndicator()),
-                  );
-                },
-                errorBuilder: (context, error, stack) => _errorWidget(context),
+                placeholder: (context, url) => Container(
+                  height: 200,
+                  color:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => _errorWidget(context),
               )
               : Image.file(
                 File(path),
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) => _errorWidget(context),
               ),
     );
 

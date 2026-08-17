@@ -54,15 +54,16 @@ class EventDetailsCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(
                 50,
               ), // half of image width/height
-              child: event['imageUrl'] != null
-                  ? CachedNetworkImage(
-                      imageUrl: event['imageUrl'],
-                      width: 75,
-                      height: 75,
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => _defaultImage(),
-                    )
-                  : _defaultImage(),
+              child:
+                  event['imageUrl'] != null
+                      ? CachedNetworkImage(
+                        imageUrl: event['imageUrl'],
+                        width: 75,
+                        height: 75,
+                        fit: BoxFit.cover,
+                        errorWidget: (context, url, error) => _defaultImage(),
+                      )
+                      : _defaultImage(),
             ),
             SizedBox(width: 10),
             SizedBox(height: 20),
@@ -102,16 +103,13 @@ class EventDetailsCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (event['link'] != null && event['link'].toString().isNotEmpty) ...[
+            if (event['link'] != null &&
+                event['link'].toString().isNotEmpty) ...[
               SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.link,
-                    size: 16,
-                    color: Color(0xff8e8e93),
-                  ),
+                  Icon(Icons.link, size: 16, color: Color(0xff8e8e93)),
                   const SizedBox(width: 5),
                   Flexible(
                     child: Text(
@@ -139,15 +137,24 @@ class EventDetailsCard extends StatelessWidget {
                     children: const [
                       Positioned(
                         left: 0,
-                        child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
+                        child: CustomAvatar(
+                          imageUrl: 'assets/images/boy.png',
+                          radius: 11.5,
+                        ),
                       ),
                       Positioned(
                         left: 15,
-                        child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
+                        child: CustomAvatar(
+                          imageUrl: 'assets/images/boy.png',
+                          radius: 11.5,
+                        ),
                       ),
                       Positioned(
                         left: 30,
-                        child: CustomAvatar(imageUrl: 'assets/images/boy.png', radius: 11.5),
+                        child: CustomAvatar(
+                          imageUrl: 'assets/images/boy.png',
+                          radius: 11.5,
+                        ),
                       ),
                     ],
                   ),
@@ -191,7 +198,9 @@ class EventDetailsCard extends StatelessWidget {
                   const SizedBox(width: 3),
                   Text(
                     event['date'] != null
-                        ? DateFormat('MMM yyyy').format(DateTime.parse(event['date']))
+                        ? DateFormat(
+                          'MMM yyyy',
+                        ).format(DateTime.parse(event['date']))
                         : '',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -226,8 +235,14 @@ class EventDetailsCard extends StatelessWidget {
             ),
             SizedBox(height: 25),
             ActionPillButton(
-              backgroundColor: isAttending ? theme.colorScheme.onSurface.withValues(alpha: 0.1) : theme.colorScheme.onSurface,
-              textColor: isAttending ? theme.colorScheme.onSurface : theme.colorScheme.surface,
+              backgroundColor:
+                  isAttending
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.1)
+                      : theme.colorScheme.onSurface,
+              textColor:
+                  isAttending
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.surface,
               label: isAttending ? "Unattend Event" : "Attend Event",
               onTap: onToggleAttend,
             ),
@@ -237,7 +252,8 @@ class EventDetailsCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ActionPillButton(
-                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
                       textColor: theme.colorScheme.onSurface,
                       label: "Edit",
                       onTap: onEdit ?? () {},

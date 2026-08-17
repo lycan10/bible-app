@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:convert';
 import 'package:quest/main.dart';
 import 'package:quest/providers/chat_provider.dart';
@@ -28,6 +29,7 @@ import 'package:quest/screens/devotion/devotion_screen.dart';
 import 'package:quest/screens/bible_quiz/play_mode_sheet.dart';
 import 'package:quest/screens/word_cross/word_cross_difficulty_screen.dart';
 import 'package:quest/screens/messages/message_list_screen.dart';
+import 'package:quest/components/page_loader.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/providers/notification_provider.dart';
 import 'package:quest/theme/theme.dart';
@@ -216,8 +218,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       }
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    return PageLoader(
+      isLoading: feedProvider.isLoading,
+      hasData: feedProvider.feed != null && feedProvider.feed!.isNotEmpty,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
@@ -355,8 +360,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               ), // half of image width/height
                               child:
                                   formattedAvatarUrl.startsWith('http')
-                                      ? Image.network(
-                                        formattedAvatarUrl,
+                                      ? CachedNetworkImage(imageUrl: formattedAvatarUrl,
                                         width: 30,
                                         height: 30,
                                         fit: BoxFit.cover,
@@ -976,7 +980,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                     final community = communities[index];
                                     return CommunityReelCard(
                                       title: community['name'] ?? '',
-                                      author: community['description'] ?? '',
+                                      author: community['authorName'] ?? '',
                                       followers:
                                           '${community['_count']?['members'] ?? 0} members',
                                       backgroundImage:
@@ -1173,7 +1177,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -1311,7 +1315,7 @@ class CommunityReelCard extends StatelessWidget {
             children: [
               /// 🔹 Background Image
               backgroundImage.startsWith('http')
-                  ? Image.network(backgroundImage, fit: BoxFit.cover)
+                  ? CachedNetworkImage(imageUrl: backgroundImage, fit: BoxFit.cover)
                   : Image.asset(backgroundImage, fit: BoxFit.cover),
 
               /// 🔹 Dark overlay for readability
@@ -1373,15 +1377,6 @@ class CommunityReelCard extends StatelessWidget {
                               color: Colors.white,
                             ),
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
-                            ' - Recently active',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontSize: 12, color: Colors.white),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/stats/stats.dart';
@@ -137,13 +138,11 @@ class PostCardShort extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         child:
                             postImage!.startsWith('http')
-                                ? Image.network(
-                                  postImage!,
+                                ? CachedNetworkImage(imageUrl: postImage!,
                                   width: 105,
                                   height: 105,
                                   fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (context, error, stackTrace) => Container(
+                                  errorWidget: (context, url, error) => Container(
                                         width: 90,
                                         height: 90,
                                         color: Colors.grey.shade300,

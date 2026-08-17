@@ -102,13 +102,13 @@ class _EditContentScreenState extends State<EditContentScreen> {
                   color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    color: AppTheme.primaryBlue.withOpacity(0.2),
                   ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, size: 20, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.info_outline, size: 20, color: AppTheme.primaryBlue),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -152,7 +152,7 @@ class _EditContentScreenState extends State<EditContentScreen> {
               const SizedBox(height: 32),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: AppTheme.primaryBlue,
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

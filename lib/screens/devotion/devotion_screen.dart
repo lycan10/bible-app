@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -448,8 +449,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                             borderRadius: BorderRadius.circular(10),
                             child:
                                 planImage.startsWith('http')
-                                    ? Image.network(
-                                      planImage,
+                                    ? CachedNetworkImage(imageUrl: planImage,
                                       width: 48,
                                       height: 48,
                                       fit: BoxFit.cover,
@@ -558,8 +558,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                             borderRadius: BorderRadius.circular(12),
                             child:
                                 _dayData!['image'].toString().startsWith('http')
-                                    ? Image.network(
-                                      _dayData!['image'],
+                                    ? CachedNetworkImage(imageUrl: _dayData!['image'],
                                       height: 200,
                                       fit: BoxFit.cover,
                                     )
@@ -596,8 +595,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
                             borderRadius: BorderRadius.circular(50),
                             child:
                                 planImage.startsWith('http')
-                                    ? Image.network(
-                                      planImage,
+                                    ? CachedNetworkImage(imageUrl: planImage,
                                       width: 34,
                                       height: 34,
                                       fit: BoxFit.cover,

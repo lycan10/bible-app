@@ -19,6 +19,7 @@ class PdfViewerScreen extends StatefulWidget {
 
 class _PdfViewerScreenState extends State<PdfViewerScreen> {
   final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
+  bool _isLoading = true;
   
   @override
   Widget build(BuildContext context) {
@@ -40,11 +41,31 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
               ),
             ),
             Expanded(
-              child: SfPdfViewer.network(
-                widget.pdfUrl,
-                key: _pdfViewerKey,
-                canShowScrollHead: false,
-                canShowScrollStatus: false,
+              child: Stack(
+                children: [
+                  SfPdfViewer.network(
+                    widget.pdfUrl,
+                    key: _pdfViewerKey,
+                    canShowScrollHead: false,
+                    canShowScrollStatus: false,
+                    onDocumentLoaded: (details) {
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    },
+                    onDocumentLoadFailed: (details) {
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    },
+                  ),
+                  if (_isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xff673aff),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

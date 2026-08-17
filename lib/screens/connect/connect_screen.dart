@@ -16,6 +16,9 @@ import 'package:quest/providers/auth_provider.dart';
 import '../../components/global_more_menu.dart';
 import 'package:quest/screens/connect/sent_requests_screen.dart';
 
+import 'package:quest/components/page_loader.dart';
+import 'package:quest/main.dart';
+
 class ConnectScreen extends StatefulWidget {
   const ConnectScreen({super.key});
 
@@ -23,26 +26,42 @@ class ConnectScreen extends StatefulWidget {
   State<ConnectScreen> createState() => _ConnectScreenState();
 }
 
-class _ConnectScreenState extends State<ConnectScreen> {
+class _ConnectScreenState extends State<ConnectScreen> with RouteAware {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPopNext() {
+    _loadData();
+  }
+
+  void _loadData() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+    if (authProvider.token != null) {
+      feedProvider.loadProfileDetails(authProvider.token!);
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final feedProvider = Provider.of<FeedProvider>(context, listen: false);
-      if (authProvider.token != null) {
-        feedProvider.loadProfileDetails(authProvider.token!);
-      }
+      _loadData();
     });
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _searchController.dispose();
     _scrollController.dispose();
     _debounce?.cancel();
@@ -98,16 +117,24 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 15, left: 16, right: 16),
-          child: ListView(
-            controller: _scrollController,
-            children: [
-              Column(
+      body: PageLoader(
+        isLoading: feedProvider.isLoading,
+        hasData: friends.isNotEmpty || suggestions.isNotEmpty || pendingRequests.isNotEmpty || sentRequests.isNotEmpty,
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              _loadData();
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(top: 15, left: 16, right: 16),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                controller: _scrollController,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: TitleOne(
@@ -373,7 +400,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
               ),
             ],
           ),
+         ),
         ),
+       ),
       ),
     );
   }

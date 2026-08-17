@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'dart:convert';
@@ -9,6 +10,7 @@ import '../../components/more/inline_verse_text.dart';
 import '../../providers/bible_provider.dart';
 import '../../screens/bible/bible_home_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:quest/utils/date_formatter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../components/editor_toolbar.dart';
 import 'package:image_picker/image_picker.dart';
@@ -353,8 +355,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              ApiService.getFullImageUrl(imageUrls.first),
+            child: CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(imageUrls.first),
               fit: BoxFit.cover,
             ),
           ),
@@ -376,8 +377,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
             itemBuilder: (context, index) {
               return ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  ApiService.getFullImageUrl(imageUrls[index]),
+                child: CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(imageUrls[index]),
                   fit: BoxFit.cover,
                 ),
               );
@@ -562,7 +562,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                                     ),
                                   ),
                                   Text(
-                                    'Today $_date', // Using the passed _date for simplicity
+                                    DateFormatter.formatTimeAgo(_date), // Using the passed _date formatted
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       color: Theme.of(context)

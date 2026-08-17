@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -509,10 +510,9 @@ class _VideoPageState extends State<_VideoPage> {
               ),
             ),
           ] else if (thumbnailUrl.isNotEmpty && thumbnailUrl.startsWith('http'))
-            Image.network(
-              thumbnailUrl,
+            CachedNetworkImage(imageUrl: thumbnailUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _gradientPlaceholder(),
+              errorWidget: (context, url, error) => _gradientPlaceholder(),
             )
           else
             _gradientPlaceholder(),

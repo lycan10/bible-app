@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
@@ -250,8 +251,7 @@ class MembersBottomSheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(25),
                           child:
                               avatar != null
-                                  ? Image.network(
-                                    ApiService.getFullImageUrl(avatar),
+                                  ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(avatar),
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,
@@ -468,8 +468,7 @@ class ProfileBottomSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(40),
                 child:
                     avatar != null
-                        ? Image.network(
-                          ApiService.getFullImageUrl(avatar),
+                        ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(avatar),
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
@@ -557,8 +556,7 @@ class ProfileBottomSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(25),
                   child:
                       currentCommunity['image'] != null
-                          ? Image.network(
-                            ApiService.getFullImageUrl(
+                          ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(
                               currentCommunity['image'],
                             ),
                             width: 50,

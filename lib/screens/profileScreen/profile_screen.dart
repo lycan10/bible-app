@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,6 +22,8 @@ import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/providers/economy_provider.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/main.dart';
+import 'package:quest/utils/date_formatter.dart';
+import 'package:quest/components/page_loader.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -229,8 +232,11 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     // Get user posts
     final userPosts = _userPosts;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    return PageLoader(
+      isLoading: feedProvider.isLoading,
+      hasData: user != null, // As long as user is not null, we have some data
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -271,8 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                               borderRadius: BorderRadius.circular(50),
                               child:
                                   formattedAvatarUrl.startsWith('http')
-                                      ? Image.network(
-                                        formattedAvatarUrl,
+                                      ? CachedNetworkImage(imageUrl: formattedAvatarUrl,
                                         width: 55,
                                         height: 55,
                                         fit: BoxFit.cover,
@@ -517,7 +522,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                                 '${post['reactions']?.length ?? 0}',
                                             comments:
                                                 '${post['comments']?.length ?? 0}',
-                                            time: "Today",
+                                            time: DateFormatter.formatTimeAgo(post['createdAt']),
                                             onTap:
                                                 () => _navigateToPostScreen(
                                                   context,
@@ -861,7 +866,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

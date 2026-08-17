@@ -1,3 +1,4 @@
+import 'package:quest/components/page_loader.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -89,47 +90,39 @@ class _PostListState extends State<PostList> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          child: Column(
-            children: [
-              TitleOne(
-                leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-                title: 'Posts',
-                trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-                leadingIconTap: () {
-                  Navigator.pop(context);
-                },
-                /*trailingIconTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) {
-                      return const GlobalMoreMenu();
-                    },
-                  );
-                },*/
-              ),
-              const SizedBox(height: 25),
-              Expanded(
-                child: Consumer<CommunityProvider>(
-                  builder: (context, provider, child) {
-                    if (provider.isLoading && provider.globalPosts.isEmpty) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
-                    if (provider.globalPosts.isEmpty) {
-                      return const Center(child: Text("No posts found."));
-                    }
-
-                    return RefreshIndicator(
-                      onRefresh: () => _loadPosts(refresh: true),
-                      child: ListView.builder(
-                        controller: _scrollController,
+    return Consumer<CommunityProvider>(
+      builder: (context, provider, child) {
+        return Scaffold(
+          backgroundColor: AppTheme.backgroundColor,
+          body: PageLoader(
+            isLoading: provider.isLoading,
+            hasData: provider.globalPosts.isNotEmpty,
+            child: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: () => _loadPosts(refresh: true),
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  children: [
+                    TitleOne(
+                      leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                      title: 'Posts',
+                      trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                      leadingIconTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    const SizedBox(height: 25),
+                    if (provider.globalPosts.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Center(child: Text("No posts found.")),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount:
                             provider.globalPosts.length +
                             (provider.hasMoreGlobalPosts ? 1 : 0),
@@ -183,14 +176,13 @@ class _PostListState extends State<PostList> with RouteAware {
                           );
                         },
                       ),
-                    );
-                  },
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

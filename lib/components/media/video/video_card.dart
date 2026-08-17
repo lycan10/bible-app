@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:flutter/material.dart';
 
@@ -45,7 +46,7 @@ class VideoCard extends StatelessWidget {
                           : '';
                   return formattedImage.isNotEmpty
                       ? (formattedImage.startsWith('http')
-                          ? Image.network(formattedImage, fit: BoxFit.cover)
+                          ? CachedNetworkImage(imageUrl: formattedImage, fit: BoxFit.cover)
                           : Image.asset(formattedImage, fit: BoxFit.cover))
                       : Container(color: Colors.grey.shade800);
                 },

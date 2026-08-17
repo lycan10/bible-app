@@ -17,6 +17,7 @@ import 'package:quest/services/api_service.dart';
 import 'package:quest/screens/paywall_screen.dart';
 import '../../components/global_more_menu.dart';
 import 'package:quest/main.dart';
+import 'package:quest/components/page_loader.dart';
 
 class AudioListScreen extends StatefulWidget {
   const AudioListScreen({super.key});
@@ -245,8 +246,11 @@ class _AudioListScreenState extends State<AudioListScreen> with RouteAware {
         backgroundColor: AppTheme.buttonColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: SafeArea(
-        child: RefreshIndicator(
+      body: PageLoader(
+        isLoading: isLoading,
+        hasData: audios.isNotEmpty || continueListening != null,
+        child: SafeArea(
+          child: RefreshIndicator(
           onRefresh: () async {
             final authProvider = context.read<AuthProvider>();
             if (authProvider.token != null) {
@@ -343,14 +347,7 @@ class _AudioListScreenState extends State<AudioListScreen> with RouteAware {
                 ],
               ),
 
-              const SizedBox(height: 25),
 
-              if (isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(50.0),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else ...[
                 if (continueListening != null) ...[
                   /// HEADER
                   Row(
@@ -427,10 +424,11 @@ class _AudioListScreenState extends State<AudioListScreen> with RouteAware {
                         );
                       },
                     ),
-              ],
+              
             ],
           ),
         ),
+      ),
       ),
     );
   }

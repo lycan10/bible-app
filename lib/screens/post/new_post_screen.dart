@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -205,8 +206,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   borderRadius: BorderRadius.circular(25),
                   child:
                       avatarUrl != null
-                          ? Image.network(
-                            ApiService.getFullImageUrl(avatarUrl),
+                          ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(avatarUrl),
                             width: 40,
                             height: 40,
                             fit: BoxFit.cover,

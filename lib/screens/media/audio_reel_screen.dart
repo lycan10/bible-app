@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:quest/services/api_service.dart';
 import 'dart:async';
 import 'dart:math';
@@ -472,11 +473,9 @@ class _AudioPageState extends State<_AudioPage> {
       fit: StackFit.expand,
       children: [
         if (formattedBgImage.startsWith('http'))
-          Image.network(
-            formattedBgImage,
+          CachedNetworkImage(imageUrl: formattedBgImage,
             fit: BoxFit.cover,
-            errorBuilder:
-                (_, __, ___) =>
+            errorWidget: (context, url, error) =>
                     Image.asset('assets/images/boy.png', fit: BoxFit.cover),
           )
         else
@@ -558,13 +557,11 @@ class _AudioPageState extends State<_AudioPage> {
                     borderRadius: BorderRadius.circular(25),
                     child:
                         formattedBgImage.startsWith('http')
-                            ? Image.network(
-                              formattedBgImage,
+                            ? CachedNetworkImage(imageUrl: formattedBgImage,
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) => Image.asset(
+                              errorWidget: (context, url, error) => Image.asset(
                                     'assets/images/boy.png',
                                     width: 50,
                                     height: 50,
@@ -576,13 +573,6 @@ class _AudioPageState extends State<_AudioPage> {
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) => Image.asset(
-                                    'assets/images/boy.png',
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                  ),
                             ),
                   ),
                   SizedBox(width: 10),

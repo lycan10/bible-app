@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
@@ -127,12 +128,11 @@ class SavedMessagesCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: messageImage != null && messageImage!.startsWith('http')
-                    ? Image.network(
-                        messageImage!,
+                    ? CachedNetworkImage(imageUrl: messageImage!,
                         fit: BoxFit.cover,
                         width: 80,
                         height: 80,
-                        errorBuilder: (context, error, stackTrace) =>
+                        errorWidget: (context, url, error) =>
                             Image.asset(
                           "assets/images/boy.png",
                           fit: BoxFit.cover,

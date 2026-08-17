@@ -8,6 +8,9 @@ import 'package:quest/screens/more/more_screen.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quest/components/daily_feeling_popup.dart';
+import 'package:provider/provider.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/feed_provider.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});
@@ -90,9 +93,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
               // RIGHT floating button
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    _currentIndex = 4; // 👈 BibleHomeScreen index
-                  });
+                  if (_currentIndex != 4) {
+                    setState(() {
+                      _currentIndex = 4; // 👈 BibleHomeScreen index
+                    });
+                  }
+                  _refreshTab(4);
                 },
                 child: Container(
                   padding: const EdgeInsets.all(12),
@@ -114,15 +120,34 @@ class _NavigationScreenState extends State<NavigationScreen> {
     );
   }
 
-  /// ✅ MOVE THIS INSIDE THE CLASS
+  void _refreshTab(int index) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+    final token = authProvider.token;
+    final userId = authProvider.user?['id'];
+    
+    if (token == null) return;
+    
+    if (index == 0 && userId != null) {
+      feedProvider.loadHomeData(token, userId);
+    } else if (index == 1) {
+      feedProvider.loadExploreData(token);
+    } else if (index == 3) {
+      feedProvider.loadProfileDetails(token);
+    }
+  }
+
   Widget _navItem(dynamic icon, String label, int index) {
     final bool isSelected = _currentIndex == index;
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
+        if (_currentIndex != index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        }
+        _refreshTab(index);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

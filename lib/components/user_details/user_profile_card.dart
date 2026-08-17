@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
@@ -147,8 +148,7 @@ class _UserProfileCardState extends State<UserProfileCard> {
                   borderRadius: BorderRadius.circular(50),
                   child:
                       avatarUrl != null && avatarUrl.toString().isNotEmpty
-                          ? Image.network(
-                            ApiService.getFullImageUrl(avatarUrl),
+                          ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(avatarUrl),
                             width: 75,
                             height: 75,
                             fit: BoxFit.cover,

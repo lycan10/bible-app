@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:animations/animations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:quest/services/api_service.dart';
 import 'package:quest/screens/paywall_screen.dart';
 import '../../components/global_more_menu.dart';
 import 'package:quest/main.dart';
+import 'package:quest/components/page_loader.dart';
 
 class VideoListScreen extends StatefulWidget {
   const VideoListScreen({super.key});
@@ -248,8 +250,11 @@ class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
         backgroundColor: AppTheme.buttonColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: SafeArea(
-        child: RefreshIndicator(
+      body: PageLoader(
+        isLoading: isLoading,
+        hasData: videos.isNotEmpty || continueWatching != null,
+        child: SafeArea(
+          child: RefreshIndicator(
           onRefresh: () async {
             final authProvider = context.read<AuthProvider>();
             if (authProvider.token != null) {
@@ -362,14 +367,7 @@ class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
                 ],
               ),
 
-              SizedBox(height: 25),
 
-              if (isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(50.0),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else ...[
                 if (continueWatching != null) ...[
                   /// HEADER
                   Row(
@@ -465,10 +463,11 @@ class _VideoListScreenState extends State<VideoListScreen> with RouteAware {
                         );
                       },
                     ),
-              ],
+              
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -546,11 +545,9 @@ class MediaCard extends StatelessWidget {
             children: [
               /// 🔹 Background Image (supports network + asset)
               if (imagePath.startsWith('http'))
-                Image.network(
-                  imagePath,
+                CachedNetworkImage(imageUrl: imagePath,
                   fit: BoxFit.cover,
-                  errorBuilder:
-                      (_, __, ___) => Container(color: Colors.grey[800]),
+                  errorWidget: (context, url, error) => Container(color: Colors.grey[800]),
                 )
               else if (imagePath.isNotEmpty)
                 Image.asset(imagePath, fit: BoxFit.cover)

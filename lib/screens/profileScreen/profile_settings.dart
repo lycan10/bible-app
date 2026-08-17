@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
@@ -160,8 +161,7 @@ class ProfileSettings extends StatelessWidget {
                       ), // half of image width/height
                       child:
                           formattedAvatarUrl.startsWith('http')
-                              ? Image.network(
-                                formattedAvatarUrl,
+                              ? CachedNetworkImage(imageUrl: formattedAvatarUrl,
                                 width: 40,
                                 height: 40,
                                 fit: BoxFit.cover,

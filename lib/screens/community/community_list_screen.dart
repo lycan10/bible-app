@@ -1,3 +1,4 @@
+import 'package:quest/components/page_loader.dart';
 import 'dart:async';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
@@ -122,8 +123,11 @@ class _CommunityListScreenState extends State<CommunityListScreen>
         backgroundColor: AppTheme.buttonColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: SafeArea(
-        child: RefreshIndicator(
+      body: PageLoader(
+        isLoading: communityProvider.isLoading,
+        hasData: myCommunities.isNotEmpty || recommended.isNotEmpty,
+        child: SafeArea(
+          child: RefreshIndicator(
           onRefresh: () async {
             final authProvider = context.read<AuthProvider>();
             if (authProvider.token != null) {
@@ -388,6 +392,7 @@ class _CommunityListScreenState extends State<CommunityListScreen>
             ],
           ),
         ),
+       ),
       ),
     );
   }

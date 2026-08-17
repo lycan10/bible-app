@@ -1,3 +1,5 @@
+import 'package:quest/components/page_loader.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:animations/animations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -230,11 +232,11 @@ class _DevotionListScreenState extends State<DevotionListScreen>
               )
               : null,
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
+      body: PageLoader(
+        isLoading: isLoading,
+        hasData: allPlans.isNotEmpty,
+        child: SafeArea(
+          child: RefreshIndicator(
                   color: AppTheme.purpleColor,
                   backgroundColor: theme.colorScheme.surface,
                   onRefresh: () async {
@@ -441,6 +443,7 @@ class _DevotionListScreenState extends State<DevotionListScreen>
                     ],
                   ),
                 ),
+        ),
       ),
     );
   }
@@ -667,12 +670,11 @@ void showStartPlanModal({
               borderRadius: BorderRadius.circular(15),
               child:
                   planImagePath.trim().replaceAll('"', '').startsWith('http')
-                      ? Image.network(
-                        planImagePath.trim().replaceAll('"', ''),
+                      ? CachedNetworkImage(imageUrl: planImagePath.trim().replaceAll('"', ''),
                         width: 62,
                         height: 62,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
+                        errorWidget: (context, url, error) {
                           return Container(
                             width: 62,
                             height: 62,

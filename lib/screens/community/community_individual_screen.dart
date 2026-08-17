@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:animations/animations.dart';
@@ -629,8 +630,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                       borderRadius: BorderRadius.circular(50),
                       child:
                           community['image'] != null
-                              ? Image.network(
-                                community['image'],
+                              ? CachedNetworkImage(
+                                imageUrl: community['image'],
                                 width: 75,
                                 height: 75,
                                 fit: BoxFit.cover,
@@ -1127,14 +1128,15 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                                                 child: ClipRRect(
                                                   borderRadius:
                                                       BorderRadius.circular(16),
-                                                  child: Image.network(
-                                                    ApiService.getFullImageUrl(
-                                                      msg['imageUrl'],
-                                                    ),
+                                                  child: CachedNetworkImage(
+                                                    imageUrl:
+                                                        ApiService.getFullImageUrl(
+                                                          msg['imageUrl'],
+                                                        ),
                                                     width: 200,
                                                     fit: BoxFit.cover,
-                                                    errorBuilder:
-                                                        (_, __, ___) =>
+                                                    errorWidget:
+                                                        (context, url, error) =>
                                                             const SizedBox(),
                                                   ),
                                                 ),
@@ -1385,8 +1387,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                         borderRadius: BorderRadius.circular(50),
                         child:
                             community['image'] != null
-                                ? Image.network(
-                                  community['image']!,
+                                ? CachedNetworkImage(
+                                  imageUrl: community['image']!,
                                   width: 75,
                                   height: 75,
                                   fit: BoxFit.cover,
@@ -1686,7 +1688,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SectionHeader(
-                                    title: "Today's Messages",
+                                    title: "Today's Sermons",
                                     showSeeAll: false,
                                   ),
                                   AdminMessageCard(message: latestMessage),

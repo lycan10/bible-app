@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
@@ -51,8 +52,7 @@ class CommunityProfileCard2 extends StatelessWidget {
                   ), // half of image width/height
                   child:
                       community['image'] != null
-                          ? Image.network(
-                            community['image'],
+                          ? CachedNetworkImage(imageUrl: community['image'],
                             width: 75,
                             height: 75,
                             fit: BoxFit.cover,

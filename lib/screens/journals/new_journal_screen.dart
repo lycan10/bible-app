@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:quest/utils/date_formatter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/daily_feeling_popup.dart';
@@ -334,7 +335,7 @@ class _NewJournalScreenState extends State<NewJournalScreen>
                               ),
                             ),
                             Text(
-                              'Today ${DateFormat('h:mma').format(DateTime.now()).toLowerCase()}',
+                              DateFormatter.formatTimeAgo(DateTime.now().toIso8601String()),
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: Theme.of(

@@ -40,9 +40,9 @@ class _MyContentScreenState extends State<MyContentScreen>
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: colorScheme.primary,
+          labelColor: AppTheme.primaryBlue,
           unselectedLabelColor: colorScheme.onSurfaceVariant,
-          indicatorColor: colorScheme.primary,
+          indicatorColor: AppTheme.primaryBlue,
           isScrollable: true,
           tabs: const [
             Tab(text: 'Devotions'),
@@ -141,7 +141,7 @@ class _MyContentScreenState extends State<MyContentScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary),
+                        icon: Icon(Icons.edit_outlined, color: AppTheme.primaryBlue),
                         onPressed: () => _editItem(type, item),
                         tooltip: 'Edit',
                       ),

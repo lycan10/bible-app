@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
@@ -151,12 +152,11 @@ class CommunityMessageCard extends StatelessWidget {
             if (imageUrl != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(imageUrl: imageUrl,
                   width: 85,
                   height: 85,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+                  errorWidget: (context, url, error) => Container(
                     width: 85,
                     height: 85,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.05),

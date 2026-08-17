@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/components/stats/stats.dart';
@@ -126,15 +127,14 @@ class PostCardLong extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 65),
-                            child: FormattedText(
-                              postText,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 14,
-                                color: theme.colorScheme.tertiary,
-                                height: 1.4,
-                              ),
+                          Text(
+                            postText,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 14,
+                              color: theme.colorScheme.tertiary,
+                              height: 1.4,
                             ),
                           ),
 
@@ -200,8 +200,7 @@ class PostCardLong extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         child:
                             postImage.startsWith('http')
-                                ? Image.network(
-                                  postImage,
+                                ? CachedNetworkImage(imageUrl: postImage,
                                   width: 90,
                                   height: 90,
                                   fit: BoxFit.cover,

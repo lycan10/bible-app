@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/gestures.dart';
@@ -762,8 +763,7 @@ class ChatBubble extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    imageUrl!,
+                  child: CachedNetworkImage(imageUrl: imageUrl!,
                     width: 200,
                     fit: BoxFit.cover,
                   ),

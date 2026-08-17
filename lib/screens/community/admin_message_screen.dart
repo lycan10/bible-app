@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
@@ -417,8 +418,7 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
                       borderRadius: BorderRadius.circular(20),
                       child: Stack(
                         children: [
-                          Image.network(
-                            imageUrl,
+                          CachedNetworkImage(imageUrl: imageUrl,
                             width: double.infinity,
                             fit: BoxFit.cover,
                           ),

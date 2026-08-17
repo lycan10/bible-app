@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
@@ -278,11 +279,11 @@ class _PostScreenState extends State<PostScreen> {
                           width: double.infinity,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              imageUrl,
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
                               fit: BoxFit.cover,
-                              errorBuilder:
-                                  (context, error, stackTrace) => Image.asset(
+                              errorWidget:
+                                  (context, url, error) => Image.asset(
                                     'assets/images/test.png',
                                     fit: BoxFit.cover,
                                   ),

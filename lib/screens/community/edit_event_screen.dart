@@ -13,8 +13,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 class EditEventScreen extends StatefulWidget {
   final String communityId;
   final Map<String, dynamic> event;
-  
-  const EditEventScreen({super.key, required this.communityId, required this.event});
+
+  const EditEventScreen({
+    super.key,
+    required this.communityId,
+    required this.event,
+  });
 
   @override
   State<EditEventScreen> createState() => _EditEventScreenState();
@@ -36,20 +40,24 @@ class _EditEventScreenState extends State<EditEventScreen> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.event['title']);
-    _descriptionController = TextEditingController(text: widget.event['description']);
+    _descriptionController = TextEditingController(
+      text: widget.event['description'],
+    );
     _locationController = TextEditingController(text: widget.event['location']);
     _linkController = TextEditingController(text: widget.event['link']);
     try {
       _selectedDate = DateTime.parse(widget.event['date']);
     } catch (_) {}
-    
+
     try {
       final timeParts = widget.event['time'].toString().split(RegExp(r'[: ]'));
       int hour = int.parse(timeParts[0]);
       int minute = int.parse(timeParts[1]);
-      if (widget.event['time'].toString().toLowerCase().contains('pm') && hour != 12) {
+      if (widget.event['time'].toString().toLowerCase().contains('pm') &&
+          hour != 12) {
         hour += 12;
-      } else if (widget.event['time'].toString().toLowerCase().contains('am') && hour == 12) {
+      } else if (widget.event['time'].toString().toLowerCase().contains('am') &&
+          hour == 12) {
         hour = 0;
       }
       _selectedTime = TimeOfDay(hour: hour, minute: minute);
@@ -91,7 +99,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
       dateStr,
       timeStr,
       _locationController.text.trim(),
-      link: _linkController.text.trim().isEmpty ? null : _linkController.text.trim(),
+      link:
+          _linkController.text.trim().isEmpty
+              ? null
+              : _linkController.text.trim(),
       imagePath: _image?.path,
       existingImageUrl: widget.event['imageUrl'],
     );
@@ -103,9 +114,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
       Navigator.pop(context); // Close edit screen
       Navigator.pop(context); // Close event details bottom sheet
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update event')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to update event')));
     }
   }
 
@@ -203,31 +214,44 @@ class _EditEventScreenState extends State<EditEventScreen> {
                     height: 150,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                     ),
-                    child: _image != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: Image.file(_image!, fit: BoxFit.cover),
-                          )
-                        : (widget.event['imageUrl'] != null
+                    child:
+                        _image != null
                             ? ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: CachedNetworkImage(
-                                  imageUrl: widget.event['imageUrl'],
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  HugeIcon(icon: HugeIcons.strokeRoundedImage01, color: AppTheme.textColor2, size: 40.0),
-                                  const SizedBox(height: 10),
-                                  Text('Upload Event Image', style: TextStyle(color: AppTheme.textColor2)),
-                                ],
-                              )),
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.file(_image!, fit: BoxFit.cover),
+                            )
+                            : (widget.event['imageUrl'] != null
+                                ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(15),
+                                  child: CachedNetworkImage(
+                                    imageUrl: widget.event['imageUrl'],
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                                : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    HugeIcon(
+                                      icon: HugeIcons.strokeRoundedImage01,
+                                      color: AppTheme.textColor2,
+                                      size: 40.0,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      'Upload Event Image',
+                                      style: TextStyle(
+                                        color: AppTheme.textColor2,
+                                      ),
+                                    ),
+                                  ],
+                                )),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -238,7 +262,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
                     labelText: 'Event Title',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -246,8 +272,11 @@ class _EditEventScreenState extends State<EditEventScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Title is required' : null,
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? 'Title is required'
+                              : null,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
@@ -258,7 +287,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
                     labelText: 'Description',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -266,8 +297,11 @@ class _EditEventScreenState extends State<EditEventScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Description required' : null,
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? 'Description required'
+                              : null,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
@@ -277,7 +311,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
                     labelText: 'Location',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -285,8 +321,11 @@ class _EditEventScreenState extends State<EditEventScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Location required' : null,
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? 'Location required'
+                              : null,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
@@ -296,7 +335,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
                     labelText: 'Event Link (Optional)',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -314,15 +355,22 @@ class _EditEventScreenState extends State<EditEventScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             _selectedDate == null
                                 ? 'Select Date'
-                                : DateFormat('yyyy-MM-dd').format(_selectedDate!),
+                                : DateFormat(
+                                  'yyyy-MM-dd',
+                                ).format(_selectedDate!),
                             style: TextStyle(
-                              color: _selectedDate == null ? AppTheme.textColor2 : theme.colorScheme.onSurface,
+                              color:
+                                  _selectedDate == null
+                                      ? AppTheme.textColor2
+                                      : theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -335,7 +383,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -343,7 +393,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
                                 ? 'Select Time'
                                 : _selectedTime!.format(context),
                             style: TextStyle(
-                              color: _selectedTime == null ? AppTheme.textColor2 : theme.colorScheme.onSurface,
+                              color:
+                                  _selectedTime == null
+                                      ? AppTheme.textColor2
+                                      : theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -363,23 +416,24 @@ class _EditEventScreenState extends State<EditEventScreen> {
                         borderRadius: BorderRadius.circular(100),
                       ),
                     ),
-                    child: _isLoading
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: theme.colorScheme.surface,
-                              strokeWidth: 2,
+                    child:
+                        _isLoading
+                            ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: theme.colorScheme.surface,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : Text(
+                              'Save Changes',
+                              style: TextStyle(
+                                color: theme.colorScheme.surface,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          )
-                        : Text(
-                            'Save Changes',
-                            style: TextStyle(
-                              color: theme.colorScheme.surface,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                   ),
                 ),
               ],

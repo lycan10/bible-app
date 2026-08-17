@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
@@ -124,12 +125,11 @@ class OngoingDevotionCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(25),
                       child:
                           formattedImagePath.startsWith('http')
-                              ? Image.network(
-                                formattedImagePath,
+                              ? CachedNetworkImage(imageUrl: formattedImagePath,
                                 width: 95,
                             height: 95,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
+                            errorWidget: (context, url, error) {
                               return Container(
                                 width: 95,
                                 height: 95,

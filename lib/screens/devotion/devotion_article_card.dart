@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
@@ -48,12 +49,12 @@ class DevotionArticleCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
               child:
                   imagePath.startsWith('http')
-                      ? Image.network(
-                        imagePath,
+                      ? CachedNetworkImage(
+                        imageUrl: imagePath,
                         width: 62,
                         height: 62,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
+                        errorWidget: (context, url, error) {
                           return Container(
                             width: 62,
                             height: 62,
@@ -71,18 +72,6 @@ class DevotionArticleCard extends StatelessWidget {
                         width: 62,
                         height: 62,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 62,
-                            height: 62,
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.broken_image,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                          );
-                        },
                       ),
             ),
 
@@ -241,3 +230,4 @@ class DevotionArticleCard extends StatelessWidget {
     );
   }
 }
+

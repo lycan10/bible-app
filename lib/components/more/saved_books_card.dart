@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:quest/theme/theme.dart';
@@ -105,8 +106,7 @@ class SavedBooksCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: imageUrl != null 
-                  ? Image.network(
-                      imageUrl!,
+                  ? CachedNetworkImage(imageUrl: imageUrl!,
                       fit: BoxFit.cover,
                       width: 80,
                       height: 80,

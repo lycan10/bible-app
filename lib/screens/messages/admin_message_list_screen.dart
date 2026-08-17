@@ -1,3 +1,4 @@
+import 'package:quest/components/page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
@@ -14,7 +15,8 @@ class AdminMessageListScreen extends StatefulWidget {
   State<AdminMessageListScreen> createState() => _AdminMessageListScreenState();
 }
 
-class _AdminMessageListScreenState extends State<AdminMessageListScreen> with RouteAware {
+class _AdminMessageListScreenState extends State<AdminMessageListScreen>
+    with RouteAware {
   List<dynamic> _messages = [];
   bool _isLoading = true;
 
@@ -68,35 +70,42 @@ class _AdminMessageListScreenState extends State<AdminMessageListScreen> with Ro
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 15, left: 16, right: 16),
-          child: Column(
-            children: [
-              TitleOne(
-                leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
-                title: 'Messages',
-                trailingIcon: HugeIcons.strokeRoundedMoreVertical,
-                leadingIconTap: () => Navigator.pop(context),
-                trailingIconTap: () {},
-              ),
-              const SizedBox(height: 25),
-              Expanded(
-                child:
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _messages.isEmpty
-                        ? const Center(
-                          child: Text("No messages found in your communities."),
-                        )
-                        : ListView.builder(
-                          itemCount: _messages.length,
-                          itemBuilder: (context, index) {
-                            return AdminMessageCard(message: _messages[index]);
-                          },
-                        ),
-              ),
-            ],
+      body: PageLoader(
+        isLoading: _isLoading,
+        hasData: _messages.isNotEmpty,
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadMessages,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(top: 15, left: 16, right: 16, bottom: 20),
+              children: [
+                TitleOne(
+                  leadingIcon: HugeIcons.strokeRoundedArrowLeft01,
+                  title: 'Sermons',
+                  trailingIcon: HugeIcons.strokeRoundedMoreVertical,
+                  leadingIconTap: () => Navigator.pop(context),
+                  trailingIconTap: () {},
+                ),
+                const SizedBox(height: 25),
+                if (_messages.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(
+                      child: Text("No messages found in your communities."),
+                    ),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      return AdminMessageCard(message: _messages[index]);
+                    },
+                  ),
+              ],
+            ),
           ),
         ),
       ),

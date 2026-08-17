@@ -1,6 +1,14 @@
 class DateFormatter {
+  static String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
   static String formatTimeAgo(String? dateTimeStr) {
-    if (dateTimeStr == null) return 'Today';
+    if (dateTimeStr == null) return _formatDate(DateTime.now());
     try {
       final dateTime = DateTime.parse(dateTimeStr).toLocal();
       final now = DateTime.now();
@@ -26,21 +34,7 @@ class DateFormatter {
         if (difference.inDays < 7) {
           return '${difference.inDays} days ago';
         } else {
-          final months = [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
-            'Nov',
-            'Dec',
-          ];
-          return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
+          return _formatDate(dateTime);
         }
       }
     } catch (e) {

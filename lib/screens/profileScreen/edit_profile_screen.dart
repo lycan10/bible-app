@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -218,8 +219,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                           fit: BoxFit.cover,
                                         )
                                         : formattedAvatarUrl.startsWith('http')
-                                        ? Image.network(
-                                          formattedAvatarUrl,
+                                        ? CachedNetworkImage(imageUrl: formattedAvatarUrl,
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
