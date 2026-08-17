@@ -14,7 +14,9 @@ import '../../components/embeds/voice_note_embed.dart';
 import '../../components/coin_purchase_dialog.dart';
 
 class NewNoteScreen extends StatefulWidget {
-  const NewNoteScreen({super.key});
+  final String? initialBibleReference;
+
+  const NewNoteScreen({super.key, this.initialBibleReference});
 
   @override
   State<NewNoteScreen> createState() => _NewNoteScreenState();
@@ -25,6 +27,14 @@ class _NewNoteScreenState extends State<NewNoteScreen>
   final QuillController _controller = QuillController.basic();
   final TextEditingController _titleController = TextEditingController();
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialBibleReference != null) {
+      _controller.document.insert(0, '[Verse:${widget.initialBibleReference}] ');
+    }
+  }
 
   @override
   QuillController get quillController => _controller;

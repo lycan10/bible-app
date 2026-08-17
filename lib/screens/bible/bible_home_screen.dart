@@ -10,6 +10,7 @@ import 'package:quest/services/bible_service.dart';
 import 'package:quest/screens/bible/saved_verses_screen.dart';
 import 'package:quest/screens/bible/highlights_screen.dart';
 import 'package:quest/screens/bible/bible_settings_screen.dart';
+import 'package:quest/screens/notes/new_note_screen.dart';
 import 'bible_search_delegate.dart';
 
 class BibleHomeScreen extends StatefulWidget {
@@ -174,8 +175,19 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
                       icon: HugeIcons.strokeRoundedNote01,
                       label: "Note",
                       onTap: () {
-                        // TODO: Implement Notes
                         Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => NewNoteScreen(
+                              initialBibleReference: BibleService.formatReference(
+                                bibleProvider.currentBookIndex,
+                                bibleProvider.currentChapter,
+                                verseCount,
+                              ),
+                            ),
+                          ),
+                        );
                       },
                     ),
                     _buildActionIcon(
