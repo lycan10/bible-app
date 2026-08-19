@@ -209,7 +209,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
       ),
       builder: (context) {
         return FutureBuilder<String?>(
-          future: BibleService.getVerseText(reference),
+          future: BibleService.getVerseText(reference, Provider.of<BibleProvider>(context, listen: false).currentTranslation),
           builder: (context, snapshot) {
             return SafeArea(
               child: Padding(

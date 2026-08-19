@@ -103,7 +103,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiary,
+                    color: Colors.black,
                     borderRadius: BorderRadius.circular(50),
                   ),
                   child: Image.asset(

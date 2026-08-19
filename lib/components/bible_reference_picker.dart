@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quest/services/bible_service.dart';
+import 'package:provider/provider.dart';
+import 'package:quest/providers/bible_provider.dart';
 
 void showBibleReferencePicker(
   BuildContext context,
@@ -36,7 +38,11 @@ void showBibleReferencePicker(
             );
           } else if (selectedChapter == null) {
             content = FutureBuilder<int>(
-              future: BibleService.getChaptersCount(selectedBook!),
+              future: BibleService.getChaptersCount(
+                selectedBook!,
+                Provider.of<BibleProvider>(context, listen: false)
+                    .currentTranslation,
+              ),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
@@ -66,7 +72,12 @@ void showBibleReferencePicker(
             );
           } else {
             content = FutureBuilder<List<Map<String, dynamic>>>(
-              future: BibleService.getVerses(selectedBook!, selectedChapter!),
+              future: BibleService.getVerses(
+                selectedBook!,
+                selectedChapter!,
+                Provider.of<BibleProvider>(context, listen: false)
+                    .currentTranslation,
+              ),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());

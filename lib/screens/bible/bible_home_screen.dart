@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:quest/main.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:quest/theme/theme.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:quest/providers/bible_provider.dart';
 import 'package:quest/providers/auth_provider.dart';
@@ -24,6 +25,9 @@ class BibleHomeScreen extends StatefulWidget {
 
 class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
   final ItemScrollController _itemScrollController = ItemScrollController();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
+  bool _hasInitialScrolled = false;
 
   @override
   void initState() {
@@ -36,16 +40,48 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
           listen: false,
         ).syncData(authProvider.token!);
       }
-      if (widget.initialScrollIndex != null) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (_itemScrollController.isAttached) {
-            _itemScrollController.scrollTo(
-              index: widget.initialScrollIndex!,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          }
-        });
+    });
+
+    _itemPositionsListener.itemPositions.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (!_hasInitialScrolled) return;
+    
+    final positions = _itemPositionsListener.itemPositions.value;
+    if (positions.isNotEmpty) {
+      int topIndex = positions
+          .where((p) => p.itemTrailingEdge > 0)
+          .map((p) => p.index)
+          .reduce((a, b) => a < b ? a : b);
+
+      final provider = Provider.of<BibleProvider>(context, listen: false);
+      if (topIndex > 0 && topIndex <= provider.verses.length) {
+        int verse = provider.verses[topIndex - 1]['Versecount'];
+        provider.updateCurrentVerse(verse);
+      }
+    }
+  }
+
+  void _handleInitialScroll(BibleProvider provider) {
+    if (_hasInitialScrolled) return;
+    if (provider.isLoading || !provider.isDbReady) return;
+
+    _hasInitialScrolled = true;
+    int targetIndex = widget.initialScrollIndex ?? provider.currentVerse;
+
+    // Ensure index is within bounds
+    if (targetIndex < 0) targetIndex = 0;
+    if (targetIndex > provider.verses.length)
+      targetIndex = provider.verses.length;
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_itemScrollController.isAttached) {
+        _itemScrollController.scrollTo(
+          index: targetIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
       }
     });
   }
@@ -59,6 +95,7 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
+    _itemPositionsListener.itemPositions.removeListener(_scrollListener);
     super.dispose();
   }
 
@@ -126,8 +163,10 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  spacing: 16,
+                  runSpacing: 16,
                   children: [
                     _buildActionIcon(
                       context: context,
@@ -179,13 +218,15 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => NewNoteScreen(
-                              initialBibleReference: BibleService.formatReference(
-                                bibleProvider.currentBookIndex,
-                                bibleProvider.currentChapter,
-                                verseCount,
-                              ),
-                            ),
+                            builder:
+                                (_) => NewNoteScreen(
+                                  initialBibleReference:
+                                      BibleService.formatReference(
+                                        bibleProvider.currentBookIndex,
+                                        bibleProvider.currentChapter,
+                                        verseCount,
+                                      ),
+                                ),
                           ),
                         );
                       },
@@ -209,6 +250,22 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
                         Navigator.pop(context);
                       },
                     ),
+                    if (bibleProvider.showActionSheetCrossReferences)
+                      _buildActionIcon(
+                        context: context,
+                        icon: HugeIcons.strokeRoundedLink01,
+                        label: "References",
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showCrossReferencesSheet(
+                            context,
+                            bibleProvider.currentBookIndex,
+                            bibleProvider.currentChapter,
+                            verseCount,
+                            bibleProvider.currentTranslation,
+                          );
+                        },
+                      ),
                   ],
                 ),
               ],
@@ -321,6 +378,97 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
     );
   }
 
+  void _showCrossReferencesSheet(
+    BuildContext context,
+    int bookIndex,
+    int chapter,
+    int verse,
+    String translationTable,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.3,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return FutureBuilder<List<Map<String, dynamic>>>(
+              future: () async {
+                var refs = await BibleService.getCrossReferences(
+                  bookIndex,
+                  chapter,
+                  verse,
+                );
+                List<int> vids = refs.map((r) => r['sv'] as int).toList();
+                return await BibleService.getVersesByVids(
+                  vids,
+                  translationTable,
+                );
+              }(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError ||
+                    !snapshot.hasData ||
+                    snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text("No cross-references found."),
+                  );
+                }
+
+                final crossRefs = snapshot.data!;
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "Cross-References for ${BibleService.formatReference(bookIndex, chapter, verse)}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: crossRefs.length,
+                        itemBuilder: (context, index) {
+                          final ref = crossRefs[index];
+                          return ListTile(
+                            title: Text(
+                              "${ref['bookName']} ${ref['chapter']}:${ref['Versecount']}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(ref['verse']),
+                            onTap: () {
+                              Navigator.pop(context);
+                              // Navigate to that verse if needed.
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildActionIcon({
     required BuildContext context,
     required dynamic icon,
@@ -354,10 +502,97 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
     final bibleProvider = Provider.of<BibleProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final theme = Theme.of(context);
+
+    // Call handleInitialScroll to jump to the last read verse once ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleInitialScroll(bibleProvider);
+    });
+
+    if (!bibleProvider.isDbReady) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.menu_book_rounded,
+                  size: 80,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "Download Bible Data",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "We need to download the offline database to continue. This is a one-time process.",
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                if (bibleProvider.downloadProgress > 0) ...[
+                  LinearProgressIndicator(
+                    value: bibleProvider.downloadProgress,
+                    color: AppTheme.primaryBlue,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "${(bibleProvider.downloadProgress * 100).toStringAsFixed(1)}%",
+                  ),
+                ] else ...[
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 1,
+                      ),
+                    ),
+                    onPressed: () {
+                      if (authProvider.token != null) {
+                        bibleProvider.startDownload(authProvider.token!);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Please login to download the Bible data",
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text("Start Download"),
+                  ),
+                ],
+                if (bibleProvider.downloadError != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    "Error: ${bibleProvider.downloadError}",
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    String currentAbbrev = 'KJV';
+    if (bibleProvider.availableTranslations.isNotEmpty) {
+      final t = bibleProvider.availableTranslations.firstWhere(
+        (t) => t['table'] == bibleProvider.currentTranslation,
+        orElse: () => bibleProvider.availableTranslations.first,
+      );
+      currentAbbrev = t['abbreviation'] ?? 'KJV';
+    }
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         centerTitle: true,
         title: InkWell(
@@ -366,7 +601,7 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color:
-                  Theme.of(context).brightness == Brightness.dark
+                  theme.brightness == Brightness.dark
                       ? Colors.grey[800]
                       : Colors.grey[100],
               borderRadius: BorderRadius.circular(20),
@@ -375,9 +610,13 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "${BibleService.bookNames[bibleProvider.currentBookIndex]} ${bibleProvider.currentChapter}",
+                  BibleService.bookNames.isNotEmpty &&
+                          bibleProvider.currentBookIndex <
+                              BibleService.bookNames.length
+                      ? "${BibleService.bookNames[bibleProvider.currentBookIndex]} ${bibleProvider.currentChapter}"
+                      : "...",
                   style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    color: theme.textTheme.bodyMedium?.color,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -385,9 +624,7 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
                 const SizedBox(width: 8),
                 HugeIcon(
                   icon: HugeIcons.strokeRoundedArrowDown01,
-                  color:
-                      Theme.of(context).textTheme.bodyMedium?.color ??
-                      Colors.black,
+                  color: theme.textTheme.bodyMedium?.color ?? Colors.black,
                   size: 16,
                 ),
               ],
@@ -395,17 +632,46 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
           ),
         ),
         actions: [
+          PopupMenuButton<String>(
+            icon: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: theme.dividerColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                currentAbbrev,
+                style: TextStyle(
+                  color: theme.textTheme.bodyMedium?.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            onSelected: (value) {
+              bibleProvider.setTranslation(value);
+            },
+            itemBuilder: (BuildContext context) {
+              return bibleProvider.availableTranslations.map((t) {
+                return PopupMenuItem<String>(
+                  value: t['table'],
+                  child: Text("${t['version']} (${t['abbreviation']})"),
+                );
+              }).toList();
+            },
+          ),
           IconButton(
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedSearch01,
-              color:
-                  Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black,
+              color: theme.textTheme.bodyMedium?.color ?? Colors.black,
               size: 24,
             ),
             onPressed: () async {
               var result = await showSearch<Map<String, dynamic>?>(
                 context: context,
-                delegate: BibleSearchDelegate(),
+                delegate: BibleSearchDelegate(
+                  translationTable: bibleProvider.currentTranslation,
+                ),
               );
               if (result != null && context.mounted) {
                 int book = result['Book'];
@@ -417,7 +683,6 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
                   await bibleProvider.loadVerses(book, chapter);
                 }
 
-                // Header is index 0, verse 1 is index 1, so verse index is `verse`
                 Future.delayed(const Duration(milliseconds: 100), () {
                   if (_itemScrollController.isAttached) {
                     _itemScrollController.scrollTo(
@@ -433,8 +698,7 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
           PopupMenuButton<String>(
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedMenu01,
-              color:
-                  Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black,
+              color: theme.textTheme.bodyMedium?.color ?? Colors.black,
               size: 24,
             ),
             onSelected: (value) {
@@ -478,146 +742,365 @@ class _BibleHomeScreenState extends State<BibleHomeScreen> with RouteAware {
       body:
           bibleProvider.isLoading
               ? const Center(child: CircularProgressIndicator())
-              : ScrollablePositionedList.builder(
-                itemScrollController: _itemScrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 20,
-                ),
-                itemCount:
-                    bibleProvider.verses.length +
-                    2, // +2 for header and footer spacing
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Text(
-                        "${BibleService.bookNames[bibleProvider.currentBookIndex]} ${bibleProvider.currentChapter}",
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                    );
-                  }
-                  if (index == bibleProvider.verses.length + 1) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 30),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () {
-                              bibleProvider.previousChapter();
-                              _itemScrollController.jumpTo(index: 0);
-                            },
-                            icon: const Icon(Icons.arrow_back),
-                            label: const Text("Previous"),
-                          ),
-                          TextButton.icon(
-                            onPressed: () {
-                              bibleProvider.nextChapter();
-                              _itemScrollController.jumpTo(index: 0);
-                            },
-                            icon: const Icon(Icons.arrow_forward),
-                            label: const Text("Next"),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  final verseData = bibleProvider.verses[index - 1];
-                  final verseCount = verseData['Versecount'] as int;
-                  final text = verseData['verse'] as String;
-
-                  final highlightColorHex = bibleProvider.getHighlightColor(
-                    verseCount,
-                  );
-                  Color? highlightColor;
-                  if (highlightColorHex != null) {
-                    highlightColor = Color(
-                      int.parse(highlightColorHex.replaceFirst('#', '0xFF')),
-                    ).withValues(alpha: 0.3);
-                  }
-
-                  final isBookmarked = bibleProvider.isBookmarked(verseCount);
-
-                  return InkWell(
-                    onLongPress: () {
-                      if (authProvider.token != null) {
-                        _showVerseActionSheet(
-                          context,
-                          bibleProvider,
-                          authProvider.token!,
-                          verseCount,
-                          text,
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "Please sign in to use these features",
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: highlightColor ?? Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+              : Column(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: ScrollablePositionedList.builder(
+                      itemScrollController: _itemScrollController,
+                      itemPositionsListener: _itemPositionsListener,
                       padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 4,
+                        horizontal: 16,
+                        vertical: 20,
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 30,
+                      itemCount:
+                          bibleProvider.verses.length +
+                          2, // +2 for header and footer spacing
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
                             child: Text(
-                              "$verseCount",
-                              style: TextStyle(
-                                color: Colors.grey[600],
+                              BibleService.bookNames.isNotEmpty &&
+                                      bibleProvider.currentBookIndex <
+                                          BibleService.bookNames.length
+                                  ? "${BibleService.bookNames[bibleProvider.currentBookIndex]} ${bibleProvider.currentChapter}"
+                                  : "...",
+                              style: theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                color: theme.textTheme.bodyMedium?.color,
                               ),
+                            ),
+                          );
+                        }
+                        if (index == bibleProvider.verses.length + 1) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 30),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton.icon(
+                                  onPressed: () {
+                                    bibleProvider.previousChapter();
+                                    _itemScrollController.jumpTo(index: 0);
+                                  },
+                                  icon: const Icon(Icons.arrow_back),
+                                  label: const Text("Previous"),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () {
+                                    bibleProvider.nextChapter();
+                                    _itemScrollController.jumpTo(index: 0);
+                                  },
+                                  icon: const Icon(Icons.arrow_forward),
+                                  label: const Text("Next"),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        final verseData = bibleProvider.verses[index - 1];
+                        final verseCount = verseData['Versecount'] as int;
+                        final text = verseData['verse'] as String;
+
+                        final highlightColorHex = bibleProvider
+                            .getHighlightColor(verseCount);
+                        Color? highlightColor;
+                        if (highlightColorHex != null) {
+                          highlightColor = Color(
+                            int.parse(
+                              highlightColorHex.replaceFirst('#', '0xFF'),
+                            ),
+                          ).withValues(alpha: 0.3);
+                        }
+
+                        final isBookmarked = bibleProvider.isBookmarked(
+                          verseCount,
+                        );
+
+                        return InkWell(
+                          onLongPress: () {
+                            if (authProvider.token != null) {
+                              _showVerseActionSheet(
+                                context,
+                                bibleProvider,
+                                authProvider.token!,
+                                verseCount,
+                                text,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Please sign in to use these features",
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: highlightColor ?? Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 30,
+                                  child: Text(
+                                    "$verseCount",
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child:
+                                      !bibleProvider.showInlineCrossReferences
+                                          ? Text(
+                                            text,
+                                            style: TextStyle(
+                                              fontSize: bibleProvider.fontSize,
+                                              height: 1.5,
+                                              color:
+                                                  theme
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.color,
+                                            ),
+                                          )
+                                          : FutureBuilder<
+                                            List<Map<String, dynamic>>
+                                          >(
+                                            future:
+                                                BibleService.getCrossReferences(
+                                                  bibleProvider
+                                                      .currentBookIndex,
+                                                  bibleProvider.currentChapter,
+                                                  verseCount,
+                                                ),
+                                            builder: (context, snapshot) {
+                                              bool hasRefs =
+                                                  snapshot.hasData &&
+                                                  snapshot.data!.isNotEmpty;
+                                              return RichText(
+                                                text: TextSpan(
+                                                  text: text,
+                                                  style: TextStyle(
+                                                    fontSize:
+                                                        bibleProvider.fontSize,
+                                                    height: 1.5,
+                                                    color:
+                                                        theme
+                                                            .textTheme
+                                                            .bodyMedium
+                                                            ?.color,
+                                                  ),
+                                                  children: [
+                                                    if (hasRefs)
+                                                      WidgetSpan(
+                                                        alignment:
+                                                            PlaceholderAlignment
+                                                                .middle,
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                left: 6.0,
+                                                              ),
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              _showCrossReferencesSheet(
+                                                                context,
+                                                                bibleProvider
+                                                                    .currentBookIndex,
+                                                                bibleProvider
+                                                                    .currentChapter,
+                                                                verseCount,
+                                                                bibleProvider
+                                                                    .currentTranslation,
+                                                              );
+                                                            },
+                                                            child: HugeIcon(
+                                                              icon:
+                                                                  HugeIcons
+                                                                      .strokeRoundedLink01,
+                                                              size:
+                                                                  bibleProvider
+                                                                      .fontSize *
+                                                                  0.8,
+                                                              color:
+                                                                  Colors.blue,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                ),
+                                if (isBookmarked)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8),
+                                    child: HugeIcon(
+                                      icon: HugeIcons.strokeRoundedBookmark02,
+                                      size: 16,
+                                      color:
+                                          theme.textTheme.bodyMedium?.color ??
+                                          Colors.black,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                          Expanded(
-                            child: Text(
-                              text,
-                              style: TextStyle(
-                                fontSize: bibleProvider.fontSize,
-                                height: 1.5,
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.color,
-                              ),
-                            ),
-                          ),
-                          if (isBookmarked)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: HugeIcon(
-                                icon: HugeIcons.strokeRoundedBookmark02,
-                                size: 16,
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.color ??
-                                    Colors.black,
-                              ),
-                            ),
-                        ],
+                        );
+                      },
+                    ),
+                  ),
+                  if (bibleProvider.enableStudyMode) ...[
+                    const Divider(height: 1),
+                    Expanded(
+                      flex: 2,
+                      child: _StudyModePanel(
+                        bibleProvider: bibleProvider,
+                        itemPositionsListener: _itemPositionsListener,
                       ),
                     ),
+                  ],
+                ],
+              ),
+    );
+  }
+}
+
+class _StudyModePanel extends StatefulWidget {
+  final BibleProvider bibleProvider;
+  final ItemPositionsListener itemPositionsListener;
+
+  const _StudyModePanel({
+    required this.bibleProvider,
+    required this.itemPositionsListener,
+  });
+
+  @override
+  State<_StudyModePanel> createState() => _StudyModePanelState();
+}
+
+class _StudyModePanelState extends State<_StudyModePanel> {
+  int _currentTopVerse = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.itemPositionsListener.itemPositions.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    widget.itemPositionsListener.itemPositions.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final positions = widget.itemPositionsListener.itemPositions.value;
+    if (positions.isEmpty) return;
+
+    final topIndex = positions
+        .where((p) => p.itemTrailingEdge > 0)
+        .map((p) => p.index)
+        .reduce((a, b) => a < b ? a : b);
+
+    if (topIndex > 0 && topIndex <= widget.bibleProvider.verses.length) {
+      int verse = widget.bibleProvider.verses[topIndex - 1]['Versecount'];
+      if (verse != _currentTopVerse) {
+        setState(() {
+          _currentTopVerse = verse;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: () async {
+        var refs = await BibleService.getCrossReferences(
+          widget.bibleProvider.currentBookIndex,
+          widget.bibleProvider.currentChapter,
+          _currentTopVerse,
+        );
+        List<int> vids = refs.map((r) => r['sv'] as int).toList();
+        return await BibleService.getVersesByVids(
+          vids,
+          widget.bibleProvider.currentTranslation,
+        );
+      }(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Text(
+              "No cross-references for Verse $_currentTopVerse.",
+              style: TextStyle(color: Theme.of(context).hintColor),
+            ),
+          );
+        }
+
+        final crossRefs = snapshot.data!;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: Text(
+                "Cross-References: v. $_currentTopVerse",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(12),
+                itemCount: crossRefs.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final ref = crossRefs[index];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${ref['bookName']} ${ref['chapter']}:${ref['Versecount']}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        ref['verse'],
+                        style: TextStyle(
+                          fontSize: widget.bibleProvider.fontSize * 0.85,
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -655,7 +1138,10 @@ class _BookChapterVersePickerState extends State<_BookChapterVersePicker>
   }
 
   Future<void> _loadChaptersCount() async {
-    int count = await BibleService.getChaptersCount(_selectedBookIndex);
+    int count = await BibleService.getChaptersCount(
+      _selectedBookIndex,
+      widget.bibleProvider.currentTranslation,
+    );
     if (mounted) {
       setState(() {
         _chaptersCount = count;
@@ -671,6 +1157,7 @@ class _BookChapterVersePickerState extends State<_BookChapterVersePicker>
     var verses = await BibleService.getVerses(
       _selectedBookIndex,
       _selectedChapter,
+      widget.bibleProvider.currentTranslation,
     );
     if (mounted) {
       setState(() {
@@ -799,7 +1286,10 @@ class _BookChapterVersePickerState extends State<_BookChapterVersePicker>
                                     : Theme.of(
                                       context,
                                     ).textTheme.bodyMedium?.color,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                           ),
                         ),
                       ),
@@ -822,7 +1312,6 @@ class _BookChapterVersePickerState extends State<_BookChapterVersePicker>
                         int verse = index + 1;
                         return InkWell(
                           onTap: () async {
-                            Navigator.pop(context);
                             if (widget.bibleProvider.currentBookIndex !=
                                     _selectedBookIndex ||
                                 widget.bibleProvider.currentChapter !=
@@ -832,7 +1321,7 @@ class _BookChapterVersePickerState extends State<_BookChapterVersePicker>
                                 _selectedChapter,
                               );
                             }
-                            // Jump to verse, header is index 0, verse 1 is index 1
+                            Navigator.pop(context);
                             Future.delayed(
                               const Duration(milliseconds: 100),
                               () {
@@ -862,7 +1351,6 @@ class _BookChapterVersePickerState extends State<_BookChapterVersePicker>
                                     Theme.of(
                                       context,
                                     ).textTheme.bodyMedium?.color,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),

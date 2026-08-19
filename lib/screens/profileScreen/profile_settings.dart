@@ -534,10 +534,12 @@ class _AppearanceOptionsSheetState extends State<_AppearanceOptionsSheet> {
     });
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
+    // Update locally immediately for responsive UI
+    auth.updateUserLocally({'appearance': value});
+
     if (auth.token != null) {
       try {
-        await ApiService.updateProfile(auth.token!, {'appearance': value});
-        auth.updateUserLocally({'appearance': value});
+        await ApiService.updateSettings(auth.token!, {'appearance': value});
       } catch (e) {
         // Handle error silently or show a toast
       }

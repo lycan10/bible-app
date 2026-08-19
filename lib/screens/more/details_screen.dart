@@ -4,6 +4,7 @@ import 'package:quest/components/daily_feeling_popup.dart';
 import 'package:quest/components/more/inline_verse_text.dart';
 import 'package:quest/components/more/tag_text_editing_controller.dart';
 import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/providers/bible_provider.dart';
 import 'package:quest/services/api_service.dart';
 import 'package:quest/services/bible_service.dart';
 
@@ -314,7 +315,11 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
               );
             } else if (selectedChapter == null) {
               content = FutureBuilder<int>(
-                future: BibleService.getChaptersCount(selectedBook!),
+                future: BibleService.getChaptersCount(
+                  selectedBook!,
+                  Provider.of<BibleProvider>(context, listen: false)
+                      .currentTranslation,
+                ),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -345,7 +350,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
               );
             } else {
               content = FutureBuilder<List<Map<String, dynamic>>>(
-                future: BibleService.getVerses(selectedBook!, selectedChapter!),
+                future: BibleService.getVerses(
+                  selectedBook!,
+                  selectedChapter!,
+                  Provider.of<BibleProvider>(context, listen: false)
+                      .currentTranslation,
+                ),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());

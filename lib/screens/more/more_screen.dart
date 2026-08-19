@@ -218,7 +218,7 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
   }
 
   void _showVerseBottomSheet(String reference) async {
-    final text = await BibleService.getVerseText(reference);
+    final text = await BibleService.getVerseText(reference, Provider.of<BibleProvider>(context, listen: false).currentTranslation);
     if (!mounted) return;
     showModalBottomSheet(
       context: context,
