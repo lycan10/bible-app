@@ -154,7 +154,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  static void _navigateToCommunityFromNotification(String communityId) {
+  static void _navigateToCommunityFromNotification(String communityId, {String? initialTab}) {
     final context = navigatorKey.currentContext;
     if (context == null) return;
 
@@ -162,7 +162,10 @@ class _MyAppState extends State<MyApp> {
     navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder:
-            (context) => CommunityIndividualScreen(communityId: communityId),
+            (context) => CommunityIndividualScreen(
+              communityId: communityId,
+              initialTab: initialTab,
+            ),
       ),
     );
   }

@@ -78,7 +78,7 @@ class NotificationService {
   static void Function(String)? _chatNavigationHandler;
 
   /// Navigation handler for COMMUNITY_POST notifications.
-  static void Function(String)? _communityNavigationHandler;
+  static void Function(String, {String? initialTab})? _communityNavigationHandler;
 
   /// Register the handler that opens a specific chat when a CHAT_MESSAGE
   /// notification is tapped. Called once from [_MyAppState.initState].
@@ -89,7 +89,7 @@ class NotificationService {
   }
 
   static void setCommunityNavigationHandler(
-    void Function(String) handler,
+    void Function(String, {String? initialTab}) handler,
   ) {
     _communityNavigationHandler = handler;
   }
@@ -434,16 +434,45 @@ void navigateFromNotificationPayload(Map<String, dynamic> data) {
       handler(chatId);
       return;
     }
-  } else if (['COMMUNITY_FORUM', 'COMMUNITY_MESSAGE', 'COMMUNITY_EVENT'].contains(type)) {
+  } else if (['COMMUNITY_FORUM', 'COMMUNITY_MESSAGE', 'COMMUNITY_EVENT', 'NEW_COMMUNITY_POST'].contains(type)) {
     final communityId = data['communityId'] as String?;
-    if (communityId != null) {
-      final context = navigatorKey.currentContext;
-      if (context != null) {
-        final handler = NotificationService._communityNavigationHandler;
-        if (handler != null) {
-          handler(communityId);
-          return;
-        }
+    final postId = data['postId'] as String?;
+    final context = navigatorKey.currentContext;
+
+    // For new posts, if we have the postId open directly to the post screen
+    if (type == 'NEW_COMMUNITY_POST' && postId != null && context != null) {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token != null) {
+        ApiService.fetchPostById(token, postId).then((post) {
+          if (post != null) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => PostScreen(post: post)));
+          } else if (communityId != null) {
+            // fallback: open community Space tab
+            final handler = NotificationService._communityNavigationHandler;
+            handler?.call(communityId, initialTab: 'Space');
+          }
+        }).catchError((e) {
+          debugPrint('Error fetching post: $e');
+          if (communityId != null) {
+            final handler = NotificationService._communityNavigationHandler;
+            handler?.call(communityId, initialTab: 'Space');
+          }
+        });
+        return;
+      }
+    }
+
+    if (communityId != null && context != null) {
+      final handler = NotificationService._communityNavigationHandler;
+      if (handler != null) {
+        String? tab;
+        if (type == 'COMMUNITY_FORUM') tab = 'Forum';
+        else if (type == 'COMMUNITY_MESSAGE') tab = 'Admin message';
+        else if (type == 'COMMUNITY_EVENT') tab = 'Event';
+        else if (type == 'NEW_COMMUNITY_POST') tab = 'Space';
+        
+        handler(communityId, initialTab: tab);
+        return;
       }
     }
   } else if (type == 'COMMUNITY_JOIN_REQUEST') {
@@ -481,7 +510,7 @@ void navigateFromNotificationPayload(Map<String, dynamic> data) {
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
       return;
     }
-  } else if (['COMMUNITY_POST', 'POST_REACTION', 'POST_COMMENT', 'COMMENT_REPLY', 'COMMENT_REACTION'].contains(type)) {
+  } else if (['POST_REACTION', 'POST_COMMENT', 'COMMENT_REPLY', 'COMMENT_REACTION'].contains(type)) {
     final postId = data['postId'] as String?;
     final context = navigatorKey.currentContext;
     if (postId != null && context != null) {

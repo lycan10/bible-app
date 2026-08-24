@@ -10,6 +10,22 @@ import 'package:quest/utils/date_formatter.dart';
 import 'package:quest/main.dart';
 import 'package:quest/services/notification_service.dart';
 
+/// Merges the nested `data` string field (if present and valid JSON) into the
+/// notification payload map. Silently ignores non-JSON values like "data".
+Map<String, dynamic> _mergeNotificationData(Map<String, dynamic> n) {
+  final payload = Map<String, dynamic>.from(n);
+  final raw = payload['data'];
+  if (raw is String && (raw.startsWith('{') || raw.startsWith('['))) {
+    try {
+      final parsed = jsonDecode(raw);
+      if (parsed is Map<String, dynamic>) payload.addAll(parsed);
+    } catch (e) {
+      debugPrint('Error decoding notification data: $e');
+    }
+  }
+  return payload;
+}
+
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
@@ -62,6 +78,20 @@ class _NotificationScreenState extends State<NotificationScreen>
       case 'FRIEND_REQUEST':
       case 'FRIEND_ACCEPTED':
       case 'FRIEND':
+        return HugeIcons.strokeRoundedUserAdd01;
+      case 'COMMUNITY_FORUM':
+        return HugeIcons.strokeRoundedComment01;
+      case 'COMMUNITY_MESSAGE':
+        return HugeIcons.strokeRoundedMegaphone02;
+      case 'COMMUNITY_EVENT':
+        return HugeIcons.strokeRoundedCalendar02;
+      case 'NEW_COMMUNITY_POST':
+      case 'POST_COMMENT':
+      case 'POST_REACTION':
+      case 'COMMENT_REPLY':
+      case 'COMMENT_REACTION':
+        return HugeIcons.strokeRoundedGroup01;
+      case 'COMMUNITY_JOIN_REQUEST':
         return HugeIcons.strokeRoundedUserAdd01;
       case 'SYSTEM':
       default:
@@ -184,17 +214,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
-                                        if (payload['data'] != null && payload['data'] is String) {
-                                          try {
-                                            final parsedData = jsonDecode(payload['data']);
-                                            if (parsedData is Map<String, dynamic>) {
-                                              payload.addAll(parsedData);
-                                            }
-                                          } catch (e) {
-                                            debugPrint('Error decoding notification data: $e');
-                                          }
-                                        }
+                                        final payload = _mergeNotificationData(n as Map<String, dynamic>);
                                         navigateFromNotificationPayload(payload);
                                       },
                                     );
@@ -227,17 +247,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
-                                        if (payload['data'] != null && payload['data'] is String) {
-                                          try {
-                                            final parsedData = jsonDecode(payload['data']);
-                                            if (parsedData is Map<String, dynamic>) {
-                                              payload.addAll(parsedData);
-                                            }
-                                          } catch (e) {
-                                            debugPrint('Error decoding notification data: $e');
-                                          }
-                                        }
+                                        final payload = _mergeNotificationData(n as Map<String, dynamic>);
                                         navigateFromNotificationPayload(payload);
                                       },
                                     );
@@ -268,17 +278,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
-                                        if (payload['data'] != null && payload['data'] is String) {
-                                          try {
-                                            final parsedData = jsonDecode(payload['data']);
-                                            if (parsedData is Map<String, dynamic>) {
-                                              payload.addAll(parsedData);
-                                            }
-                                          } catch (e) {
-                                            debugPrint('Error decoding notification data: $e');
-                                          }
-                                        }
+                                        final payload = _mergeNotificationData(n as Map<String, dynamic>);
                                         navigateFromNotificationPayload(payload);
                                       },
                                     );
@@ -309,17 +309,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
-                                        if (payload['data'] != null && payload['data'] is String) {
-                                          try {
-                                            final parsedData = jsonDecode(payload['data']);
-                                            if (parsedData is Map<String, dynamic>) {
-                                              payload.addAll(parsedData);
-                                            }
-                                          } catch (e) {
-                                            debugPrint('Error decoding notification data: $e');
-                                          }
-                                        }
+                                        final payload = _mergeNotificationData(n as Map<String, dynamic>);
                                         navigateFromNotificationPayload(payload);
                                       },
                                     );
@@ -350,17 +340,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
-                                        if (payload['data'] != null && payload['data'] is String) {
-                                          try {
-                                            final parsedData = jsonDecode(payload['data']);
-                                            if (parsedData is Map<String, dynamic>) {
-                                              payload.addAll(parsedData);
-                                            }
-                                          } catch (e) {
-                                            debugPrint('Error decoding notification data: $e');
-                                          }
-                                        }
+                                        final payload = _mergeNotificationData(n as Map<String, dynamic>);
                                         navigateFromNotificationPayload(payload);
                                       },
                                     );

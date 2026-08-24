@@ -39,10 +39,12 @@ import 'package:quest/components/formatted_text.dart';
 class CommunityIndividualScreen extends StatefulWidget {
   final String communityId;
   final Map<String, dynamic>? initialData;
+  final String? initialTab;
   const CommunityIndividualScreen({
     super.key,
     required this.communityId,
     this.initialData,
+    this.initialTab,
   });
 
   @override
@@ -52,7 +54,7 @@ class CommunityIndividualScreen extends StatefulWidget {
 
 class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
     with RouteAware {
-  String selectedTab = "Space";
+  late String selectedTab;
   final TextEditingController _forumController = TextEditingController();
   final ScrollController _forumScrollController = ScrollController();
   final ScrollController _mainScrollController = ScrollController();
@@ -90,6 +92,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
   @override
   void initState() {
     super.initState();
+    selectedTab = widget.initialTab ?? "Space";
     _mainScrollController.addListener(() {
       if (_mainScrollController.position.pixels >=
           _mainScrollController.position.maxScrollExtent - 200) {
