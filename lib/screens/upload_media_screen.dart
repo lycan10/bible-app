@@ -55,14 +55,14 @@ class _UploadMediaScreenState extends State<UploadMediaScreen> {
         await _generateVideoThumbnail(video.path);
       }
     } else if (widget.initialMediaType == 'audio') {
-      FilePickerResult? result = await FilePicker.pickFiles(
+      PlatformFile? result = await FilePicker.pickFile(
         type: FileType.audio,
       );
-      if (result != null && result.files.single.path != null) {
+      if (result != null && result.path != null) {
         setState(() {
-          _selectedMedia = File(result.files.single.path!);
+          _selectedMedia = File(result.path!);
         });
-        await _extractAudioDuration(result.files.single.path!);
+        await _extractAudioDuration(result.path!);
       }
     }
   }

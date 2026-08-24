@@ -82,12 +82,12 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
         });
       }
     } else if (_mediaType == 'Audio') {
-      FilePickerResult? result = await FilePicker.pickFiles(
+      PlatformFile? result = await FilePicker.pickFile(
         type: FileType.audio,
       );
-      if (result != null && result.files.single.path != null) {
+      if (result != null && result.path != null) {
         setState(() {
-          _selectedMedia = File(result.files.single.path!);
+          _selectedMedia = File(result.path!);
         });
       }
     }
