@@ -41,6 +41,7 @@ import 'package:quest/screens/games/games_screen.dart' as quest_games;
 import 'package:quest/screens/donate/donate_screen.dart';
 import 'package:quest/screens/community/community_list_screen.dart';
 import 'package:quest/screens/community/community_individual_screen.dart';
+import 'package:quest/components/feedback_bottom_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -223,232 +224,233 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       hasData: feedProvider.feed != null && feedProvider.feed!.isNotEmpty,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
 
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(width: 10),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(width: 10),
 
-                        Image.asset(
-                          Theme.of(context).brightness == Brightness.dark
-                              ? 'assets/images/logo-dark.png'
-                              : 'assets/images/logo.png',
-                          width: 40,
-                          height: 40,
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FeatureGuard(
-                          featureKey: 'connect',
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => _navigateToMessage(context),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    HugeIcon(
-                                      icon: HugeIcons.strokeRoundedMessage02,
-                                      size: 20.0,
-                                      color: Theme.of(context).iconTheme.color,
-                                      strokeWidth: 1.5,
-                                    ),
-                                    Consumer<ChatProvider>(
-                                      builder: (context, chatProvider, child) {
-                                        if (chatProvider.totalUnreadCount > 0) {
-                                          return Positioned(
-                                            right: -2,
-                                            top: -2,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: const BoxDecoration(
-                                                color: Colors.red,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Text(
-                                                '${chatProvider.totalUnreadCount}',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 8,
-                                                  fontWeight: FontWeight.bold,
+                          Image.asset(
+                            Theme.of(context).brightness == Brightness.dark
+                                ? 'assets/images/logo-dark.png'
+                                : 'assets/images/logo.png',
+                            width: 40,
+                            height: 40,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FeatureGuard(
+                            featureKey: 'connect',
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _navigateToMessage(context),
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      HugeIcon(
+                                        icon: HugeIcons.strokeRoundedMessage02,
+                                        size: 20.0,
+                                        color:
+                                            Theme.of(context).iconTheme.color,
+                                        strokeWidth: 1.5,
+                                      ),
+                                      Consumer<ChatProvider>(
+                                        builder: (
+                                          context,
+                                          chatProvider,
+                                          child,
+                                        ) {
+                                          if (chatProvider.totalUnreadCount >
+                                              0) {
+                                            return Positioned(
+                                              right: -2,
+                                              top: -2,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.red,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Text(
+                                                  '${chatProvider.totalUnreadCount}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 8,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          );
-                                        }
-                                        return const SizedBox.shrink();
-                                      },
-                                    ),
-                                  ],
+                                            );
+                                          }
+                                          return const SizedBox.shrink();
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 13),
-                            ],
+                                const SizedBox(width: 13),
+                              ],
+                            ),
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () => _navigateToNotification(context),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              HugeIcon(
-                                icon: HugeIcons.strokeRoundedNotification01,
-                                size: 20.0,
-                                color: Theme.of(context).iconTheme.color,
-                                strokeWidth: 2,
-                              ),
-                              Consumer<NotificationProvider>(
-                                builder: (context, notifProvider, child) {
-                                  if (notifProvider.unreadCount > 0) {
-                                    return Positioned(
-                                      right: -2,
-                                      top: -2,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          '${notifProvider.unreadCount}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.bold,
+                          GestureDetector(
+                            onTap: () => _navigateToNotification(context),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedNotification01,
+                                  size: 20.0,
+                                  color: Theme.of(context).iconTheme.color,
+                                  strokeWidth: 2,
+                                ),
+                                Consumer<NotificationProvider>(
+                                  builder: (context, notifProvider, child) {
+                                    if (notifProvider.unreadCount > 0) {
+                                      return Positioned(
+                                        right: -2,
+                                        top: -2,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Text(
+                                            '${notifProvider.unreadCount}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  }
-                                  return const SizedBox.shrink();
-                                },
-                              ),
-                            ],
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 13),
-                        GestureDetector(
-                          onTap: () => _navigateToProfile(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [Color(0xff00d4ff), Color(0xff4a3aff)],
-                              ),
+                          const SizedBox(width: 13),
+                          GestureDetector(
+                            onTap: () => _navigateToProfile(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xff00d4ff),
+                                    Color(0xff4a3aff),
+                                  ],
+                                ),
 
-                              borderRadius: BorderRadius.circular(
-                                30,
-                              ), // matches image roundness
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                15,
-                              ), // half of image width/height
-                              child:
-                                  formattedAvatarUrl.startsWith('http')
-                                      ? CachedNetworkImage(imageUrl: formattedAvatarUrl,
-                                        width: 30,
-                                        height: 30,
-                                        fit: BoxFit.cover,
-                                      )
-                                      : Image.asset(
-                                        formattedAvatarUrl,
-                                        width: 30,
-                                        height: 30,
-                                        fit: BoxFit.cover,
-                                      ),
+                                borderRadius: BorderRadius.circular(
+                                  30,
+                                ), // matches image roundness
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  15,
+                                ), // half of image width/height
+                                child:
+                                    formattedAvatarUrl.startsWith('http')
+                                        ? CachedNetworkImage(
+                                          imageUrl: formattedAvatarUrl,
+                                          width: 30,
+                                          height: 30,
+                                          fit: BoxFit.cover,
+                                        )
+                                        : Image.asset(
+                                          formattedAvatarUrl,
+                                          width: 30,
+                                          height: 30,
+                                          fit: BoxFit.cover,
+                                        ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 15),
-                SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${DateFormatter.getGreeting()} ${authProvider.user?['firstName'] ?? ''}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          height: 2,
-                        ),
-                      ),
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "Say ",
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xff4A3AFF),
-                                fontSize: 16,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "'${feedProvider.affirmation}'",
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.normal,
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.color,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                ),
-                SizedBox(height: 20),
-
-                TodayVerseGlass(verseData: feedProvider.dailyVerse),
-                FeatureGuard(
-                  featureKey: 'journal',
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: "Journal",
-                        seeAllText: "See all",
-                        onSeeAllTap: () {
-                          Navigator.push(
+                  SizedBox(height: 15),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${DateFormatter.getGreeting()} ${authProvider.user?['firstName'] ?? ''}',
+                          style: Theme.of(
                             context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) =>
-                                      const MoreScreen(initialTab: "Journal"),
-                            ),
-                          );
-                        },
-                      ),
-                      if (latestJournal == null)
-                        GestureDetector(
-                          onTap: () {
+                          ).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            height: 2,
+                          ),
+                        ),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: "Say ",
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xff4A3AFF),
+                                  fontSize: 16,
+                                ),
+                              ),
+                              TextSpan(
+                                text: "'${feedProvider.affirmation}'",
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+
+                  TodayVerseGlass(verseData: feedProvider.dailyVerse),
+                  FeatureGuard(
+                    featureKey: 'journal',
+                    child: Column(
+                      children: [
+                        SectionHeader(
+                          title: "Journal",
+                          seeAllText: "See all",
+                          onSeeAllTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -458,742 +460,812 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               ),
                             );
                           },
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Text(
-                              "Write your first journal today!",
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: AppTheme.textColor2),
-                            ),
-                          ),
-                        )
-                      else
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => ViewNoteScreen(
-                                      id: latestJournal['id'] ?? '',
-                                      title:
-                                          latestJournal['title'] ?? 'Untitled',
-                                      bodyText: latestJournal['bodyText'] ?? '',
-                                      time: DateFormatter.formatTimeAgo(
-                                        latestJournal['createdAt'],
+                        ),
+                        if (latestJournal == null)
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const MoreScreen(
+                                        initialTab: "Journal",
                                       ),
-                                      verses: parsedVersesList,
-                                      feelings: parsedFeelingsList,
-                                      type: "Journal",
-                                    ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                /// 🔹 Avatar
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.greenColor.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  child: HugeIcon(
-                                    icon: HugeIcons.strokeRoundedLeaf02,
-                                    size: 30,
-                                    color: AppTheme.greenColor,
-                                  ),
                                 ),
-
-                                const SizedBox(width: 10),
-
-                                /// 🔹 Text Content
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        latestJournal['title'] ?? 'Untitled',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium?.color,
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 6),
-
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          maxWidth: 250,
-                                        ),
-                                        child: Text(
-                                          TextParser.extractTextFromDelta(
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Text(
+                                "Write your first journal today!",
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: AppTheme.textColor2),
+                              ),
+                            ),
+                          )
+                        else
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ViewNoteScreen(
+                                        id: latestJournal['id'] ?? '',
+                                        title:
+                                            latestJournal['title'] ??
+                                            'Untitled',
+                                        bodyText:
                                             latestJournal['bodyText'] ?? '',
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                        time: DateFormatter.formatTimeAgo(
+                                          latestJournal['createdAt'],
+                                        ),
+                                        verses: parsedVersesList,
+                                        feelings: parsedFeelingsList,
+                                        type: "Journal",
+                                      ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  /// 🔹 Avatar
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.greenColor.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    child: HugeIcon(
+                                      icon: HugeIcons.strokeRoundedLeaf02,
+                                      size: 30,
+                                      color: AppTheme.greenColor,
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 10),
+
+                                  /// 🔹 Text Content
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          latestJournal['title'] ?? 'Untitled',
                                           style: Theme.of(
                                             context,
                                           ).textTheme.bodyMedium?.copyWith(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: theme.colorScheme.onTertiary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.bodyMedium?.color,
                                           ),
                                         ),
-                                      ),
 
-                                      const SizedBox(height: 6),
+                                        const SizedBox(height: 6),
 
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          maxWidth: 250,
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 250,
+                                          ),
+                                          child: Text(
+                                            TextParser.extractTextFromDelta(
+                                              latestJournal['bodyText'] ?? '',
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.copyWith(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color:
+                                                  theme.colorScheme.onTertiary,
+                                            ),
+                                          ),
                                         ),
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                              '- ${DateFormatter.formatTimeAgo(latestJournal['createdAt'])}',
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium?.copyWith(
-                                                fontSize: 12,
-                                                color:
-                                                    Theme.of(context)
+
+                                        const SizedBox(height: 6),
+
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 250,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                '- ${DateFormatter.formatTimeAgo(latestJournal['createdAt'])}',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontSize: 12,
+                                                      color:
+                                                          Theme.of(context)
+                                                              .textTheme
+                                                              .bodyMedium
+                                                              ?.color,
+                                                    ),
+                                              ),
+                                              const SizedBox(width: 6),
+
+                                              if (parsedFeelings
+                                                  .isNotEmpty) ...[
+                                                SizedBox(
+                                                  height: 10,
+                                                  child: VerticalDivider(
+                                                    thickness: 1.5,
+                                                    color: AppTheme.textColor2
+                                                        .withValues(alpha: 0.5),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    '- Feelings: $parsedFeelings',
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: Theme.of(context)
                                                         .textTheme
                                                         .bodyMedium
-                                                        ?.color,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-
-                                            if (parsedFeelings.isNotEmpty) ...[
-                                              SizedBox(
-                                                height: 10,
-                                                child: VerticalDivider(
-                                                  thickness: 1.5,
-                                                  color: AppTheme.textColor2
-                                                      .withValues(alpha: 0.5),
+                                                        ?.copyWith(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .textTheme
+                                                                  .bodyMedium
+                                                                  ?.color,
+                                                        ),
+                                                  ),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  '- Feelings: $parsedFeelings',
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.copyWith(
-                                                        fontSize: 12,
-                                                        color:
-                                                            Theme.of(context)
-                                                                .textTheme
-                                                                .bodyMedium
-                                                                ?.color,
-                                                      ),
-                                                ),
-                                              ),
+                                              ],
                                             ],
-                                          ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 13),
-                GestureDetector(
-                  onTap: () {
-                    DailyFeelingPopup.show(context);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: AppTheme.purpleColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            /// 🔹 Avatar
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppTheme.purpleColor.withValues(
-                                  alpha: 0.2,
-                                ),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: HugeIcon(
-                                icon: HugeIcons.strokeRoundedLeaf02,
-                                size: 30,
-                                color: AppTheme.purpleColor,
-                              ),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            /// 🔹 Text Content
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  feedProvider.currentFeeling != null
-                                      ? 'Feeling: ${feedProvider.currentFeeling!['emoji']} ${feedProvider.currentFeeling!['feeling']}'
-                                      : 'How are you feeling?',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-
-                                if (feedProvider.currentFeeling != null) ...[
-                                  const SizedBox(height: 4),
-
-                                  Text(
-                                    '- ${DateFormatter.formatTimeAgo(feedProvider.currentFeeling!['createdAt'])}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontSize: 13),
+                                      ],
+                                    ),
                                   ),
                                 ],
-                              ],
+                              ),
                             ),
-                          ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 13),
+                  GestureDetector(
+                    onTap: () {
+                      DailyFeelingPopup.show(context);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: AppTheme.purpleColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              /// 🔹 Avatar
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.purpleColor.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: HugeIcon(
+                                  icon: HugeIcons.strokeRoundedLeaf02,
+                                  size: 30,
+                                  color: AppTheme.purpleColor,
+                                ),
+                              ),
+
+                              const SizedBox(width: 10),
+
+                              /// 🔹 Text Content
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    feedProvider.currentFeeling != null
+                                        ? 'Feeling: ${feedProvider.currentFeeling!['emoji']} ${feedProvider.currentFeeling!['feeling']}'
+                                        : 'How are you feeling?',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+
+                                  if (feedProvider.currentFeeling != null) ...[
+                                    const SizedBox(height: 4),
+
+                                    Text(
+                                      '- ${DateFormatter.formatTimeAgo(feedProvider.currentFeeling!['createdAt'])}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(fontSize: 13),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppTheme.purpleColor,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedPencilEdit01,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  FeatureGuard(
+                    featureKey: 'devotion',
+                    child: Column(
+                      children: [
+                        Builder(
+                          builder: (context) {
+                            final ongoingPlans =
+                                devotionProvider.myPlans.where((myPlan) {
+                                  final currentDay = myPlan['currentDay'] ?? 1;
+                                  final durationDays =
+                                      myPlan['plan']['durationDays'] ?? 1;
+                                  return currentDay <= durationDays;
+                                }).toList();
+
+                            if (ongoingPlans.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Column(
+                              children: [
+                                const SectionHeader(
+                                  title: "Ongoing devotion",
+                                  showSeeAll: false,
+                                ),
+                                Builder(
+                                  builder: (context) {
+                                    final plan = ongoingPlans[0]['plan'];
+                                    final currentDay =
+                                        ongoingPlans[0]['currentDay'] ?? 1;
+                                    return OngoingDevotionCard(
+                                      title: plan['title'] ?? "",
+                                      author: plan['authorName'] ?? "",
+                                      imagePath:
+                                          plan['image'] ??
+                                          "assets/images/boy.png",
+                                      likes:
+                                          "${plan['durationDays']} Days Plan",
+                                      planText: plan['tag'] ?? "",
+                                      day: currentDay,
+                                      onContinue: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => DevotionScreen(
+                                                  planId: plan['id'],
+                                                  dayNum: currentDay,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppTheme.purpleColor,
-                            borderRadius: BorderRadius.circular(30),
+                        if (devotions.length > 1) ...[
+                          SectionHeader(
+                            title: "Devotion for you",
+                            seeAllText: "See more",
+                            onSeeAllTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const DevotionListScreen(),
+                                ),
+                              );
+                            },
                           ),
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedPencilEdit01,
-                            size: 20,
-                            color: Colors.white,
+                          DevotionArticleCard(
+                            title: devotions[1]['title'] ?? "",
+                            description: devotions[1]['description'] ?? "",
+                            author: devotions[1]['authorName'] ?? "",
+                            imagePath:
+                                devotions[1]['image'] ??
+                                "assets/images/boy.png",
+                            likes: "${devotions[1]['durationDays']} Days",
+                            tag: devotions[1]['tag'] ?? "",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const DevotionListScreen(),
+                                ),
+                              );
+                            },
                           ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  FeatureGuard(
+                    featureKey: 'videos',
+                    child: Column(
+                      children: [
+                        SectionHeader(
+                          title: "Video",
+                          seeAllText: "See more",
+                          onSeeAllTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const VideoListScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(
+                          height: 275,
+                          child:
+                              videos.isEmpty
+                                  ? Center(
+                                    child: Text(
+                                      "No videos available",
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.color
+                                            ?.withValues(alpha: 0.54),
+                                      ),
+                                    ),
+                                  )
+                                  : ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: videos.length,
+                                    separatorBuilder:
+                                        (_, __) => const SizedBox(width: 15),
+                                    itemBuilder: (context, index) {
+                                      final m = videos[index];
+                                      return VideoCard(
+                                        title: m['title'] ?? '',
+                                        author: m['author'] ?? '',
+                                        likes: '${m['likes'] ?? 0}',
+                                        backgroundImage:
+                                            m['imageUrl'] ??
+                                            'assets/images/boy.png',
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            PageRouteBuilder(
+                                              transitionDuration:
+                                                  const Duration(
+                                                    milliseconds: 600,
+                                                  ),
+                                              pageBuilder:
+                                                  (
+                                                    context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                  ) => VideoReelScreen(
+                                                    videos: videos,
+                                                    initialIndex: index,
+                                                  ),
+                                              transitionsBuilder: (
+                                                context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child,
+                                              ) {
+                                                return SharedAxisTransition(
+                                                  animation: animation,
+                                                  secondaryAnimation:
+                                                      secondaryAnimation,
+                                                  transitionType:
+                                                      SharedAxisTransitionType
+                                                          .scaled,
+                                                  child: child,
+                                                );
+                                              },
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                FeatureGuard(
-                  featureKey: 'devotion',
-                  child: Column(
-                    children: [
-                      Builder(
-                        builder: (context) {
-                          final ongoingPlans = devotionProvider.myPlans.where((myPlan) {
-                            final currentDay = myPlan['currentDay'] ?? 1;
-                            final durationDays = myPlan['plan']['durationDays'] ?? 1;
-                            return currentDay <= durationDays;
-                          }).toList();
-                          
-                          if (ongoingPlans.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-                          
-                          return Column(
-                            children: [
-                              const SectionHeader(
-                                title: "Ongoing devotion",
-                                showSeeAll: false,
+                  FeatureGuard(
+                    featureKey: 'audioMessages',
+                    child: Column(
+                      children: [
+                        SectionHeader(
+                          title: "Audio Sermon",
+                          seeAllText: "See more",
+                          onSeeAllTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AudioListScreen(),
                               ),
-                              Builder(
-                                builder: (context) {
-                                  final plan = ongoingPlans[0]['plan'];
-                                  final currentDay =
-                                      ongoingPlans[0]['currentDay'] ?? 1;
-                                  return OngoingDevotionCard(
-                                    title: plan['title'] ?? "",
-                                    author: plan['authorName'] ?? "",
-                                    imagePath:
-                                        plan['image'] ?? "assets/images/boy.png",
-                                    likes: "${plan['durationDays']} Days Plan",
-                                    planText: plan['tag'] ?? "",
-                                    day: currentDay,
-                                    onContinue: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => DevotionScreen(
-                                                planId: plan['id'],
-                                                dayNum: currentDay,
-                                              ),
-                                        ),
+                            );
+                          },
+                        ),
+                        SizedBox(
+                          height: 165,
+                          child:
+                              audios.isEmpty
+                                  ? Center(
+                                    child: Text(
+                                      "No audio messages available",
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.color
+                                            ?.withValues(alpha: 0.54),
+                                      ),
+                                    ),
+                                  )
+                                  : ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: audios.length,
+                                    separatorBuilder:
+                                        (_, __) => const SizedBox(width: 15),
+                                    itemBuilder: (context, index) {
+                                      final m = audios[index];
+                                      return AudioReelCard(
+                                        title: m['title'] ?? '',
+                                        author: m['author'] ?? '',
+                                        likes: '${m['likes'] ?? 0}',
+                                        backgroundImage:
+                                            m['imageUrl'] ??
+                                            'assets/images/boy.png',
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => AudioReelScreen(
+                                                    audios: audios,
+                                                    initialIndex: index,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                        width: 147,
+                                        height: 150,
+                                        duration: m['duration'] ?? "2:30",
                                       );
                                     },
-                                  );
-                                },
-                              ),
-                            ],
-                          );
-                        }
-                      ),
-                      if (devotions.length > 1) ...[
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FeatureGuard(
+                    featureKey: 'community',
+                    child: Column(
+                      children: [
                         SectionHeader(
-                          title: "Devotion for you",
+                          title: "Community For You",
                           seeAllText: "See more",
                           onSeeAllTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => const DevotionListScreen(),
+                                    (context) => const CommunityListScreen(),
                               ),
                             );
                           },
                         ),
-                        DevotionArticleCard(
-                          title: devotions[1]['title'] ?? "",
-                          description: devotions[1]['description'] ?? "",
-                          author: devotions[1]['authorName'] ?? "",
-                          imagePath:
-                              devotions[1]['image'] ?? "assets/images/boy.png",
-                          likes: "${devotions[1]['durationDays']} Days",
-                          tag: devotions[1]['tag'] ?? "",
-                          onTap: () {
+                        SizedBox(
+                          height: 230,
+                          child:
+                              communities.isEmpty
+                                  ? Center(
+                                    child: Text(
+                                      "No communities yet",
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.color
+                                            ?.withValues(alpha: 0.54),
+                                      ),
+                                    ),
+                                  )
+                                  : ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: communities.length,
+                                    separatorBuilder:
+                                        (_, __) => const SizedBox(width: 15),
+                                    itemBuilder: (context, index) {
+                                      final community = communities[index];
+                                      return CommunityReelCard(
+                                        title: community['name'] ?? '',
+                                        author: community['authorName'] ?? '',
+                                        followers:
+                                            '${community['_count']?['members'] ?? 0} members',
+                                        backgroundImage:
+                                            community['image'] != null
+                                                ? ApiService.getFullImageUrl(
+                                                  community['image'],
+                                                )
+                                                : 'assets/images/test.jpg',
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            PageRouteBuilder(
+                                              transitionDuration:
+                                                  const Duration(
+                                                    milliseconds: 600,
+                                                  ),
+                                              pageBuilder:
+                                                  (
+                                                    context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                  ) =>
+                                                      CommunityIndividualScreen(
+                                                        communityId:
+                                                            community['id'],
+                                                        initialData: community,
+                                                      ),
+                                              transitionsBuilder: (
+                                                context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child,
+                                              ) {
+                                                return SharedAxisTransition(
+                                                  animation: animation,
+                                                  secondaryAnimation:
+                                                      secondaryAnimation,
+                                                  transitionType:
+                                                      SharedAxisTransitionType
+                                                          .scaled,
+                                                  child: child,
+                                                );
+                                              },
+                                            ),
+                                          );
+                                        },
+                                        width: 209,
+                                        height: 180,
+                                      );
+                                    },
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FeatureGuard(
+                    featureKey: 'games',
+                    child: Column(
+                      children: [
+                        SectionHeader(
+                          title: "Games",
+                          seeAllText: "See all",
+                          onSeeAllTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => const DevotionListScreen(),
+                                    (context) =>
+                                        const quest_games.GamesScreen(),
                               ),
                             );
                           },
                         ),
+                        GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 15,
+                          childAspectRatio: 0.815,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            GamesReelCard(
+                              title: 'Bible Quiz',
+                              description: "Test your knowledge!",
+                              gameIcon: 'assets/images/bible_game.png',
+                              onTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => const PlayModeSheet(),
+                                );
+                              },
+                            ),
+                            GamesReelCard(
+                              title: 'Word Cross',
+                              description: "Find hidden words!",
+                              gameIcon: 'assets/images/puzzle_game.png',
+
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            const WordCrossDifficultyScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                FeatureGuard(
-                  featureKey: 'videos',
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: "Video",
-                        seeAllText: "See more",
-                        onSeeAllTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const VideoListScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(
-                        height: 275,
-                        child:
-                            videos.isEmpty
-                                ? Center(
-                                  child: Text(
-                                    "No videos available",
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.color
-                                          ?.withValues(alpha: 0.54),
-                                    ),
-                                  ),
-                                )
-                                : ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: videos.length,
-                                  separatorBuilder:
-                                      (_, __) => const SizedBox(width: 15),
-                                  itemBuilder: (context, index) {
-                                    final m = videos[index];
-                                    return VideoCard(
-                                      title: m['title'] ?? '',
-                                      author: m['author'] ?? '',
-                                      likes: '${m['likes'] ?? 0}',
-                                      backgroundImage:
-                                          m['imageUrl'] ??
-                                          'assets/images/boy.png',
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          PageRouteBuilder(
-                                            transitionDuration: const Duration(
-                                              milliseconds: 600,
-                                            ),
-                                            pageBuilder:
-                                                (
-                                                  context,
-                                                  animation,
-                                                  secondaryAnimation,
-                                                ) => VideoReelScreen(
-                                                  videos: videos,
-                                                  initialIndex: index,
-                                                ),
-                                            transitionsBuilder: (
-                                              context,
-                                              animation,
-                                              secondaryAnimation,
-                                              child,
-                                            ) {
-                                              return SharedAxisTransition(
-                                                animation: animation,
-                                                secondaryAnimation:
-                                                    secondaryAnimation,
-                                                transitionType:
-                                                    SharedAxisTransitionType
-                                                        .scaled,
-                                                child: child,
-                                              );
-                                            },
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                      ),
-                    ],
-                  ),
-                ),
-                FeatureGuard(
-                  featureKey: 'audioMessages',
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: "Audio Sermon",
-                        seeAllText: "See more",
-                        onSeeAllTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AudioListScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(
-                        height: 165,
-                        child:
-                            audios.isEmpty
-                                ? Center(
-                                  child: Text(
-                                    "No audio messages available",
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.color
-                                          ?.withValues(alpha: 0.54),
-                                    ),
-                                  ),
-                                )
-                                : ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: audios.length,
-                                  separatorBuilder:
-                                      (_, __) => const SizedBox(width: 15),
-                                  itemBuilder: (context, index) {
-                                    final m = audios[index];
-                                    return AudioReelCard(
-                                      title: m['title'] ?? '',
-                                      author: m['author'] ?? '',
-                                      likes: '${m['likes'] ?? 0}',
-                                      backgroundImage:
-                                          m['imageUrl'] ??
-                                          'assets/images/boy.png',
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => AudioReelScreen(
-                                                  audios: audios,
-                                                  initialIndex: index,
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                      width: 147,
-                                      height: 150,
-                                      duration: m['duration'] ?? "2:30",
-                                    );
-                                  },
-                                ),
-                      ),
-                    ],
-                  ),
-                ),
-                FeatureGuard(
-                  featureKey: 'community',
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: "Community For You",
-                        seeAllText: "See more",
-                        onSeeAllTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CommunityListScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(
-                        height: 230,
-                        child:
-                            communities.isEmpty
-                                ? Center(
-                                  child: Text(
-                                    "No communities yet",
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.color
-                                          ?.withValues(alpha: 0.54),
-                                    ),
-                                  ),
-                                )
-                                : ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: communities.length,
-                                  separatorBuilder:
-                                      (_, __) => const SizedBox(width: 15),
-                                  itemBuilder: (context, index) {
-                                    final community = communities[index];
-                                    return CommunityReelCard(
-                                      title: community['name'] ?? '',
-                                      author: community['authorName'] ?? '',
-                                      followers:
-                                          '${community['_count']?['members'] ?? 0} members',
-                                      backgroundImage:
-                                          community['image'] != null
-                                              ? ApiService.getFullImageUrl(
-                                                community['image'],
-                                              )
-                                              : 'assets/images/test.jpg',
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          PageRouteBuilder(
-                                            transitionDuration: const Duration(
-                                              milliseconds: 600,
-                                            ),
-                                            pageBuilder:
-                                                (
-                                                  context,
-                                                  animation,
-                                                  secondaryAnimation,
-                                                ) => CommunityIndividualScreen(
-                                                  communityId: community['id'],
-                                                  initialData: community,
-                                                ),
-                                            transitionsBuilder: (
-                                              context,
-                                              animation,
-                                              secondaryAnimation,
-                                              child,
-                                            ) {
-                                              return SharedAxisTransition(
-                                                animation: animation,
-                                                secondaryAnimation:
-                                                    secondaryAnimation,
-                                                transitionType:
-                                                    SharedAxisTransitionType
-                                                        .scaled,
-                                                child: child,
-                                              );
-                                            },
-                                          ),
-                                        );
-                                      },
-                                      width: 209,
-                                      height: 180,
-                                    );
-                                  },
-                                ),
-                      ),
-                    ],
-                  ),
-                ),
-                FeatureGuard(
-                  featureKey: 'games',
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: "Games",
-                        seeAllText: "See all",
-                        onSeeAllTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => const quest_games.GamesScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 15,
-                        childAspectRatio: 0.815,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          GamesReelCard(
-                            title: 'Bible Quiz',
-                            description: "Test your knowledge!",
-                            gameIcon: 'assets/images/bible_game.png',
-                            onTap: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) => const PlayModeSheet(),
-                              );
-                            },
-                          ),
-                          GamesReelCard(
-                            title: 'Word Cross',
-                            description: "Find hidden words!",
-                            gameIcon: 'assets/images/puzzle_game.png',
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white70,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
 
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) =>
-                                          const WordCrossDifficultyScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white70,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 45,
-                        height: 45,
-                      ),
-                      const SizedBox(height: 13),
-                      Text(
-                        "Support Sozo App",
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w800,
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          'assets/images/logo.png',
+                          width: 45,
+                          height: 45,
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Help keep Sozo free. Every donation helps us maintain and improve the app for everyone.",
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 15,
-                          color: Colors.black.withValues(alpha: 0.5),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 27),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const DonateScreen(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.secondary,
-                            borderRadius: BorderRadius.circular(30),
+                        const SizedBox(height: 13),
+                        Text(
+                          "Support Sozo App",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
                           ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              HugeIcon(
-                                icon: HugeIcons.strokeRoundedFavourite,
-                                size: 16,
-                                color:
-                                    Theme.of(context).colorScheme.tertiaryFixed,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Help keep Sozo free. Every donation helps us maintain and improve the app for everyone.",
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 15,
+                            color: Colors.black.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 27),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DonateScreen(),
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                "Donate",
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.secondary,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedFavourite,
+                                  size: 16,
                                   color:
                                       Theme.of(
                                         context,
                                       ).colorScheme.tertiaryFixed,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Donate",
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.tertiaryFixed,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 15),
+                        GestureDetector(
+                          onTap: () {
+                            FeedbackBottomSheet.show(context);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: AppTheme.purpleColor.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedMegaphone01,
+                                  size: 16,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Submit Feedback",
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 30),
-              ],
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -1331,7 +1403,10 @@ class CommunityReelCard extends StatelessWidget {
             children: [
               /// 🔹 Background Image
               backgroundImage.startsWith('http')
-                  ? CachedNetworkImage(imageUrl: backgroundImage, fit: BoxFit.cover)
+                  ? CachedNetworkImage(
+                    imageUrl: backgroundImage,
+                    fit: BoxFit.cover,
+                  )
                   : Image.asset(backgroundImage, fit: BoxFit.cover),
 
               /// 🔹 Dark overlay for readability

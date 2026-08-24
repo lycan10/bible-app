@@ -2791,4 +2791,22 @@ class ApiService {
     );
     return jsonDecode(response.body);
   }
+
+  // POST /feedback — submit feedback
+  static Future<void> submitFeedback({
+    required String token,
+    required String type,
+    required String content,
+  }) async {
+    _handleResponse(
+      await http.post(
+        Uri.parse('$baseUrl/feedback'),
+        headers: _headers(token),
+        body: jsonEncode({
+          'type': type,
+          'content': content,
+        }),
+      ),
+    );
+  }
 }
