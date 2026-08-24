@@ -36,6 +36,7 @@ class _AudioReelScreenState extends State<AudioReelScreen>
   late List<dynamic> _audios;
   int _currentIndex = 0;
   bool _isFetchingMore = false;
+
   /// True only when this route is the top-most visible route.
   bool _isActive = false;
 
@@ -90,10 +91,11 @@ class _AudioReelScreenState extends State<AudioReelScreen>
     final rawUrl = _audios[index]['mediaUrl']?.toString() ?? '';
     if (rawUrl.isEmpty) return;
 
-    final url = rawUrl.startsWith('http') ? rawUrl : 'http://10.0.2.2:3000$rawUrl';
+    final url =
+        rawUrl.startsWith('http') ? rawUrl : 'http://10.0.2.2:3000$rawUrl';
     final player = AudioPlayer();
     _players[index] = player;
-    
+
     player.setSource(UrlSource(url)).catchError((e) {
       debugPrint('Audio init error at index $index: $e');
     });
@@ -127,7 +129,8 @@ class _AudioReelScreenState extends State<AudioReelScreen>
     if (index + 1 < _audios.length) _initPlayer(index + 1);
     if (index - 1 >= 0) _initPlayer(index - 1);
 
-    final toDispose = _players.keys.where((k) => (k - index).abs() > 1).toList();
+    final toDispose =
+        _players.keys.where((k) => (k - index).abs() > 1).toList();
     for (final k in toDispose) {
       _disposePlayer(k);
     }
@@ -156,7 +159,9 @@ class _AudioReelScreenState extends State<AudioReelScreen>
 
     final existingIds = _audios.map((a) => a['id']).toSet();
     final newItems =
-        mediaProvider.audio.where((a) => !existingIds.contains(a['id'])).toList();
+        mediaProvider.audio
+            .where((a) => !existingIds.contains(a['id']))
+            .toList();
 
     setState(() {
       _audios = [..._audios, ...newItems];
@@ -204,85 +209,85 @@ class _AudioReelScreenState extends State<AudioReelScreen>
       child: Scaffold(
         backgroundColor: Colors.black,
         body: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.vertical,
-            itemCount: _audios.length,
-            onPageChanged: _onPageChanged,
-            itemBuilder: (context, index) {
-              return _AudioPage(
-                key: ValueKey(_audios[index]['id'] ?? index),
-                audioData: _audios[index],
-                player: _players[index],
-                onNext: () {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-              );
-            },
-          ),
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              scrollDirection: Axis.vertical,
+              itemCount: _audios.length,
+              onPageChanged: _onPageChanged,
+              itemBuilder: (context, index) {
+                return _AudioPage(
+                  key: ValueKey(_audios[index]['id'] ?? index),
+                  audioData: _audios[index],
+                  player: _players[index],
+                  onNext: () {
+                    _pageController.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                );
+              },
+            ),
 
-          if (_isFetchingMore)
-            const Positioned(
-              bottom: 30,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white54,
+            if (_isFetchingMore)
+              const Positioned(
+                bottom: 30,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white54,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-          Positioned(
-            top: 10,
-            left: 15,
-            right: 15,
-            child: SafeArea(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
+            Positioned(
+              top: 10,
+              left: 15,
+              right: 15,
+              child: SafeArea(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowLeft01,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.15),
                       ),
                       child: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowLeft01,
+                        icon: HugeIcons.strokeRoundedMoreVertical,
                         size: 20,
                         color: Colors.white,
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.15),
-                    ),
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedMoreVertical,
-                      size: 20,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -350,7 +355,10 @@ class _AudioPageState extends State<_AudioPage> {
 
             final remaining = _duration - p;
             final minutes = remaining.inMinutes;
-            final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
+            final seconds = (remaining.inSeconds % 60).toString().padLeft(
+              2,
+              '0',
+            );
             _positionText = '-$minutes:$seconds';
           }
         });
@@ -450,7 +458,7 @@ class _AudioPageState extends State<_AudioPage> {
       context,
       shareMessage:
           link != null
-              ? 'Check out this audio on Quest! $link'
+              ? 'Check out this audio on Sozo App! $link'
               : 'Check out this audio: $title',
     );
   }
@@ -473,9 +481,11 @@ class _AudioPageState extends State<_AudioPage> {
       fit: StackFit.expand,
       children: [
         if (formattedBgImage.startsWith('http'))
-          CachedNetworkImage(imageUrl: formattedBgImage,
+          CachedNetworkImage(
+            imageUrl: formattedBgImage,
             fit: BoxFit.cover,
-            errorWidget: (context, url, error) =>
+            errorWidget:
+                (context, url, error) =>
                     Image.asset('assets/images/boy.png', fit: BoxFit.cover),
           )
         else
@@ -557,11 +567,13 @@ class _AudioPageState extends State<_AudioPage> {
                     borderRadius: BorderRadius.circular(25),
                     child:
                         formattedBgImage.startsWith('http')
-                            ? CachedNetworkImage(imageUrl: formattedBgImage,
+                            ? CachedNetworkImage(
+                              imageUrl: formattedBgImage,
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => Image.asset(
+                              errorWidget:
+                                  (context, url, error) => Image.asset(
                                     'assets/images/boy.png',
                                     width: 50,
                                     height: 50,
@@ -725,10 +737,11 @@ class _AudioPageState extends State<_AudioPage> {
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
-                        builder: (context) => ReportBottomSheet(
-                          itemType: 'AUDIO',
-                          itemId: widget.audioData['id'] ?? '',
-                        ),
+                        builder:
+                            (context) => ReportBottomSheet(
+                              itemType: 'AUDIO',
+                              itemId: widget.audioData['id'] ?? '',
+                            ),
                       );
                     },
                     child: Container(

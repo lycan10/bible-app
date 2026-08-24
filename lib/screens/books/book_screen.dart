@@ -240,7 +240,7 @@ class _BookScreenState extends State<BookScreen> {
     showInAppShareSheet(
       context,
       shareMessage:
-          "Check out this book on Quest! ${widget.book?['title'] ?? ''} - ${widget.book?['downloadUrl'] ?? ''}",
+          "Check out this book on Sozo App! ${widget.book?['title'] ?? ''} - ${widget.book?['downloadUrl'] ?? ''}",
     );
   }
 
@@ -345,7 +345,9 @@ class _BookScreenState extends State<BookScreen> {
                                     ],
                                   ),
                                   Text(
-                                    DateFormatter.formatTimeAgo(widget.book?['createdAt']),
+                                    DateFormatter.formatTimeAgo(
+                                      widget.book?['createdAt'],
+                                    ),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontSize: 12,
                                       color: AppTheme.textColor2,
@@ -505,7 +507,9 @@ class _BookScreenState extends State<BookScreen> {
                                           widget.book != null &&
                                                   widget.book!['imageUrl'] !=
                                                       null
-                                              ? CachedNetworkImage(imageUrl: widget.book!['imageUrl'],
+                                              ? CachedNetworkImage(
+                                                imageUrl:
+                                                    widget.book!['imageUrl'],
                                                 fit: BoxFit.cover,
                                               )
                                               : Image.asset(
@@ -722,7 +726,8 @@ class _CommentItemState extends State<CommentItem> {
                     borderRadius: BorderRadius.circular(50),
                     child:
                         user['avatarUrl'] != null
-                            ? CachedNetworkImage(imageUrl: user['avatarUrl'],
+                            ? CachedNetworkImage(
+                              imageUrl: user['avatarUrl'],
                               width: 30,
                               height: 30,
                               fit: BoxFit.cover,

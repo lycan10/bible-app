@@ -13,6 +13,7 @@ import 'package:quest/providers/community_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/community/community_verse_override_dialog.dart';
 import 'package:quest/screens/community/community_join_requests_screen.dart';
+import 'package:quest/screens/community/edit_community_screen.dart';
 
 class CommunityMenuDialogBox extends StatelessWidget {
   final Map<String, dynamic> community;
@@ -76,7 +77,7 @@ class CommunityMenuDialogBox extends StatelessWidget {
                     'https://quest.vidarave.com/community/${community['id']}';
                 showInAppShareSheet(
                   context,
-                  shareMessage: 'Join ${community['name']} on Quest! $link',
+                  shareMessage: 'Join ${community['name']} on Sozo App! $link',
                 );
               },
             ),
@@ -92,29 +93,35 @@ class CommunityMenuDialogBox extends StatelessWidget {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => ReportBottomSheet(
-                    itemType: 'COMMUNITY',
-                    itemId: community['id'],
-                  ),
+                  builder:
+                      (context) => ReportBottomSheet(
+                        itemType: 'COMMUNITY',
+                        itemId: community['id'],
+                      ),
                 );
               },
             ),
-            Builder(builder: (context) {
-              final authId = context.read<AuthProvider>().user?['id'];
-              final members = (community['members'] as List<dynamic>?) ?? [];
-              final isOwner = community['ownerId'] == authId;
-              final isAdmin = isOwner || members.any((m) => m['id'] == authId && m['role'] == 'ADMIN');
-              final isPrivate = community['isPrivate'] == true;
-              final isForumDisabledGlobally = community['isForumDisabledGlobally'] == true;
+            Builder(
+              builder: (context) {
+                final authId = context.read<AuthProvider>().user?['id'];
+                final members = (community['members'] as List<dynamic>?) ?? [];
+                final isOwner = community['ownerId'] == authId;
+                final isAdmin =
+                    isOwner ||
+                    members.any(
+                      (m) => m['id'] == authId && m['role'] == 'ADMIN',
+                    );
+                final isPrivate = community['isPrivate'] == true;
+                final isForumDisabledGlobally =
+                    community['isForumDisabledGlobally'] == true;
 
-              if (isAdmin) {
-                return Column(
-                  children: [
-                    if (isPrivate)
+                if (isAdmin) {
+                  return Column(
+                    children: [
                       SettingsRowItem(
-                        icon: HugeIcons.strokeRoundedUserAdd01,
+                        icon: HugeIcons.strokeRoundedEdit02,
                         iconBackgroundColor: Colors.transparent,
-                        title: 'Join Requests',
+                        title: 'Edit Community',
                         iconColor: AppTheme.textColor2,
                         secondIconColor: Colors.transparent,
                         onTap: () {
@@ -122,53 +129,93 @@ class CommunityMenuDialogBox extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CommunityJoinRequestsScreen(
-                                communityId: community['id'],
-                              ),
+                              builder:
+                                  (_) => EditCommunityScreen(
+                                    initialData: community,
+                                  ),
                             ),
                           );
                         },
                       ),
-                    SettingsRowItem(
-                      icon: isForumDisabledGlobally ? HugeIcons.strokeRoundedCheckmarkBadge01 : HugeIcons.strokeRoundedCancel01,
-                      iconBackgroundColor: Colors.transparent,
-                      title: isForumDisabledGlobally ? 'Enable Global Posting' : 'Disable Global Posting',
-                      iconColor: AppTheme.textColor2,
-                      secondIconColor: Colors.transparent,
-                      onTap: () async {
-                        Navigator.pop(context);
-                        final auth = context.read<AuthProvider>();
-                        if (auth.token != null) {
-                          await context.read<CommunityProvider>().updateCommunitySettings(
-                            auth.token!,
-                            community['id'],
-                            isForumDisabledGlobally: !isForumDisabledGlobally,
+                      if (isPrivate)
+                        SettingsRowItem(
+                          icon: HugeIcons.strokeRoundedUserAdd01,
+                          iconBackgroundColor: Colors.transparent,
+                          title: 'Join Requests',
+                          iconColor: AppTheme.textColor2,
+                          secondIconColor: Colors.transparent,
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => CommunityJoinRequestsScreen(
+                                      communityId: community['id'],
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                      SettingsRowItem(
+                        icon:
+                            isForumDisabledGlobally
+                                ? HugeIcons.strokeRoundedCheckmarkBadge01
+                                : HugeIcons.strokeRoundedCancel01,
+                        iconBackgroundColor: Colors.transparent,
+                        title:
+                            isForumDisabledGlobally
+                                ? 'Enable Global Posting'
+                                : 'Disable Global Posting',
+                        iconColor: AppTheme.textColor2,
+                        secondIconColor: Colors.transparent,
+                        onTap: () async {
+                          Navigator.pop(context);
+                          final auth = context.read<AuthProvider>();
+                          if (auth.token != null) {
+                            await context
+                                .read<CommunityProvider>()
+                                .updateCommunitySettings(
+                                  auth.token!,
+                                  community['id'],
+                                  isForumDisabledGlobally:
+                                      !isForumDisabledGlobally,
+                                );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isForumDisabledGlobally
+                                      ? 'Global posting enabled'
+                                      : 'Global posting disabled',
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      SettingsRowItem(
+                        icon: HugeIcons.strokeRoundedEdit01,
+                        iconBackgroundColor: Colors.transparent,
+                        title: 'Override Verse of the Day',
+                        iconColor: AppTheme.textColor2,
+                        secondIconColor: Colors.transparent,
+                        onTap: () {
+                          Navigator.pop(context);
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => CommunityVerseOverrideDialog(
+                                  communityId: community['id'],
+                                ),
                           );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(isForumDisabledGlobally ? 'Global posting enabled' : 'Global posting disabled')),
-                          );
-                        }
-                      },
-                    ),
-                    SettingsRowItem(
-                      icon: HugeIcons.strokeRoundedEdit01,
-                      iconBackgroundColor: Colors.transparent,
-                      title: 'Override Verse of the Day',
-                      iconColor: AppTheme.textColor2,
-                      secondIconColor: Colors.transparent,
-                      onTap: () {
-                        Navigator.pop(context);
-                        showDialog(
-                          context: context,
-                          builder: (context) => CommunityVerseOverrideDialog(communityId: community['id']),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              }
-              return const SizedBox();
-            }),
+                        },
+                      ),
+                    ],
+                  );
+                }
+                return const SizedBox();
+              },
+            ),
           ],
         ),
       ),
@@ -186,7 +233,9 @@ class MembersBottomSheet extends StatelessWidget {
     final members = (community['members'] as List<dynamic>?) ?? [];
     final currentUser = context.read<AuthProvider>().user;
     final friends = context.read<FeedProvider>().friends;
-    final isAdmin = members.any((m) => m['id'] == currentUser?['id'] && m['role'] == 'ADMIN');
+    final isAdmin = members.any(
+      (m) => m['id'] == currentUser?['id'] && m['role'] == 'ADMIN',
+    );
 
     final theme = Theme.of(context);
     return Container(
@@ -251,7 +300,10 @@ class MembersBottomSheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(25),
                           child:
                               avatar != null
-                                  ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(avatar),
+                                  ? CachedNetworkImage(
+                                    imageUrl: ApiService.getFullImageUrl(
+                                      avatar,
+                                    ),
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,
@@ -278,7 +330,10 @@ class MembersBottomSheet extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                user['username'] != null && user['username'].toString().isNotEmpty ? '@${user['username']}' : '',
+                                user['username'] != null &&
+                                        user['username'].toString().isNotEmpty
+                                    ? '@${user['username']}'
+                                    : '',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade600,
@@ -310,27 +365,50 @@ class MembersBottomSheet extends StatelessWidget {
                           ),
                         if (isAdmin && !isMe)
                           PopupMenuButton<String>(
-                            icon: Icon(Icons.more_vert, color: theme.colorScheme.onSurface),
+                            icon: Icon(
+                              Icons.more_vert,
+                              color: theme.colorScheme.onSurface,
+                            ),
                             onSelected: (value) async {
                               final auth = context.read<AuthProvider>();
                               final cp = context.read<CommunityProvider>();
                               if (auth.token == null) return;
                               if (value == 'suspend') {
-                                await cp.moderateCommunityMember(auth.token!, community['id'], user['id'], isSuspended: !isSuspended);
+                                await cp.moderateCommunityMember(
+                                  auth.token!,
+                                  community['id'],
+                                  user['id'],
+                                  isSuspended: !isSuspended,
+                                );
                               } else if (value == 'posting') {
-                                await cp.moderateCommunityMember(auth.token!, community['id'], user['id'], canPostForum: !canPostForum);
+                                await cp.moderateCommunityMember(
+                                  auth.token!,
+                                  community['id'],
+                                  user['id'],
+                                  canPostForum: !canPostForum,
+                                );
                               }
                             },
-                            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                              PopupMenuItem<String>(
-                                value: 'suspend',
-                                child: Text(isSuspended ? 'Unsuspend Member' : 'Suspend Member'),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'posting',
-                                child: Text(canPostForum ? 'Disable Posting' : 'Enable Posting'),
-                              ),
-                            ],
+                            itemBuilder:
+                                (BuildContext context) =>
+                                    <PopupMenuEntry<String>>[
+                                      PopupMenuItem<String>(
+                                        value: 'suspend',
+                                        child: Text(
+                                          isSuspended
+                                              ? 'Unsuspend Member'
+                                              : 'Suspend Member',
+                                        ),
+                                      ),
+                                      PopupMenuItem<String>(
+                                        value: 'posting',
+                                        child: Text(
+                                          canPostForum
+                                              ? 'Disable Posting'
+                                              : 'Enable Posting',
+                                        ),
+                                      ),
+                                    ],
                           ),
                       ],
                     ),
@@ -468,7 +546,8 @@ class ProfileBottomSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(40),
                 child:
                     avatar != null
-                        ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(avatar),
+                        ? CachedNetworkImage(
+                          imageUrl: ApiService.getFullImageUrl(avatar),
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
@@ -493,7 +572,10 @@ class ProfileBottomSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    user['username'] != null && user['username'].toString().isNotEmpty ? '@${user['username']}' : '',
+                    user['username'] != null &&
+                            user['username'].toString().isNotEmpty
+                        ? '@${user['username']}'
+                        : '',
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 10),
@@ -556,7 +638,8 @@ class ProfileBottomSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(25),
                   child:
                       currentCommunity['image'] != null
-                          ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(
+                          ? CachedNetworkImage(
+                            imageUrl: ApiService.getFullImageUrl(
                               currentCommunity['image'],
                             ),
                             width: 50,

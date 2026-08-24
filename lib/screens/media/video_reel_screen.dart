@@ -41,6 +41,7 @@ class _VideoReelScreenState extends State<VideoReelScreen>
   int _currentIndex = 0;
   bool _isFetchingMore = false;
   bool _isMuted = false;
+
   /// True only when this route is the top-most visible route.
   bool _isActive = false;
 
@@ -139,7 +140,8 @@ class _VideoReelScreenState extends State<VideoReelScreen>
       prevController.pause();
       // Schedule disposal after frame so the widget tree has a chance to update
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_controllers.containsKey(_currentIndex) || _currentIndex != index) {
+        if (!_controllers.containsKey(_currentIndex) ||
+            _currentIndex != index) {
           prevController.dispose();
         }
       });
@@ -281,85 +283,85 @@ class _VideoReelScreenState extends State<VideoReelScreen>
         child: Scaffold(
           backgroundColor: Colors.black,
           body: Stack(
-          children: [
-            // ── Vertical PageView ──
-            PageView.builder(
-              controller: _pageController,
-              scrollDirection: Axis.vertical,
-              itemCount: _videos.length,
-              onPageChanged: _onPageChanged,
-              itemBuilder: (context, index) {
-                return _VideoPage(
-                  key: ValueKey(_videos[index]['id'] ?? index),
-                  videoData: _videos[index],
-                  controller: _controllers[index],
-                  isCurrentPage: index == _currentIndex,
-                  isMuted: _isMuted,
-                  onTogglePlay: () => _togglePlayPause(index),
-                  onToggleMute: _toggleMute,
-                  onLike: () => _likeVideo(_videos[index]),
-                  onTrackPlayback:
-                      (completed) =>
-                          _trackPlayback(_videos[index], index, completed),
-                  onNext:
-                      () => _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      ),
-                  onPrevious:
-                      () => _pageController.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      ),
-                );
-              },
-            ),
+            children: [
+              // ── Vertical PageView ──
+              PageView.builder(
+                controller: _pageController,
+                scrollDirection: Axis.vertical,
+                itemCount: _videos.length,
+                onPageChanged: _onPageChanged,
+                itemBuilder: (context, index) {
+                  return _VideoPage(
+                    key: ValueKey(_videos[index]['id'] ?? index),
+                    videoData: _videos[index],
+                    controller: _controllers[index],
+                    isCurrentPage: index == _currentIndex,
+                    isMuted: _isMuted,
+                    onTogglePlay: () => _togglePlayPause(index),
+                    onToggleMute: _toggleMute,
+                    onLike: () => _likeVideo(_videos[index]),
+                    onTrackPlayback:
+                        (completed) =>
+                            _trackPlayback(_videos[index], index, completed),
+                    onNext:
+                        () => _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        ),
+                    onPrevious:
+                        () => _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        ),
+                  );
+                },
+              ),
 
-            // ── Back button ──
-            Positioned(
-              top: 10,
-              left: 16,
-              child: SafeArea(
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.15),
-                    ),
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowLeft01,
-                      size: 20,
-                      color: Colors.white,
+              // ── Back button ──
+              Positioned(
+                top: 10,
+                left: 16,
+                child: SafeArea(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowLeft01,
+                        size: 20,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            // ── Loading more indicator ──
-            if (_isFetchingMore)
-              const Positioned(
-                bottom: 30,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white54,
+              // ── Loading more indicator ──
+              if (_isFetchingMore)
+                const Positioned(
+                  bottom: 30,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white54,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
 
@@ -510,7 +512,8 @@ class _VideoPageState extends State<_VideoPage> {
               ),
             ),
           ] else if (thumbnailUrl.isNotEmpty && thumbnailUrl.startsWith('http'))
-            CachedNetworkImage(imageUrl: thumbnailUrl,
+            CachedNetworkImage(
+              imageUrl: thumbnailUrl,
               fit: BoxFit.cover,
               errorWidget: (context, url, error) => _gradientPlaceholder(),
             )
@@ -807,7 +810,7 @@ class _VideoPageState extends State<_VideoPage> {
                                 showInAppShareSheet(
                                   context,
                                   shareMessage:
-                                      'Check out this video on Quest! $link',
+                                      'Check out this video on Sozo App! $link',
                                 );
                               }
                             },
@@ -831,10 +834,11 @@ class _VideoPageState extends State<_VideoPage> {
                                 context: context,
                                 isScrollControlled: true,
                                 backgroundColor: Colors.transparent,
-                                builder: (context) => ReportBottomSheet(
-                                  itemType: 'VIDEO',
-                                  itemId: data['id'] ?? '',
-                                ),
+                                builder:
+                                    (context) => ReportBottomSheet(
+                                      itemType: 'VIDEO',
+                                      itemId: data['id'] ?? '',
+                                    ),
                               );
                             },
                             child: Container(

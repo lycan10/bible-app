@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
 import 'package:quest/services/api_service.dart';
+import 'package:quest/utils/media_helper.dart';
 import 'package:file_picker/file_picker.dart';
 
 class NewMessageScreen extends StatefulWidget {
@@ -71,14 +72,13 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
 
   Future<void> _pickMedia() async {
     if (_mediaType == 'Photo' || _mediaType == 'Video') {
-      final ImagePicker picker = ImagePicker();
-      final XFile? media = _mediaType == 'Photo' 
-        ? await picker.pickImage(source: ImageSource.gallery)
-        : await picker.pickVideo(source: ImageSource.gallery);
+      final media = _mediaType == 'Photo' 
+        ? await MediaHelper.pickAndCompressImage(source: ImageSource.gallery)
+        : await MediaHelper.pickAndCompressImage(source: ImageSource.gallery, isVideo: true);
       
       if (media != null) {
         setState(() {
-          _selectedMedia = File(media.path);
+          _selectedMedia = media;
         });
       }
     } else if (_mediaType == 'Audio') {
@@ -94,11 +94,10 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
   }
 
   Future<void> _pickThumbnail() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    final image = await MediaHelper.pickAndCompressImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        _selectedThumbnail = File(image.path);
+        _selectedThumbnail = image;
       });
     }
   }

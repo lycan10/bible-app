@@ -519,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                                                 "Community",
                                             postImage: post['mediaUrl'] ?? "",
                                             likes:
-                                                '${post['reactions']?.length ?? 0}',
+                                                '${post['likesCount'] ?? 0}',
                                             comments:
                                                 '${post['comments']?.length ?? 0}',
                                             time: DateFormatter.formatTimeAgo(post['createdAt']),

@@ -201,7 +201,7 @@ class _DevotionScreenState extends State<DevotionScreen> {
     );
   }
 
-  void _reactToDay() async {
+  void _toggleLike() async {
     if (_hasLiked) return; // already liked
     _triggerHaptic();
     final dayId = _dayData?['id'];
@@ -639,15 +639,18 @@ class _DevotionScreenState extends State<DevotionScreen> {
                         children: [
                           Row(
                             children: [
-                              Stat(
-                                icon: HugeIcons.strokeRoundedThumbsUp,
-                                text: "$likesCount",
-                                iconSize: 18,
-                                textColor:
-                                    _hasLiked
-                                        ? AppTheme.purpleColor
-                                        : AppTheme.textColor2,
-                                textSize: 12,
+                              GestureDetector(
+                                onTap: _hasLiked ? null : _toggleLike,
+                                child: Stat(
+                                  icon: HugeIcons.strokeRoundedThumbsUp,
+                                  text: "$likesCount",
+                                  iconSize: 18,
+                                  textColor:
+                                      _hasLiked
+                                          ? AppTheme.purpleColor
+                                          : AppTheme.textColor2,
+                                  textSize: 12,
+                                ),
                               ),
                             ],
                           ),
@@ -657,68 +660,6 @@ class _DevotionScreenState extends State<DevotionScreen> {
                                 icon: HugeIcons.strokeRoundedShare08,
                                 label: "Share",
                                 onTap: _sharePlan,
-                              ),
-                              const SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: _hasLiked ? null : _reactToDay,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  height: 40,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        _hasLiked
-                                            ? AppTheme.purpleColor
-                                            : const Color(
-                                              0xff673aff,
-                                            ).withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        _hasLiked ? "Reacted" : "React",
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  _hasLiked
-                                                      ? Colors.white
-                                                      : const Color(0xff673aff),
-                                              fontSize: 12,
-                                            ),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      VerticalDivider(
-                                        width: 4,
-                                        thickness: 1.5,
-                                        indent: 7,
-                                        endIndent: 7,
-                                        color:
-                                            _hasLiked
-                                                ? Colors.white
-                                                : const Color(0xff673aff),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        _hasLiked ? "✅" : "🤩",
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              color:
-                                                  _hasLiked
-                                                      ? Colors.white
-                                                      : const Color(0xff673aff),
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                               ),
                             ],
                           ),

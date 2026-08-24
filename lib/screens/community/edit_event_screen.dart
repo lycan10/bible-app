@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
@@ -7,7 +8,7 @@ import 'package:quest/providers/feed_provider.dart';
 import 'package:quest/theme/theme.dart';
 import 'dart:io';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:quest/utils/media_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class EditEventScreen extends StatefulWidget {
@@ -33,7 +34,6 @@ class _EditEventScreenState extends State<EditEventScreen> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   File? _image;
-  final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
 
   @override
@@ -65,10 +65,12 @@ class _EditEventScreenState extends State<EditEventScreen> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await MediaHelper.pickAndCompressImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null) {
       setState(() {
-        _image = File(pickedFile.path);
+        _image = pickedFile;
       });
     }
   }

@@ -190,8 +190,43 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
     }
   }
 
+  bool _canCreateJournalToday() {
+    if (_journalsList.isNotEmpty) {
+      final lastJournalCreatedAt = _journalsList.first['createdAt'];
+      if (lastJournalCreatedAt != null) {
+        DateTime? lastJournalDate;
+        if (lastJournalCreatedAt is int) {
+          lastJournalDate = DateTime.fromMillisecondsSinceEpoch(lastJournalCreatedAt);
+        } else if (lastJournalCreatedAt is String) {
+          final intValue = int.tryParse(lastJournalCreatedAt);
+          if (intValue != null) {
+            lastJournalDate = DateTime.fromMillisecondsSinceEpoch(intValue);
+          } else {
+            lastJournalDate = DateTime.tryParse(lastJournalCreatedAt);
+          }
+        }
+        
+        if (lastJournalDate != null) {
+          final today = DateTime.now();
+          if (lastJournalDate.year == today.year &&
+              lastJournalDate.month == today.month &&
+              lastJournalDate.day == today.day) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   void _showAddModal() {
     if (selectedTab == "Journal") {
+      if (!_canCreateJournalToday()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You can only create one journal entry per day. You can still edit your existing entry today.')),
+        );
+        return;
+      }
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const NewJournalScreen()),
@@ -205,6 +240,12 @@ class _MoreScreenState extends State<MoreScreen> with RouteAware {
   }
 
   void _showFeelingSelector() {
+    if (!_canCreateJournalToday()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can only create one journal entry per day. You can still edit your existing entry today.')),
+      );
+      return;
+    }
     DailyFeelingPopup.show(
       context,
       onSelected: (feeling, emoji) {

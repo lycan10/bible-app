@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
@@ -6,7 +7,7 @@ import 'package:quest/providers/community_provider.dart';
 import 'package:quest/theme/theme.dart';
 import 'dart:io';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:quest/utils/media_helper.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final String communityId;
@@ -25,14 +26,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   File? _image;
-  final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
-
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await MediaHelper.pickAndCompressImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null) {
       setState(() {
-        _image = File(pickedFile.path);
+        _image = pickedFile;
       });
     }
   }
@@ -62,7 +63,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       dateStr,
       timeStr,
       _locationController.text.trim(),
-      link: _linkController.text.trim().isEmpty ? null : _linkController.text.trim(),
+      link:
+          _linkController.text.trim().isEmpty
+              ? null
+              : _linkController.text.trim(),
       imagePath: _image?.path,
     );
 
@@ -71,9 +75,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (success && mounted) {
       Navigator.pop(context);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create event')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to create event')));
     }
   }
 
@@ -171,23 +175,34 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     height: 150,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                     ),
-                    child: _image != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: Image.file(_image!, fit: BoxFit.cover),
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              HugeIcon(icon: HugeIcons.strokeRoundedImage01, color: AppTheme.textColor2, size: 40.0),
-                              const SizedBox(height: 10),
-                              Text('Upload Event Image (Optional)', style: TextStyle(color: AppTheme.textColor2)),
-                            ],
-                          ),
+                    child:
+                        _image != null
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.file(_image!, fit: BoxFit.cover),
+                            )
+                            : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedImage01,
+                                  color: AppTheme.textColor2,
+                                  size: 40.0,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Upload Event Image (Optional)',
+                                  style: TextStyle(color: AppTheme.textColor2),
+                                ),
+                              ],
+                            ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -198,7 +213,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     labelText: 'Event Title',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -206,8 +223,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Title is required' : null,
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? 'Title is required'
+                              : null,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
@@ -218,7 +238,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     labelText: 'Description',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -226,8 +248,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Description required' : null,
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? 'Description required'
+                              : null,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
@@ -237,7 +262,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     labelText: 'Location',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -245,8 +272,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Location required' : null,
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? 'Location required'
+                              : null,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
@@ -256,7 +286,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     labelText: 'Event Link (Optional)',
                     labelStyle: TextStyle(color: AppTheme.textColor2),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -274,15 +306,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             _selectedDate == null
                                 ? 'Select Date'
-                                : DateFormat('yyyy-MM-dd').format(_selectedDate!),
+                                : DateFormat(
+                                  'yyyy-MM-dd',
+                                ).format(_selectedDate!),
                             style: TextStyle(
-                              color: _selectedDate == null ? AppTheme.textColor2 : theme.colorScheme.onSurface,
+                              color:
+                                  _selectedDate == null
+                                      ? AppTheme.textColor2
+                                      : theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -295,7 +334,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -303,7 +344,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                 ? 'Select Time'
                                 : _selectedTime!.format(context),
                             style: TextStyle(
-                              color: _selectedTime == null ? AppTheme.textColor2 : theme.colorScheme.onSurface,
+                              color:
+                                  _selectedTime == null
+                                      ? AppTheme.textColor2
+                                      : theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -323,23 +367,24 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         borderRadius: BorderRadius.circular(100),
                       ),
                     ),
-                    child: _isLoading
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: theme.colorScheme.surface,
-                              strokeWidth: 2,
+                    child:
+                        _isLoading
+                            ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: theme.colorScheme.surface,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : Text(
+                              'Create Event',
+                              style: TextStyle(
+                                color: theme.colorScheme.surface,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          )
-                        : Text(
-                            'Create Event',
-                            style: TextStyle(
-                              color: theme.colorScheme.surface,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                   ),
                 ),
               ],

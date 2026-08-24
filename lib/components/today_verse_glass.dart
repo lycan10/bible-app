@@ -121,7 +121,8 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                             widget.verseData!['backgroundImageUrl']
                                 .toString()
                                 .isNotEmpty
-                        ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(
+                        ? CachedNetworkImage(
+                          imageUrl: ApiService.getFullImageUrl(
                             widget.verseData!['backgroundImageUrl'],
                           ),
                           fit: BoxFit.cover,
@@ -152,7 +153,7 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
 
               /// 🔹 Content
               Padding(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -207,16 +208,18 @@ class _TodayVerseGlassState extends State<TodayVerseGlass>
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      text ??
-                          "Every good and perfect gift comes from above, from the Father of Lights.",
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        height: 1.4,
+                    Flexible(
+                      child: Text(
+                        text ??
+                            "Every good and perfect gift comes from above, from the Father of Lights.",
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 1.2,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -464,7 +467,8 @@ class FullScreenVerseScreen extends StatelessWidget {
             child:
                 verseData?['backgroundImageUrl'] != null &&
                         verseData!['backgroundImageUrl'].toString().isNotEmpty
-                    ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(
+                    ? CachedNetworkImage(
+                      imageUrl: ApiService.getFullImageUrl(
                         verseData!['backgroundImageUrl'],
                       ),
                       fit: BoxFit.cover,

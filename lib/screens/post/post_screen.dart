@@ -95,14 +95,22 @@ class _PostScreenState extends State<PostScreen> {
   Future<void> _toggleReaction(String emoji) async {
     final auth = context.read<AuthProvider>();
     final communityProvider = context.read<CommunityProvider>();
-    final res = await communityProvider.reactToPost(auth.token!, widget.post['id'], emoji);
+    final res = await communityProvider.reactToPost(
+      auth.token!,
+      widget.post['id'],
+      emoji,
+    );
     if (mounted) {
       setState(() {
         if (res) {
           // re-read from the provider's updated list
-          final updatedPost = communityProvider.currentPosts
-              .firstWhere((p) => p['id'] == widget.post['id'], orElse: () => widget.post);
-          _reactions = List<dynamic>.from(updatedPost['reactions'] ?? _reactions);
+          final updatedPost = communityProvider.currentPosts.firstWhere(
+            (p) => p['id'] == widget.post['id'],
+            orElse: () => widget.post,
+          );
+          _reactions = List<dynamic>.from(
+            updatedPost['reactions'] ?? _reactions,
+          );
         }
       });
     }
@@ -337,7 +345,7 @@ class _PostScreenState extends State<PostScreen> {
                                   showInAppShareSheet(
                                     context,
                                     shareMessage:
-                                        'Check out this post on Quest! $link',
+                                        'Check out this post on Sozo App! $link',
                                   );
                                 },
                               ),
@@ -962,7 +970,7 @@ class _PostMenuDialogBox extends StatelessWidget {
                 final link = 'https://quest.vidarave.com/post/${post['id']}';
                 showInAppShareSheet(
                   context,
-                  shareMessage: 'Check out this post on Quest! $link',
+                  shareMessage: 'Check out this post on Sozo App! $link',
                 );
               },
               child: SettingsRowItem(

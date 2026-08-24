@@ -826,7 +826,7 @@ class _ExploreScreenState extends State<ExploreScreen> with RouteAware {
                                     post['image'] != null && post['image'].toString().isNotEmpty
                                         ? ApiService.getFullImageUrl(post['image'])
                                         : "",
-                                likes: '${post['reactions']?.length ?? 0}',
+                                likes: '${post['likesCount'] ?? 0}',
                                 comments: '${post['comments']?.length ?? 0}',
                                 time: DateFormatter.formatTimeAgo(
                                   post['createdAt'],

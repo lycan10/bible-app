@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:quest/utils/media_helper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -24,7 +25,6 @@ class UploadMediaScreen extends StatefulWidget {
 
 class _UploadMediaScreenState extends State<UploadMediaScreen> {
   final _formKey = GlobalKey<FormState>();
-  final ImagePicker _picker = ImagePicker();
   
   String title = '';
   String category = 'Sermon';
@@ -46,10 +46,10 @@ class _UploadMediaScreenState extends State<UploadMediaScreen> {
 
   Future<void> _pickMedia() async {
     if (widget.initialMediaType == 'video') {
-      final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+      final video = await MediaHelper.pickAndCompressImage(source: ImageSource.gallery, isVideo: true);
       if (video != null) {
         setState(() {
-          _selectedMedia = File(video.path);
+          _selectedMedia = video;
         });
         await _extractVideoDuration(video.path);
         await _generateVideoThumbnail(video.path);
@@ -112,10 +112,10 @@ class _UploadMediaScreenState extends State<UploadMediaScreen> {
   }
 
   Future<void> _pickThumbnail() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final image = await MediaHelper.pickAndCompressImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        _selectedThumbnail = File(image.path);
+        _selectedThumbnail = image;
       });
     }
   }

@@ -145,8 +145,7 @@ class _PostListState extends State<PostList> with RouteAware {
                               user['avatarUrl'] ?? "assets/images/boy.png";
                           final groupName = community['name'] ?? "Community";
                           final likes =
-                              ((post['reactions'] as List?)?.length ?? 0)
-                                  .toString();
+                              (post['likesCount'] ?? 0).toString();
                           final comments =
                               (post['_count']?['comments'] ?? 0).toString();
 

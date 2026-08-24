@@ -58,6 +58,8 @@ dependencies:
   flutter_markdown: ^0.7.7+1
   flutter_html: ^3.0.0
   dio: ^5.11.0
+  flutter_image_compress: ^2.5.1
+  image_cropper: ^12.2.1
 
 dev_dependencies:
   flutter_test:
@@ -80,7 +82,6 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
-    - assets/bible/
     - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -25,8 +25,7 @@ class AdminMessageCard extends StatelessWidget {
     final user = message['sender'] ?? {};
     final userName =
         "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
-    final authorName =
-        userName.isEmpty ? (user['username'] ?? '') : userName;
+    final authorName = userName.isEmpty ? (user['username'] ?? '') : userName;
     final avatarUrl = user['avatarUrl'];
 
     final text = message['text'] ?? '';
@@ -48,186 +47,253 @@ class AdminMessageCard extends StatelessWidget {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          width: 1,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: theme.colorScheme.onSurface.withValues(
-                  alpha: 0.1,
-                ),
-                backgroundImage:
-                    avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                child:
-                    avatarUrl == null
-                        ? HugeIcon(
-                          icon: HugeIcons.strokeRoundedUser,
-                          size: 16,
-                          color: theme.colorScheme.onSurface,
-                        )
-                        : null,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            authorName,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xff4a3aff,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: const Text(
-                            'ADMIN',
-                            style: TextStyle(
-                              color: Color(0xff4a3aff),
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (createdAt != null)
-                      Text(
-                        timeago.format(DateTime.parse(createdAt)),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          color: AppTheme.textColor2,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            width: 1,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
           ),
-
-          const SizedBox(height: 12),
-
-          // Media Content First
-          if (imageUrl != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: CachedNetworkImage(imageUrl: imageUrl,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-                errorWidget: (context, url, error) => Container(
-                      width: double.infinity,
-                      height: 200,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                      child: Center(
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedImage01,
-                          size: 40,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: theme.colorScheme.onSurface.withValues(
+                    alpha: 0.1,
+                  ),
+                  backgroundImage:
+                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                  child:
+                      avatarUrl == null
+                          ? HugeIcon(
+                            icon: HugeIcons.strokeRoundedUser,
+                            size: 16,
+                            color: theme.colorScheme.onSurface,
+                          )
+                          : null,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              authorName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(
+                                0xff4a3aff,
+                              ).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: const Text(
+                              'ADMIN',
+                              style: TextStyle(
+                                color: Color(0xff4a3aff),
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (createdAt != null)
+                        Text(
+                          timeago.format(DateTime.parse(createdAt)),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: AppTheme.textColor2,
                           ),
                         ),
-                      ),
-                    ),
-              ),
+                    ],
+                  ),
+                ),
+              ],
             ),
 
-          if (videoUrl != null)
-            _buildMediaPreview(
-              context,
-              videoThumbnail,
-              HugeIcons.strokeRoundedVideo01,
-              true,
-            ),
-
-          if (audioUrl != null)
-            _buildMediaPreview(
-              context,
-              audioThumbnail,
-              HugeIcons.strokeRoundedMusicNote01,
-              false,
-            ),
-
-          if (text.isNotEmpty &&
-              (imageUrl != null || videoUrl != null || audioUrl != null))
             const SizedBox(height: 12),
 
-          // Text Content (under media, 2 lines max)
-          if (text.isNotEmpty)
-            ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxHeight: 45,
-              ), // Roughly 2 lines
-              child: FormattedText(
-                text,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  color: theme.colorScheme.onSurface,
+            // Media Content First
+            if (imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorWidget:
+                      (context, url, error) => Container(
+                        width: double.infinity,
+                        height: 200,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.1,
+                        ),
+                        child: Center(
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedImage01,
+                            size: 40,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
                 ),
               ),
-            ),
 
-          const SizedBox(height: 16),
+            if (videoUrl != null)
+              _buildMediaPreview(
+                context,
+                videoThumbnail,
+                HugeIcons.strokeRoundedVideo01,
+                true,
+              ),
 
-          // Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Row(
+            if (audioUrl != null)
+              _buildMediaPreview(
+                context,
+                audioThumbnail,
+                HugeIcons.strokeRoundedMusicNote01,
+                false,
+              ),
+
+            if (text.isNotEmpty &&
+                (imageUrl != null || videoUrl != null || audioUrl != null))
+              const SizedBox(height: 12),
+
+            // Text Content (under media, 2 lines max)
+            if (text.isNotEmpty)
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 45,
+                ), // Roughly 2 lines
+                child: FormattedText(
+                  text,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Row(
+                    children: [
+                      _actionItem(
+                        theme,
+                        message['hasLiked'] == true
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        "${message['likesCount'] ?? 0}",
+                        color:
+                            message['hasLiked'] == true
+                                ? Colors.red
+                                : AppTheme.textColor2,
+                        onTap: () async {
+                          if (auth.token != null) {
+                            await communityProvider.toggleAdminMessageLike(
+                              auth.token!,
+                              message['id'],
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _actionItem(
+                        theme,
+                        Icons.chat_bubble_outline,
+                        "${message['commentsCount'] ?? 0}",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      AdminMessageScreen(message: message),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _actionItem(
+                        theme,
+                        Icons.share_outlined,
+                        "${message['sharesCount'] ?? 0}",
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder:
+                                (context) => InAppShareSheet(
+                                  shareMessage:
+                                      'Check out this message on Sozo App: https://bible.quest/community/messages/${message['id']}',
+                                ),
+                          );
+                          if (auth.token != null) {
+                            communityProvider.shareAdminMessage(
+                              auth.token!,
+                              message['id'],
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                Row(
                   children: [
-                    _actionItem(
+                    _iconButton(
                       theme,
-                      message['hasLiked'] == true
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      "${message['likesCount'] ?? 0}",
-                      color:
-                          message['hasLiked'] == true
-                              ? Colors.red
-                              : AppTheme.textColor2,
+                      message['hasBookmarked'] == true
+                          ? HugeIcons.strokeRoundedBookmarkCheck02
+                          : HugeIcons.strokeRoundedBookmark02,
+                      message['hasBookmarked'] == true
+                          ? Colors.green
+                          : AppTheme.textColor2,
                       onTap: () async {
                         if (auth.token != null) {
-                          await communityProvider.toggleAdminMessageLike(
+                          await communityProvider.toggleAdminMessageBookmark(
                             auth.token!,
                             message['id'],
                           );
                         }
                       },
                     ),
-                    const SizedBox(width: 8),
-                    _actionItem(
+                    const SizedBox(width: 6),
+                    _iconButton(
                       theme,
-                      Icons.chat_bubble_outline,
-                      "${message['commentsCount'] ?? 0}",
+                      HugeIcons.strokeRoundedLinkForward,
+                      theme.colorScheme.onSurface,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -239,74 +305,12 @@ class AdminMessageCard extends StatelessWidget {
                         );
                       },
                     ),
-                    const SizedBox(width: 8),
-                    _actionItem(
-                      theme,
-                      Icons.share_outlined,
-                      "${message['sharesCount'] ?? 0}",
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder:
-                              (context) => InAppShareSheet(
-                                shareMessage:
-                                    'Check out this message on Quest: https://bible.quest/community/messages/${message['id']}',
-                              ),
-                        );
-                        if (auth.token != null) {
-                          communityProvider.shareAdminMessage(
-                            auth.token!,
-                            message['id'],
-                          );
-                        }
-                      },
-                    ),
                   ],
                 ),
-              ),
-
-              Row(
-                children: [
-                  _iconButton(
-                    theme,
-                    message['hasBookmarked'] == true
-                        ? HugeIcons.strokeRoundedBookmarkCheck02
-                        : HugeIcons.strokeRoundedBookmark02,
-                    message['hasBookmarked'] == true
-                        ? Colors.green
-                        : AppTheme.textColor2,
-                    onTap: () async {
-                      if (auth.token != null) {
-                        await communityProvider.toggleAdminMessageBookmark(
-                          auth.token!,
-                          message['id'],
-                        );
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 6),
-                  _iconButton(
-                    theme,
-                    HugeIcons.strokeRoundedLinkForward,
-                    theme.colorScheme.onSurface,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => AdminMessageScreen(message: message),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -325,11 +329,13 @@ class AdminMessageCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(15),
           child:
               thumbnail != null
-                  ? CachedNetworkImage(imageUrl: thumbnail,
+                  ? CachedNetworkImage(
+                    imageUrl: thumbnail,
                     width: double.infinity,
                     height: 150,
                     fit: BoxFit.cover,
-                    errorWidget: (context, url, error) =>
+                    errorWidget:
+                        (context, url, error) =>
                             _buildFallback(theme, fallbackIcon),
                   )
                   : _buildFallback(theme, fallbackIcon),

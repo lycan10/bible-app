@@ -12,6 +12,7 @@ import 'package:quest/components/event/event_dotted_card.dart';
 import 'package:quest/components/posts/post_card_long.dart';
 import 'package:quest/main.dart';
 import 'package:quest/components/tile/settings_row_item.dart';
+import 'package:quest/utils/media_helper.dart';
 import 'package:quest/components/titles/section_header.dart';
 import 'package:quest/components/titles/title_one.dart';
 import 'package:quest/components/today_verse_glass.dart';
@@ -56,7 +57,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
   final ScrollController _forumScrollController = ScrollController();
   final ScrollController _mainScrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
-  XFile? _pendingAttachment;
+  File? _pendingAttachment;
   bool _isVideo = false;
   String _selectedEventFilter = "All";
   Timer? _pollingTimer;
@@ -208,9 +209,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                       color: const Color(0xFF7C5CFF),
                       onTap: () async {
                         Navigator.pop(ctx);
-                        final file = await _imagePicker.pickImage(
+                        final file = await MediaHelper.pickAndCompressImage(
                           source: ImageSource.gallery,
-                          imageQuality: 85,
                         );
                         if (file != null) {
                           setState(() {
@@ -226,9 +226,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                       color: const Color(0xFF00C2A8),
                       onTap: () async {
                         Navigator.pop(ctx);
-                        final file = await _imagePicker.pickImage(
+                        final file = await MediaHelper.pickAndCompressImage(
                           source: ImageSource.camera,
-                          imageQuality: 85,
                         );
                         if (file != null) {
                           setState(() {
@@ -244,8 +243,9 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                       color: const Color(0xFFFF6B6B),
                       onTap: () async {
                         Navigator.pop(ctx);
-                        final file = await _imagePicker.pickVideo(
+                        final file = await MediaHelper.pickAndCompressImage(
                           source: ImageSource.gallery,
+                          isVideo: true,
                         );
                         if (file != null) {
                           setState(() {
@@ -256,13 +256,14 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                       },
                     ),
                     _AttachmentOption(
-                      icon: HugeIcons.strokeRoundedVideo02,
+                      icon: HugeIcons.strokeRoundedCamera02,
                       label: 'Record',
-                      color: const Color(0xFFFF9500),
+                      color: const Color(0xFFFFA94D),
                       onTap: () async {
                         Navigator.pop(ctx);
-                        final file = await _imagePicker.pickVideo(
+                        final file = await MediaHelper.pickAndCompressImage(
                           source: ImageSource.camera,
+                          isVideo: true,
                         );
                         if (file != null) {
                           setState(() {
@@ -357,7 +358,7 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                               ),
                             )
                             : Image.file(
-                              File(_pendingAttachment!.path),
+                              _pendingAttachment!,
                               height: 80,
                               width: 80,
                               fit: BoxFit.cover,
@@ -761,8 +762,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                             context,
                             shareMessage:
                                 link != null
-                                    ? 'Join $name on Quest! $link'
-                                    : 'Join $name on Quest!',
+                                    ? 'Join $name on Sozo App! $link'
+                                    : 'Join $name on Sozo App!',
                           );
                         },
                       ),
@@ -1512,8 +1513,8 @@ class _CommunityIndividualScreenState extends State<CommunityIndividualScreen>
                         context,
                         shareMessage:
                             link != null
-                                ? 'Join $name on Quest! $link'
-                                : 'Join $name on Quest!',
+                                ? 'Join $name on Sozo App! $link'
+                                : 'Join $name on Sozo App!',
                       );
                     },
                     child: Container(

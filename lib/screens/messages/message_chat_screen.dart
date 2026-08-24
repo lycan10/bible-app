@@ -17,6 +17,7 @@ import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/chat_provider.dart';
 import 'package:quest/theme/theme.dart';
 import 'package:quest/components/avatar.dart';
+import 'package:quest/utils/media_helper.dart';
 
 class MessageChatScreen extends StatefulWidget {
   final String chatId;
@@ -52,7 +53,7 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
   /// Cached provider reference for use in [dispose] where context is unavailable.
   ChatProvider? _chatProvider;
 
-  XFile? _pendingAttachment;
+  File? _pendingAttachment;
   bool _isVideo = false;
   final ImagePicker _imagePicker = ImagePicker();
   bool _isSending = false;
@@ -184,9 +185,8 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                       color: const Color(0xFF7C5CFF),
                       onTap: () async {
                         Navigator.pop(ctx);
-                        final file = await _imagePicker.pickImage(
+                        final file = await MediaHelper.pickAndCompressImage(
                           source: ImageSource.gallery,
-                          imageQuality: 85,
                         );
                         if (file != null) {
                           setState(() {
@@ -202,9 +202,8 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                       color: const Color(0xFF00C2A8),
                       onTap: () async {
                         Navigator.pop(ctx);
-                        final file = await _imagePicker.pickImage(
+                        final file = await MediaHelper.pickAndCompressImage(
                           source: ImageSource.camera,
-                          imageQuality: 85,
                         );
                         if (file != null) {
                           setState(() {
@@ -220,8 +219,9 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                       color: const Color(0xFFFF4E7B),
                       onTap: () async {
                         Navigator.pop(ctx);
-                        final file = await _imagePicker.pickVideo(
+                        final file = await MediaHelper.pickAndCompressImage(
                           source: ImageSource.gallery,
+                          isVideo: true,
                         );
                         if (file != null) {
                           setState(() {
@@ -453,7 +453,7 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                                       ),
                                     )
                                     : Image.file(
-                                      File(_pendingAttachment!.path),
+                                      _pendingAttachment!,
                                       width: 50,
                                       height: 50,
                                       fit: BoxFit.cover,
@@ -462,7 +462,7 @@ class _MessageChatScreenState extends State<MessageChatScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              _pendingAttachment!.name,
+                              _pendingAttachment!.path.split('/').last,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall,
@@ -763,7 +763,8 @@ class ChatBubble extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(imageUrl: imageUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl!,
                     width: 200,
                     fit: BoxFit.cover,
                   ),

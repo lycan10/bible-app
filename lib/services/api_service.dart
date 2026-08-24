@@ -141,6 +141,21 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  // GET /users/:userId
+  static Future<Map<String, dynamic>?> fetchUserById(
+    String token,
+    String userId,
+  ) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/$userId'),
+      headers: _headers(token),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
+  }
+
   // GET /users/me
   static Future<Map<String, dynamic>> fetchCurrentUser(String token) async {
     final response = _handleResponse(
@@ -776,6 +791,22 @@ class ApiService {
       ),
     );
     return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  // PUT /communities/:id
+  static Future<Map<String, dynamic>> updateCommunity(
+    String token,
+    String communityId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = _handleResponse(
+      await http.put(
+        Uri.parse('$baseUrl/communities/$communityId'),
+        headers: _headers(token),
+        body: jsonEncode(data),
+      ),
+    );
+    return jsonDecode(response.body);
   }
 
   // POST /communities/:id/join

@@ -9,7 +9,12 @@ import 'package:quest/main.dart';
 import 'package:quest/screens/notification/Notification_screen.dart';
 import 'package:quest/screens/connect/connect_screen.dart';
 import 'package:quest/screens/community/community_join_requests_screen.dart';
-
+import 'package:quest/screens/post/post_screen.dart';
+import 'package:quest/screens/games/games_screen.dart';
+import 'package:quest/services/api_service.dart';
+import 'package:provider/provider.dart';
+import 'package:quest/providers/auth_provider.dart';
+import 'package:quest/components/user_details/user_profile_card.dart';
 // ---------------------------------------------------------------------------
 // Android notification channel definitions
 // ---------------------------------------------------------------------------
@@ -429,7 +434,7 @@ void navigateFromNotificationPayload(Map<String, dynamic> data) {
       handler(chatId);
       return;
     }
-  } else if (type == 'COMMUNITY_FORUM') {
+  } else if (['COMMUNITY_FORUM', 'COMMUNITY_MESSAGE', 'COMMUNITY_EVENT'].contains(type)) {
     final communityId = data['communityId'] as String?;
     if (communityId != null) {
       final context = navigatorKey.currentContext;
@@ -455,12 +460,47 @@ void navigateFromNotificationPayload(Map<String, dynamic> data) {
       }
     }
   } else if (type == 'FRIEND_REQUEST' || type == 'FRIEND_ACCEPTED') {
-    // Navigate to the Connect screen so the user can accept/reject requests.
+    final userId = data['senderId'] as String? ?? data['receiverId'] as String?;
+    final context = navigatorKey.currentContext;
+    if (userId != null && context != null) {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token != null) {
+        ApiService.fetchUserById(token, userId).then((user) {
+          if (user != null) {
+            UserProfileCard.show(context, user);
+          } else {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
+          }
+        }).catchError((e) {
+          debugPrint('Error fetching user for connection notification: $e');
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
+        });
+        return;
+      }
+    } else if (context != null) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
+      return;
+    }
+  } else if (['COMMUNITY_POST', 'POST_REACTION', 'POST_COMMENT', 'COMMENT_REPLY', 'COMMENT_REACTION'].contains(type)) {
+    final postId = data['postId'] as String?;
+    final context = navigatorKey.currentContext;
+    if (postId != null && context != null) {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token != null) {
+        ApiService.fetchPostById(token, postId).then((post) {
+          if (post != null) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => PostScreen(post: post)));
+          }
+        }).catchError((e) {
+          debugPrint('Error fetching post: $e');
+        });
+        return;
+      }
+    }
+  } else if (['CHALLENGE_INVITE', 'CHALLENGE_TURN'].contains(type)) {
     final context = navigatorKey.currentContext;
     if (context != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const ConnectScreen()),
-      );
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GamesScreen()));
       return;
     }
   }

@@ -12,7 +12,7 @@ import 'package:quest/components/avatar.dart';
 /// Shows the in-app share bottom sheet.
 ///
 /// [shareMessage] is the full text that will be sent as a DM and/or
-/// passed to the OS share sheet (e.g. "Check out this post on Quest! <link>").
+/// passed to the OS share sheet (e.g. "Check out this post on Sozo App! <link>").
 void showInAppShareSheet(BuildContext context, {required String shareMessage}) {
   showModalBottomSheet(
     context: context,
@@ -348,9 +348,15 @@ class _InAppShareSheetState extends State<InAppShareSheet>
                                       ),
                                       child: CustomAvatar(
                                         radius: 32,
-                                        imageUrl: avatarUrl != null && avatarUrl.toString().isNotEmpty
-                                            ? ApiService.getFullImageUrl(avatarUrl)
-                                            : null,
+                                        imageUrl:
+                                            avatarUrl != null &&
+                                                    avatarUrl
+                                                        .toString()
+                                                        .isNotEmpty
+                                                ? ApiService.getFullImageUrl(
+                                                  avatarUrl,
+                                                )
+                                                : null,
                                       ),
                                     ),
 

@@ -5,6 +5,7 @@ import 'package:quest/components/embeds/voice_note_embed.dart';
 import 'package:quest/components/modals/voice_recorder_modal.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/services/api_service.dart';
+import 'package:quest/utils/media_helper.dart';
 import 'package:provider/provider.dart';
 
 /// Mixin that provides optimistic (instant preview) media insertion for
@@ -49,8 +50,7 @@ mixin MediaUploadMixin<T extends StatefulWidget> on State<T> {
   Future<void> pickAndInsertImage({
     ImageSource source = ImageSource.gallery,
   }) async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source);
+    final picked = await MediaHelper.pickAndCompressImage(source: source);
     if (picked == null || !mounted) return;
 
     final localPath = picked.path;

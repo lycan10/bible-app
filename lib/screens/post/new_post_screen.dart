@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:quest/components/titles/title_two.dart';
+import 'package:quest/utils/media_helper.dart';
+import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/providers/auth_provider.dart';
 import 'package:quest/providers/community_provider.dart';
@@ -33,21 +36,19 @@ class _NewPostScreenState extends State<NewPostScreen> {
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    final file = await MediaHelper.pickAndCompressImage(source: ImageSource.gallery);
+    if (file != null) {
       setState(() {
-        _selectedImages.add(File(image.path));
+        _selectedImages.add(file);
       });
     }
   }
 
   Future<void> _takePhoto() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
-    if (image != null) {
+    final file = await MediaHelper.pickAndCompressImage(source: ImageSource.camera);
+    if (file != null) {
       setState(() {
-        _selectedImages.add(File(image.path));
+        _selectedImages.add(file);
       });
     }
   }

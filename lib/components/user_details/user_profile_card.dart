@@ -18,7 +18,8 @@ class UserProfileCard extends StatefulWidget {
 
   static void show(BuildContext context, [Map<String, dynamic>? user]) {
     final auth = context.read<AuthProvider>();
-    final authId = auth.user?['id']?.toString() ?? auth.user?['_id']?.toString();
+    final authId =
+        auth.user?['id']?.toString() ?? auth.user?['_id']?.toString();
     final targetId = user?['id']?.toString() ?? user?['_id']?.toString();
 
     // No user passed, or the target is the current user → go to own profile
@@ -60,7 +61,10 @@ class _UserProfileCardState extends State<UserProfileCard> {
           if (mounted) setState(() => _isLoading = false);
           return;
         }
-        final res = await ApiService.fetchProfileStats(auth.token!, userId.toString());
+        final res = await ApiService.fetchProfileStats(
+          auth.token!,
+          userId.toString(),
+        );
         if (mounted) {
           setState(() {
             _stats = res;
@@ -86,7 +90,7 @@ class _UserProfileCardState extends State<UserProfileCard> {
       final link = 'https://quest.vidarave.com/user/$userId';
       showInAppShareSheet(
         context,
-        shareMessage: 'Check out @$username\'s profile on Quest! $link',
+        shareMessage: 'Check out @$username\'s profile on Sozo App! $link',
       );
     }
   }
@@ -100,21 +104,23 @@ class _UserProfileCardState extends State<UserProfileCard> {
     final username = user['username'] ?? '';
     final avatarUrl = user['avatarUrl'];
 
-    final friendsCount = _stats != null
-        ? ((_stats!['friendsCount'] as num?)?.toInt() ?? 0)
-        : (user['friends'] as List<dynamic>?)?.length ?? 0;
-    final badgesCount = _stats != null
-        ? ((_stats!['badgesCount'] as num?)?.toInt() ?? 0)
-        : 0;
-    final communitiesCount = _stats != null
-        ? ((_stats!['communitiesCount'] as num?)?.toInt() ?? 0)
-        : (user['communities'] as List<dynamic>?)?.length ?? 0;
+    final friendsCount =
+        _stats != null
+            ? ((_stats!['friendsCount'] as num?)?.toInt() ?? 0)
+            : (user['friends'] as List<dynamic>?)?.length ?? 0;
+    final badgesCount =
+        _stats != null ? ((_stats!['badgesCount'] as num?)?.toInt() ?? 0) : 0;
+    final communitiesCount =
+        _stats != null
+            ? ((_stats!['communitiesCount'] as num?)?.toInt() ?? 0)
+            : (user['communities'] as List<dynamic>?)?.length ?? 0;
     final mutualCommunities =
         _stats?['mutualCommunities'] as List<dynamic>? ?? [];
     final connectionStatus = _stats?['connectionStatus'];
 
     final auth = context.read<AuthProvider>();
-    final authId = auth.user?['id']?.toString() ?? auth.user?['_id']?.toString();
+    final authId =
+        auth.user?['id']?.toString() ?? auth.user?['_id']?.toString();
     final targetId = user['id']?.toString() ?? user['_id']?.toString();
     // If we have no target user ID, treat as own profile so actions are hidden
     final isMe = targetId == null || (authId != null && authId == targetId);
@@ -148,7 +154,8 @@ class _UserProfileCardState extends State<UserProfileCard> {
                   borderRadius: BorderRadius.circular(50),
                   child:
                       avatarUrl != null && avatarUrl.toString().isNotEmpty
-                          ? CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(avatarUrl),
+                          ? CachedNetworkImage(
+                            imageUrl: ApiService.getFullImageUrl(avatarUrl),
                             width: 75,
                             height: 75,
                             fit: BoxFit.cover,
@@ -178,12 +185,20 @@ class _UserProfileCardState extends State<UserProfileCard> {
                             TextSpan(text: '$firstName $lastName '),
                             if (user['verificationBadge'] == 'BLUE')
                               WidgetSpan(
-                                child: Icon(Icons.verified, color: Colors.blue, size: 16),
+                                child: Icon(
+                                  Icons.verified,
+                                  color: Colors.blue,
+                                  size: 16,
+                                ),
                                 alignment: PlaceholderAlignment.middle,
                               )
                             else if (user['verificationBadge'] == 'GOLD')
                               WidgetSpan(
-                                child: Icon(Icons.verified, color: Colors.amber, size: 16),
+                                child: Icon(
+                                  Icons.verified,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
                                 alignment: PlaceholderAlignment.middle,
                               ),
                             TextSpan(text: '\n'),
@@ -254,15 +269,18 @@ class _UserProfileCardState extends State<UserProfileCard> {
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
-                        builder: (context) => ReportBottomSheet(
-                          itemType: 'USER',
-                          itemId: widget.user?['id'] ?? '',
-                          reportedUserId: widget.user?['id'] ?? '',
-                        ),
+                        builder:
+                            (context) => ReportBottomSheet(
+                              itemType: 'USER',
+                              itemId: widget.user?['id'] ?? '',
+                              reportedUserId: widget.user?['id'] ?? '',
+                            ),
                       );
                     },
                   ),
-                if (!isMe && connectionStatus != 'ACCEPTED' && connectionStatus != null)
+                if (!isMe &&
+                    connectionStatus != 'ACCEPTED' &&
+                    connectionStatus != null)
                   ActionPillButton(
                     icon:
                         connectionStatus == 'PENDING'
@@ -356,8 +374,7 @@ class _UserProfileCardState extends State<UserProfileCard> {
                         communityName: comm['name'] ?? 'Unknown',
                         description: comm['description'] ?? '',
                         communityImage:
-                            comm['avatarUrl'] ??
-                            "assets/images/boy.png",
+                            comm['avatarUrl'] ?? "assets/images/boy.png",
                       );
                     },
                   ),

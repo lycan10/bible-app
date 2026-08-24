@@ -126,6 +126,40 @@ class CommunityProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateCommunityDetails(String token, String communityId, Map<String, dynamic> data) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final updatedCommunity = await ApiService.updateCommunity(token, communityId, data);
+      if (updatedCommunity.containsKey('error')) {
+        throw Exception(updatedCommunity['error']);
+      }
+      
+      // Update local state if the community exists in the list
+      final index = _communities.indexWhere((c) => c['id'] == communityId);
+      if (index != -1) {
+        _communities[index] = {
+          ..._communities[index],
+          ...updatedCommunity
+        };
+      }
+
+      // Update current community details if it's the one being viewed
+      if (_currentCommunity != null && _currentCommunity!['id'] == communityId) {
+        _currentCommunity = {
+          ..._currentCommunity!,
+          ...updatedCommunity
+        };
+      }
+    } catch (e) {
+      debugPrint("Error updating community: $e");
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> searchCommunities(String token, String query) async {
     _isLoading = true;
     notifyListeners();

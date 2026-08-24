@@ -43,7 +43,11 @@ class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       if (auth.token != null) {
-        context.read<ChatProvider>().loadChats(auth.token!);
+        final chatProvider = context.read<ChatProvider>();
+        chatProvider.loadChats(
+          auth.token!,
+          showLoading: chatProvider.chats.isEmpty,
+        );
       }
     });
   }
@@ -88,6 +92,24 @@ class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final chatProvider = context.watch<ChatProvider>();
+
+    final sortedChats = List<dynamic>.from(chatProvider.chats);
+    sortedChats.sort((a, b) {
+      final aMsg = a['lastMessage'];
+      final bMsg = b['lastMessage'];
+      
+      DateTime aTime = DateTime.fromMillisecondsSinceEpoch(0);
+      if (aMsg != null && aMsg['createdAt'] != null) {
+        aTime = DateTime.tryParse(aMsg['createdAt'].toString()) ?? aTime;
+      }
+      
+      DateTime bTime = DateTime.fromMillisecondsSinceEpoch(0);
+      if (bMsg != null && bMsg['createdAt'] != null) {
+        bTime = DateTime.tryParse(bMsg['createdAt'].toString()) ?? bTime;
+      }
+      
+      return bTime.compareTo(aTime);
+    });
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -173,16 +195,16 @@ class _MessageListScreenState extends State<MessageListScreen> with RouteAware {
                 child:
                     chatProvider.isLoading
                         ? const Center(child: CircularProgressIndicator())
-                        : chatProvider.chats.isEmpty
+                        : sortedChats.isEmpty
                         ? const Center(
                           child: Text(
                             "No messages yet. Connect with a friend to chat!",
                           ),
                         )
                         : ListView.builder(
-                          itemCount: chatProvider.chats.length,
+                          itemCount: sortedChats.length,
                           itemBuilder: (context, index) {
-                            final chat = chatProvider.chats[index];
+                            final chat = sortedChats[index];
                             final friend = chat['friend'] ?? {};
                             final lastMsg = chat['lastMessage'];
 

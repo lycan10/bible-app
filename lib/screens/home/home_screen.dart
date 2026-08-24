@@ -714,40 +714,56 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   featureKey: 'devotion',
                   child: Column(
                     children: [
-                      if (devotionProvider.myPlans.isNotEmpty) ...[
-                        SectionHeader(
-                          title: "Ongoing devotion",
-                          showSeeAll: false,
-                        ),
-                        Builder(
-                          builder: (context) {
-                            final plan = devotionProvider.myPlans[0]['plan'];
-                            final currentDay =
-                                devotionProvider.myPlans[0]['currentDay'];
-                            return OngoingDevotionCard(
-                              title: plan['title'] ?? "",
-                              author: plan['authorName'] ?? "",
-                              imagePath:
-                                  plan['image'] ?? "assets/images/boy.png",
-                              likes: "${plan['durationDays']} Days Plan",
-                              planText: plan['tag'] ?? "",
-                              day: currentDay ?? 1,
-                              onContinue: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => DevotionScreen(
-                                          planId: plan['id'],
-                                          dayNum: 1,
+                      Builder(
+                        builder: (context) {
+                          final ongoingPlans = devotionProvider.myPlans.where((myPlan) {
+                            final currentDay = myPlan['currentDay'] ?? 1;
+                            final durationDays = myPlan['plan']['durationDays'] ?? 1;
+                            return currentDay <= durationDays;
+                          }).toList();
+                          
+                          if (ongoingPlans.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          
+                          return Column(
+                            children: [
+                              const SectionHeader(
+                                title: "Ongoing devotion",
+                                showSeeAll: false,
+                              ),
+                              Builder(
+                                builder: (context) {
+                                  final plan = ongoingPlans[0]['plan'];
+                                  final currentDay =
+                                      ongoingPlans[0]['currentDay'] ?? 1;
+                                  return OngoingDevotionCard(
+                                    title: plan['title'] ?? "",
+                                    author: plan['authorName'] ?? "",
+                                    imagePath:
+                                        plan['image'] ?? "assets/images/boy.png",
+                                    likes: "${plan['durationDays']} Days Plan",
+                                    planText: plan['tag'] ?? "",
+                                    day: currentDay,
+                                    onContinue: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => DevotionScreen(
+                                                planId: plan['id'],
+                                                dayNum: currentDay,
+                                              ),
                                         ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        }
+                      ),
                       if (devotions.length > 1) ...[
                         SectionHeader(
                           title: "Devotion for you",

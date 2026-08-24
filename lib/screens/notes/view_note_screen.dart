@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -13,7 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:quest/utils/date_formatter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../components/editor_toolbar.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:quest/utils/media_helper.dart';
 import '../../components/bible_reference_picker.dart';
 import '../../components/modals/voice_recorder_modal.dart';
 import '../../components/embeds/smart_image_embed.dart';
@@ -139,8 +140,9 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
   }
 
   void _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await MediaHelper.pickAndCompressImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null && mounted) {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token != null) {
@@ -209,7 +211,13 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
       ),
       builder: (context) {
         return FutureBuilder<String?>(
-          future: BibleService.getVerseText(reference, Provider.of<BibleProvider>(context, listen: false).currentTranslation),
+          future: BibleService.getVerseText(
+            reference,
+            Provider.of<BibleProvider>(
+              context,
+              listen: false,
+            ).currentTranslation,
+          ),
           builder: (context, snapshot) {
             return SafeArea(
               child: Padding(
@@ -355,7 +363,8 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(imageUrls.first),
+            child: CachedNetworkImage(
+              imageUrl: ApiService.getFullImageUrl(imageUrls.first),
               fit: BoxFit.cover,
             ),
           ),
@@ -377,7 +386,8 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
             itemBuilder: (context, index) {
               return ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(imageUrl: ApiService.getFullImageUrl(imageUrls[index]),
+                child: CachedNetworkImage(
+                  imageUrl: ApiService.getFullImageUrl(imageUrls[index]),
                   fit: BoxFit.cover,
                 ),
               );
@@ -562,7 +572,9 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                                     ),
                                   ),
                                   Text(
-                                    DateFormatter.formatTimeAgo(_date), // Using the passed _date formatted
+                                    DateFormatter.formatTimeAgo(
+                                      _date,
+                                    ), // Using the passed _date formatted
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       color: Theme.of(context)

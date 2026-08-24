@@ -384,44 +384,61 @@ class _DevotionListScreenState extends State<DevotionListScreen>
                           ),
                       ] else ...[
                         if (myPlans.isNotEmpty) ...[
-                          ...myPlans.map((myPlan) {
-                            int myTotalLikes = 0;
-                            if (myPlan['plan']['days'] != null) {
-                              for (var day in myPlan['plan']['days']) {
-                                myTotalLikes +=
-                                    (day['likesCount'] as int? ?? 0);
+                          Builder(builder: (context) {
+                            final ongoingPlans = myPlans.where((myPlan) {
+                              final int currentDay = myPlan['currentDay'] ?? 1;
+                              final int durationDays = myPlan['plan']['durationDays'] ?? 1;
+                              return currentDay <= durationDays;
+                            }).toList();
+                            
+                            final completedPlans = myPlans.where((myPlan) {
+                              final int currentDay = myPlan['currentDay'] ?? 1;
+                              final int durationDays = myPlan['plan']['durationDays'] ?? 1;
+                              return currentDay > durationDays;
+                            }).toList();
+                            
+                            Widget buildPlanCard(Map<String, dynamic> myPlan, bool isCompleted) {
+                              int myTotalLikes = 0;
+                              if (myPlan['plan']['days'] != null) {
+                                for (var day in myPlan['plan']['days']) {
+                                  myTotalLikes += (day['likesCount'] as int? ?? 0);
+                                }
                               }
+                              final int currentDay = myPlan['currentDay'] ?? 1;
+                              final int durationDays = myPlan['plan']['durationDays'] ?? 1;
+                              final int displayDay = isCompleted ? durationDays : currentDay;
+  
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: OngoingDevotionCard(
+                                  title: myPlan['plan']['title'] ?? '',
+                                  author: myPlan['plan']['authorName'] ?? '',
+                                  imagePath: myPlan['plan']['image'] ?? 'assets/images/boy.png',
+                                  likes: myTotalLikes > 0 ? myTotalLikes.toString() : "",
+                                  planText: "- ${myPlan['plan']['durationDays']} Days Plan",
+                                  day: displayDay,
+                                  isCompleted: isCompleted,
+                                  onContinue: () => _navigateToDevotionScreen(
+                                    context,
+                                    myPlan['plan']['id'],
+                                    displayDay,
+                                  ),
+                                ),
+                              );
                             }
-                            final int currentDay = myPlan['currentDay'] ?? 1;
-                            final int durationDays =
-                                myPlan['plan']['durationDays'] ?? 1;
-                            final bool isCompleted = currentDay > durationDays;
-                            final int displayDay =
-                                isCompleted ? durationDays : currentDay;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: OngoingDevotionCard(
-                                title: myPlan['plan']['title'] ?? '',
-                                author: myPlan['plan']['authorName'] ?? '',
-                                imagePath:
-                                    myPlan['plan']['image'] ??
-                                    'assets/images/boy.png',
-                                likes:
-                                    myTotalLikes > 0
-                                        ? myTotalLikes.toString()
-                                        : "",
-                                planText:
-                                    "- ${myPlan['plan']['durationDays']} Days Plan",
-                                day: displayDay,
-                                isCompleted: isCompleted,
-                                onContinue:
-                                    () => _navigateToDevotionScreen(
-                                      context,
-                                      myPlan['plan']['id'],
-                                      displayDay,
-                                    ),
-                              ),
+                            
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (ongoingPlans.isNotEmpty) ...[
+                                  const SectionHeader(title: "Ongoing devotion", seeAllText: ""),
+                                  ...ongoingPlans.map((p) => buildPlanCard(p, false)),
+                                ],
+                                if (completedPlans.isNotEmpty) ...[
+                                  const SectionHeader(title: "Completed devotion", seeAllText: ""),
+                                  ...completedPlans.map((p) => buildPlanCard(p, true)),
+                                ],
+                              ],
                             );
                           }),
                         ],

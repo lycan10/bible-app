@@ -35,9 +35,9 @@ class _GlobalMoreMenuState extends State<GlobalMoreMenu> {
     } catch (e) {
       if (mounted) {
         auth.updateUserLocally({key: !value}); // Revert
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update setting: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to update setting: $e')));
       }
     }
   }
@@ -130,7 +130,11 @@ class _SettingsSwitchRow extends StatelessWidget {
               color: theme.colorScheme.onSurface.withOpacity(0.05),
               shape: BoxShape.circle,
             ),
-            child: HugeIcon(icon: icon, size: 20.0, color: theme.colorScheme.onSurface),
+            child: HugeIcon(
+              icon: icon,
+              size: 20.0,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -147,6 +151,7 @@ class _SettingsSwitchRow extends StatelessWidget {
                   subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    fontSize: 12,
                   ),
                 ),
               ],

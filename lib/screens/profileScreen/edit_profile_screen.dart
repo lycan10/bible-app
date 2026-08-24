@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:quest/utils/media_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:quest/components/action_pill/action_pill_button.dart';
 import 'package:quest/components/titles/title_two.dart';
@@ -64,11 +64,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await MediaHelper.pickAndCompressImage(cropToSquare: true);
     if (pickedFile != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _selectedImage = pickedFile;
       });
     }
   }

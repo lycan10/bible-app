@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
@@ -183,7 +184,18 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
+                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
+                                        if (payload['data'] != null && payload['data'] is String) {
+                                          try {
+                                            final parsedData = jsonDecode(payload['data']);
+                                            if (parsedData is Map<String, dynamic>) {
+                                              payload.addAll(parsedData);
+                                            }
+                                          } catch (e) {
+                                            debugPrint('Error decoding notification data: $e');
+                                          }
+                                        }
+                                        navigateFromNotificationPayload(payload);
                                       },
                                     );
                                   }).toList(),
@@ -215,7 +227,18 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
+                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
+                                        if (payload['data'] != null && payload['data'] is String) {
+                                          try {
+                                            final parsedData = jsonDecode(payload['data']);
+                                            if (parsedData is Map<String, dynamic>) {
+                                              payload.addAll(parsedData);
+                                            }
+                                          } catch (e) {
+                                            debugPrint('Error decoding notification data: $e');
+                                          }
+                                        }
+                                        navigateFromNotificationPayload(payload);
                                       },
                                     );
                                   }).toList(),
@@ -245,7 +268,18 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
+                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
+                                        if (payload['data'] != null && payload['data'] is String) {
+                                          try {
+                                            final parsedData = jsonDecode(payload['data']);
+                                            if (parsedData is Map<String, dynamic>) {
+                                              payload.addAll(parsedData);
+                                            }
+                                          } catch (e) {
+                                            debugPrint('Error decoding notification data: $e');
+                                          }
+                                        }
+                                        navigateFromNotificationPayload(payload);
                                       },
                                     );
                                   }).toList(),
@@ -275,7 +309,18 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
+                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
+                                        if (payload['data'] != null && payload['data'] is String) {
+                                          try {
+                                            final parsedData = jsonDecode(payload['data']);
+                                            if (parsedData is Map<String, dynamic>) {
+                                              payload.addAll(parsedData);
+                                            }
+                                          } catch (e) {
+                                            debugPrint('Error decoding notification data: $e');
+                                          }
+                                        }
+                                        navigateFromNotificationPayload(payload);
                                       },
                                     );
                                   }).toList(),
@@ -305,7 +350,18 @@ class _NotificationScreenState extends State<NotificationScreen>
                                         if (token != null) {
                                           provider.markAsRead(token, n);
                                         }
-                                        navigateFromNotificationPayload(n as Map<String, dynamic>);
+                                        Map<String, dynamic> payload = Map<String, dynamic>.from(n as Map<String, dynamic>);
+                                        if (payload['data'] != null && payload['data'] is String) {
+                                          try {
+                                            final parsedData = jsonDecode(payload['data']);
+                                            if (parsedData is Map<String, dynamic>) {
+                                              payload.addAll(parsedData);
+                                            }
+                                          } catch (e) {
+                                            debugPrint('Error decoding notification data: $e');
+                                          }
+                                        }
+                                        navigateFromNotificationPayload(payload);
                                       },
                                     );
                                   }).toList(),
