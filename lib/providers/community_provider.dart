@@ -435,30 +435,39 @@ class CommunityProvider with ChangeNotifier {
   }
 
   Future<bool> likePost(String token, String postId) async {
+    final postIndex = _currentPosts.indexWhere((p) => p['id'] == postId);
+    if (postIndex == -1) return false;
+    
+    final post = _currentPosts[postIndex];
+    final wasLiked = post['hasLiked'] == true;
+    
+    post['hasLiked'] = !wasLiked;
+    post['likesCount'] = (post['likesCount'] ?? 0) + (wasLiked ? -1 : 1);
+    notifyListeners();
+
     try {
       final res = await ApiService.likeCommunityPost(token, postId);
-      final postIndex = _currentPosts.indexWhere((p) => p['id'] == postId);
-      if (postIndex != -1) {
-        final post = _currentPosts[postIndex];
-        
-        if (res['liked'] == true) {
-          post['likesCount'] = (post['likesCount'] ?? 0) + 1;
-          post['postLikes'] = [...(post['postLikes'] ?? []), res['like']];
-        } else {
-          post['likesCount'] = (post['likesCount'] ?? 1) - 1;
-          List likes = List.from(post['postLikes'] ?? []);
-          if (likes.isNotEmpty) {
-            likes.removeLast(); // naive removal, or filter by userId
-          }
-          post['postLikes'] = likes;
-        }
-        
-        _currentPosts[postIndex] = post;
-        notifyListeners();
+      if (res['liked'] != post['hasLiked']) {
+        post['hasLiked'] = res['liked'];
+        post['likesCount'] = (post['likesCount'] ?? 0) + (res['liked'] ? 1 : -1);
       }
+      
+      if (res['liked'] == true && res['like'] != null) {
+        post['postLikes'] = [...(post['postLikes'] ?? []), res['like']];
+      } else if (res['liked'] == false) {
+        List likes = List.from(post['postLikes'] ?? []);
+        if (likes.isNotEmpty) likes.removeLast();
+        post['postLikes'] = likes;
+      }
+      
+      _currentPosts[postIndex] = post;
+      notifyListeners();
       return true;
     } catch (e) {
-      debugPrint("Error liking post: $e");
+      post['hasLiked'] = wasLiked;
+      post['likesCount'] = (post['likesCount'] ?? 0) + (wasLiked ? 1 : -1);
+      notifyListeners();
+      debugPrint("Error reacting to post: $e");
       return false;
     }
   }
@@ -764,16 +773,28 @@ class CommunityProvider with ChangeNotifier {
 
   Future<bool> toggleAdminMessageLike(String token, String msgId) async {
     if (_currentCommunity == null) return false;
+    final index = _adminMessages.indexWhere((m) => m['id'] == msgId);
+    if (index == -1) return false;
+    
+    final msg = _adminMessages[index];
+    final wasLiked = msg['hasLiked'] == true;
+    
+    msg['hasLiked'] = !wasLiked;
+    msg['likesCount'] = (msg['likesCount'] ?? 0) + (wasLiked ? -1 : 1);
+    notifyListeners();
+
     try {
       final res = await ApiService.toggleAdminMessageLike(token, _currentCommunity!['id'], msgId);
-      final index = _adminMessages.indexWhere((m) => m['id'] == msgId);
-      if (index != -1) {
-        _adminMessages[index]['hasLiked'] = res['liked'];
-        _adminMessages[index]['likesCount'] += res['liked'] ? 1 : -1;
+      if (res['liked'] != msg['hasLiked']) {
+        msg['hasLiked'] = res['liked'];
+        msg['likesCount'] = (msg['likesCount'] ?? 0) + (res['liked'] ? 1 : -1);
         notifyListeners();
       }
       return true;
     } catch (e) {
+      msg['hasLiked'] = wasLiked;
+      msg['likesCount'] = (msg['likesCount'] ?? 0) + (wasLiked ? 1 : -1);
+      notifyListeners();
       debugPrint("Error toggling admin message like: $e");
       return false;
     }
@@ -1022,19 +1043,25 @@ class CommunityProvider with ChangeNotifier {
   }
 
   Future<bool> toggleCommunityVerseLike(String token, String communityId) async {
+    if (_currentVerse == null) return false;
+    
+    final wasLiked = _currentVerse!['hasLiked'] == true;
+    _currentVerse!['hasLiked'] = !wasLiked;
+    _currentVerse!['likesCount'] = (_currentVerse!['likesCount'] ?? 0) + (wasLiked ? -1 : 1);
+    notifyListeners();
+
     try {
       final res = await ApiService.toggleCommunityDailyVerseLike(token, communityId);
-      if (_currentVerse != null) {
+      if (res['liked'] != _currentVerse!['hasLiked']) {
         _currentVerse!['hasLiked'] = res['liked'];
-        if (res['liked'] == true) {
-          _currentVerse!['likesCount'] = (_currentVerse!['likesCount'] ?? 0) + 1;
-        } else {
-          _currentVerse!['likesCount'] = (_currentVerse!['likesCount'] ?? 1) - 1;
-        }
+        _currentVerse!['likesCount'] = (_currentVerse!['likesCount'] ?? 0) + (res['liked'] ? 1 : -1);
         notifyListeners();
       }
       return true;
     } catch (e) {
+      _currentVerse!['hasLiked'] = wasLiked;
+      _currentVerse!['likesCount'] = (_currentVerse!['likesCount'] ?? 0) + (wasLiked ? 1 : -1);
+      notifyListeners();
       debugPrint("Error toggling community verse like: $e");
       return false;
     }
