@@ -174,15 +174,31 @@ class MediaProvider extends ChangeNotifier {
   }
 
   Future<void> likeVideo(String token, String videoId) async {
+    final index = _videos.indexWhere((v) => v['id'] == videoId);
+    if (index == -1) return;
+
+    final wasLiked = _videos[index]['hasLiked'] == true;
+    _videos[index]['hasLiked'] = !wasLiked;
+    _videos[index]['likes'] = (_videos[index]['likes'] ?? 0) + (wasLiked ? -1 : 1);
+    notifyListeners();
+
     try {
       final res = await ApiService.likeVideo(token, videoId);
-      final index = _videos.indexWhere((v) => v['id'] == videoId);
-      if (index != -1) {
-        _videos[index]['likes'] = res['likes'] ?? _videos[index]['likes'];
+      if (res.containsKey('hasLiked')) {
         _videos[index]['hasLiked'] = res['hasLiked'];
-        notifyListeners();
+      } else if (res.containsKey('liked')) {
+        _videos[index]['hasLiked'] = res['liked'];
       }
+      if (res.containsKey('likes')) {
+        _videos[index]['likes'] = res['likes'];
+      } else if (res.containsKey('likesCount')) {
+        _videos[index]['likes'] = res['likesCount'];
+      }
+      notifyListeners();
     } catch (e) {
+      _videos[index]['hasLiked'] = wasLiked;
+      _videos[index]['likes'] = (_videos[index]['likes'] ?? 0) + (wasLiked ? 1 : -1);
+      notifyListeners();
       _setError(e.toString());
     }
   }
@@ -207,14 +223,31 @@ class MediaProvider extends ChangeNotifier {
   }
 
   Future<void> likeAudio(String token, String audioId) async {
+    final index = _audio.indexWhere((a) => a['id'] == audioId);
+    if (index == -1) return;
+
+    final wasLiked = _audio[index]['hasLiked'] == true;
+    _audio[index]['hasLiked'] = !wasLiked;
+    _audio[index]['likes'] = (_audio[index]['likes'] ?? 0) + (wasLiked ? -1 : 1);
+    notifyListeners();
+
     try {
-      await ApiService.likeAudio(token, audioId);
-      final index = _audio.indexWhere((a) => a['id'] == audioId);
-      if (index != -1) {
-        _audio[index]['likes'] = (_audio[index]['likes'] ?? 0) + 1;
-        notifyListeners();
+      final res = await ApiService.likeAudio(token, audioId);
+      if (res.containsKey('hasLiked')) {
+        _audio[index]['hasLiked'] = res['hasLiked'];
+      } else if (res.containsKey('liked')) {
+        _audio[index]['hasLiked'] = res['liked'];
       }
+      if (res.containsKey('likes')) {
+        _audio[index]['likes'] = res['likes'];
+      } else if (res.containsKey('likesCount')) {
+        _audio[index]['likes'] = res['likesCount'];
+      }
+      notifyListeners();
     } catch (e) {
+      _audio[index]['hasLiked'] = wasLiked;
+      _audio[index]['likes'] = (_audio[index]['likes'] ?? 0) + (wasLiked ? 1 : -1);
+      notifyListeners();
       _setError(e.toString());
     }
   }
