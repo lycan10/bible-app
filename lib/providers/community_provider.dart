@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quest/services/api_service.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CommunityProvider with ChangeNotifier {
   List<dynamic> _communities = [];
@@ -1040,15 +1041,36 @@ class CommunityProvider with ChangeNotifier {
   }
 
   Future<bool> shareCommunityVerse(String token, String communityId) async {
+    if (_currentVerse == null) return false;
+
+    final verseText = _currentVerse!['text'] ?? '';
+    final reference = _currentVerse!['reference'] ?? '';
+    final verseId = _currentVerse!['id'];
+
+    String shareContent =
+        '"$verseText" - $reference\n\nRead more on Shalom App!';
+    if (verseId != null) {
+      final link = 'https://quest.vidarave.com/devotion/$verseId';
+      shareContent =
+          '"$verseText" - $reference\n\nRead more on Shalom App! $link';
+    }
+
+    try {
+      debugPrint("Attempting to launch share sheet with content: $shareContent");
+      await Share.share(shareContent);
+      debugPrint("Share sheet closed/completed.");
+    } catch (e) {
+      debugPrint("Error launching share sheet: $e");
+      return false;
+    }
+
     try {
       await ApiService.shareCommunityDailyVerse(token, communityId);
-      if (_currentVerse != null) {
-        _currentVerse!['sharesCount'] = (_currentVerse!['sharesCount'] ?? 0) + 1;
-        notifyListeners();
-      }
+      _currentVerse!['sharesCount'] = (_currentVerse!['sharesCount'] ?? 0) + 1;
+      notifyListeners();
       return true;
     } catch (e) {
-      debugPrint("Error sharing community verse: $e");
+      debugPrint("Error sharing community verse API: $e");
       return false;
     }
   }
